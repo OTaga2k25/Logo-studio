@@ -1551,7 +1551,7 @@ $('dlStlSet').addEventListener('click', async () => {
   busy(false);
 });
 // ---------- format previews ----------
-let previewMode = 'studio', pvTimer = 0;
+let previewMode = 'studio', pvTimer = 0, pvExplode = false;
 const previewGroup = new THREE.Group(); pivot.add(previewGroup);
 const pvMats = [];
 function pvMat(hex, opts){ const m = new THREE.MeshStandardMaterial(Object.assign({color: hex, roughness: 0.62, metalness: 0}, opts || {})); pvMats.push(m); return m; }
@@ -1613,18 +1613,18 @@ function applyPreview(){
         for (let k = 1; k < pal.length; k++){
           angles().forEach(a => {
             const g = colourReliefSolid(L, a, G, k); if (!g.index.count){ g.dispose(); return; }
-            const m = new THREE.Mesh(g, pvMat(rgb2hex(pal[k]))); m.userData.ownGeo = true;
-            const push = 3 + k * 2.5; m.position.set(Math.sin(a)*push, 0, Math.cos(a)*push);
+            const m = new THREE.Mesh(g, pvMat(rgb2hex(pal[k]), {polygonOffset: true, polygonOffsetFactor: -k, polygonOffsetUnits: -k})); m.userData.ownGeo = true;
+            const push = pvExplode ? 4 + k * 4 : 0; m.position.set(Math.sin(a)*push, 0, S.product === 'duo' ? push : Math.cos(a)*push); if (S.product !== 'duo') m.position.x = Math.sin(a)*push;
             previewGroup.add(m); n += g.index.count/3;
           });
           files++;
         }
       } else {
-        solids.filter(o => /Logo/.test(o.name)).forEach(o => { const m = new THREE.Mesh(o.geometry, pvMat(rgb2hex(pal[1]))); m.position.z = 4; previewGroup.add(m); n += triCount([o.geometry]); });
+        solids.filter(o => /Logo/.test(o.name)).forEach(o => { const m = new THREE.Mesh(o.geometry, pvMat(rgb2hex(pal[1]))); m.position.z = pvExplode ? 6 : 0; previewGroup.add(m); n += triCount([o.geometry]); });
         files++;
       }
     }
-    info.innerHTML = '<b>STL colour set</b> · ' + files + ' separate parts, pulled apart here so you can see them (in the file they line up) · ' + Math.round(n).toLocaleString() + ' triangles' + chipsHtml(pal.slice(0, Math.max(files, 1)), pal.map((c, i) => i === 0 ? 'body' : 'part'));
+    info.innerHTML = '<b>STL colour set</b> · ' + files + ' separate parts, assembled exactly as they print · ' + Math.round(n).toLocaleString() + ' triangles' + chipsHtml(pal.slice(0, Math.max(files, 1)), pal.map((c, i) => i === 0 ? 'body' : 'part')) + '<label style="display:flex;gap:6px;align-items:center;margin-top:6px;cursor:pointer"><input type="checkbox" id="pvExplode"' + (pvExplode ? ' checked' : '') + '> Pull parts apart to inspect each colour</label>';
   }
   info.hidden = false;
 }
@@ -1636,6 +1636,7 @@ document.querySelectorAll('.pvseg button').forEach(b => b.addEventListener('clic
   schedulePreview();
 }));
 $('nColors').addEventListener('input', () => { if (previewMode === '3mf' || previewMode === 'stlset') schedulePreview(); });
+$('pvinfo').addEventListener('change', e => { if (e.target && e.target.id === 'pvExplode'){ pvExplode = e.target.checked; schedulePreview(); } });
 $('nColors').addEventListener('input', e => { S.nColors = parseInt(e.target.value, 10); $('nColorsOut').textContent = S.nColors; showFilaments(); });
 $('nColorsOut').textContent = S.nColors;
 $('dl3mf').addEventListener('click', async () => {
