@@ -117,6 +117,14 @@ select.text{appearance:auto;padding:8px}
 .status{font-size:12.5px;min-height:1.4em;color:var(--accent);margin:0}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .sub{display:flex;flex-direction:column;gap:12px;border-left:2px solid var(--soft);padding-left:12px}
+.wrapc{display:contents}.wrapc[hidden]{display:none}
+.bk-models{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px}
+.bk-models button{font:500 12px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 4px;cursor:pointer}
+.bk-models button[aria-pressed="true"]{border-color:var(--accent);background:var(--soft);color:var(--accent)}
+.bk-ask{display:flex;gap:8px}.bk-ask .text{flex:1;min-width:0}
+.bk-ask button{font:600 13px var(--body);border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);padding:0 14px;cursor:pointer}
+.bk-parts{font:12px var(--mono);color:var(--muted);max-height:150px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0;list-style:none}
+.bk-parts li{display:flex;gap:6px;align-items:center}.bk-parts i{width:11px;height:11px;border-radius:3px;border:1px solid var(--line);flex:none}
 @media (max-width:820px){
   .app{grid-template-columns:1fr;grid-template-rows:56vh auto;height:auto}
   html,body{height:auto}
@@ -149,7 +157,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
   </section>
 
   <aside class="panel">
-    <div class="sec">
+    <div class="sec" id="logoSec">
       <h2><span><span class="step">1</span>Logo</span><small>PNG · SVG · JPG</small></h2>
       <label class="upload" for="file">
         <span class="thumb" id="thumb"></span>
@@ -243,7 +251,9 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
         <button id="prodMug" aria-pressed="true">Mug<small>Cup with optional handle</small></button>
         <button id="prodPen" aria-pressed="false">Pen holder<small>Round desk cup</small></button>
         <button id="prodDuo" aria-pressed="false">Duo organiser<small>Cup + tray, flat front</small></button>
+        <button id="prodBricks" aria-pressed="false">Bricks<small>Build &amp; print brick models</small></button>
       </div>
+      <div class="wrapc" id="shapeOpts">
       <div class="presets" id="presets" role="group" aria-label="Shape"></div>
       <div class="swatches" id="glazes" aria-label="Glaze colour"></div>
       <div class="row2">
@@ -287,6 +297,23 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
           </select></div>
         <div class="field"><label for="mb">Base thickness</label><output id="mbOut"></output><input type="range" id="mb" min="3" max="15" step="1" value="6"></div>
       </div>
+      </div>
+      <div class="sub" id="brickOpts" hidden>
+        <div><span class="lbl">Model</span><div class="bk-models" id="bkModels" role="group" aria-label="Brick model"></div></div>
+        <form class="bk-ask" id="bkAsk"><input class="text" id="bkText" placeholder="Or describe it: small blue house with garden" aria-label="Describe a brick model"><button type="submit">Build</button></form>
+        <div class="swatches" id="bkColours" aria-label="Main colour"><span style="font-weight:500;margin-right:4px">Colour</span></div>
+        <div class="row2">
+          <div><label for="bkAccent" class="lbl">Second colour</label><select class="text" id="bkAccent"></select></div>
+          <div><label for="bkSize" class="lbl">Size</label><select class="text" id="bkSize"><option value="small">Small</option><option value="" selected>Normal</option><option value="big">Big</option></select></div>
+        </div>
+        <div class="field"><label for="bkFit">Stud fit</label><output id="bkFitOut"></output><input type="range" id="bkFit" min="4.70" max="4.95" step="0.01" value="4.80"></div>
+        <span class="note">Stud diameter for printing. 4.80 mm is standard; go up a little if printed bricks feel loose, down if they don't press together. Print one 2×2 test brick first.</span>
+        <div class="row2">
+          <div><label for="bkBed" class="lbl">Printer bed</label><select class="text" id="bkBed"><option value="180">180 × 180 mm</option><option value="220" selected>220 × 220 mm</option><option value="256">256 × 256 mm</option><option value="300">300 × 300 mm</option></select></div>
+          <div><label class="lbl">&nbsp;</label><label class="check"><input type="checkbox" id="bkExplode"> Show parts apart</label></div>
+        </div>
+        <ul class="bk-parts" id="bkParts" aria-label="Parts list"></ul>
+      </div>
     </div>
 
     <div class="rule"></div>
@@ -295,6 +322,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
       <h2><span><span class="step">3</span>Download</span><small>GLB · STL · PNG</small></h2>
       <div><label for="company" style="font-weight:500;display:block;margin-bottom:5px">Company name (used for file names)</label>
       <input class="text" id="company" value="Lifecure"></div>
+      <div class="wrapc" id="mugDl">
       <label class="check"><input type="checkbox" id="glbLights" checked> Include studio lights in GLB (keeps it from looking black in simple viewers)</label>
       <button class="btn primary" id="dlGlb">Download GLB<small>3D model with colours and logo · for AR, Blender, web</small></button>
       <div class="mc">
@@ -304,6 +332,13 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
       </div>
       <button class="btn ghost" id="dlStlSet">Download STL colour set (.zip)<small>One STL per filament colour · load all together, pick a filament for each part · works in Cura too</small></button>
       <button class="btn ghost" id="dlStl">Download STL · single colour<small>One solid mesh in mm · any slicer</small></button>
+      </div>
+      <div class="wrapc" id="brickDl" hidden>
+        <button class="btn primary" id="dlBkPlates">Download print plates (.zip)<small>Every part laid out on your bed, one STL per colour · print colour by colour</small></button>
+        <button class="btn ghost" id="dlBkKit">Download parts kit (.zip)<small>One STL per part type with the quantity in its name, plus a parts list</small></button>
+        <button class="btn ghost" id="dlBk3mf">Download 3MF · assembled model<small>The finished model in colour · preview it in Bambu Studio, PrusaSlicer, OrcaSlicer</small></button>
+        <button class="btn ghost" id="dlBkSteps">Download building steps (.html)<small>Layer-by-layer pictures with the parts for each step · open and print</small></button>
+      </div>
       <button class="btn ghost" id="dlPng">Save preview image (PNG)<small>Transparent background · for mockups, catalogues, client approval</small></button>
       <p class="status" id="status" role="status" aria-live="polite"></p>
       <p class="note">Use <b>Raised</b> style before exporting STL so the logo becomes real geometry. A printed decal only shows in the GLB. In the Claude viewer files are saved as .zip; unzip to get the model.</p>
@@ -983,6 +1018,7 @@ let pending = false;
 function rebuild(){ if (pending) return; pending = true; requestAnimationFrame(() => { pending = false; build(); }); }
 
 function build(){
+  if (S.product === 'bricks'){ BRICKS.show(); return; }
   disposeMug();
   bodyMat.color.set(S.color); logoMat.color.set(S.logoColor);
   bodyMat.roughness = S.product === 'duo' ? 0.68 : 0.32; bodyMat.clearcoat = S.product === 'duo' ? 0.05 : 0.7; bodyMat.envMapIntensity = S.product === 'duo' ? 0.42 : 0.8;
@@ -1127,6 +1163,12 @@ function applyPreset(key, p){
   rebuild();
 }
 function setProduct(prod){
+  const isB = prod === 'bricks';
+  $('prodBricks').setAttribute('aria-pressed', String(isB));
+  $('shapeOpts').hidden = isB; $('brickOpts').hidden = !isB; $('logoSec').hidden = isB; $('mugDl').hidden = isB; $('brickDl').hidden = !isB;
+  document.querySelector('.pvbar').hidden = isB; document.querySelector('.stage-upload').hidden = isB;
+  mug.visible = !isB; BRICKS.group.visible = isB; previewGroup.visible = !isB;
+  if (isB){ S.product = 'bricks'; ['prodMug', 'prodPen', 'prodDuo'].forEach(id => $(id).setAttribute('aria-pressed', 'false')); clearPreview(); BRICKS.show(); return; }
   S.product = prod;
   $('prodMug').setAttribute('aria-pressed', String(prod === 'mug'));
   $('prodPen').setAttribute('aria-pressed', String(prod === 'pen'));
@@ -1145,6 +1187,7 @@ function setProduct(prod){
 $('prodMug').addEventListener('click', () => { if (S.product !== 'mug') setProduct('mug'); });
 $('prodPen').addEventListener('click', () => { if (S.product !== 'pen') setProduct('pen'); });
 $('prodDuo').addEventListener('click', () => { if (S.product !== 'duo') setProduct('duo'); });
+$('prodBricks').addEventListener('click', () => { if (S.product !== 'bricks') setProduct('bricks'); });
 $('dropWhite').addEventListener('change', e => { S.dropWhite = e.target.checked; processLogo(); rebuild(); });
 function setTexture(t, quiet){
   S.texture = t;
@@ -1659,7 +1702,7 @@ $('dlPng').addEventListener('click', async () => {
     const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
     renderer.setPixelRatio(pr); renderer.setSize(r.width, r.height, false);
     if (!blob) throw new Error('no image');
-    await deliver(slug() + (S.product === 'pen' ? '-pen-holder.' : '-mug.') + 'png', new Uint8Array(await blob.arrayBuffer()), 'image/png');
+    await deliver(slug() + (S.product === 'bricks' ? '-bricks.' : S.product === 'pen' ? '-pen-holder.' : '-mug.') + 'png', new Uint8Array(await blob.arrayBuffer()), 'image/png');
   } catch (e) { status('Could not save the image: ' + (e && e.message ? e.message : e)); }
   busy(false);
 });
@@ -1686,6 +1729,356 @@ $('dlStl').addEventListener('click', async () => {
   } catch (e) { status('STL export failed: ' + (e && e.message ? e.message : e)); }
   busy(false);
 });
+
+// ---------- bricks: build brick models and export them part by part for 3D printing ----------
+// Model units: 1 stud across, 1 plate up. Printed size: 8.0 mm stud pitch, 3.2 mm plate, 9.6 mm brick,
+// 4.8 mm studs (adjustable), hollow undersides with 6.51 mm clutch tubes so printed parts press together.
+const BRICKS = (() => {
+  const PITCH = 8.0, PLATE = 3.2, GAP = 0.1, WALL = 1.2, TOP = 1.0, STUD_H = 1.7, TUBE_OD = 6.51, TUBE_ID = 4.8, PIN_D = 3.2;
+  const COLS = {
+    red: '#c91a09', blue: '#0055bf', yellow: '#f2cd37', green: '#237841', lime: '#a5ca18', white: '#f4f4f4', black: '#1b2a34',
+    orange: '#fe8a18', purple: '#81007b', pink: '#e4adc8', grey: '#a0a5a9', darkgrey: '#6c6e68', brown: '#583927', tan: '#e4cd9e',
+    'dark blue': '#0a3463', 'dark red': '#720e0f', 'dark green': '#184632', azure: '#36aebf', gold: '#dbac34', silver: '#a5a9b4',
+    glass: '#9fd3f5', trunk: '#583927', leaf: '#237841',
+  };
+  const PICK = ['red', 'blue', 'yellow', 'green', 'orange', 'white', 'black', 'grey', 'tan', 'pink', 'purple', 'azure'];
+  const NAMES = Object.keys(COLS).filter(c => !['glass', 'trunk', 'leaf'].includes(c));
+  const MODELS = [['car', 'Car'], ['truck', 'Fire truck'], ['house', 'House'], ['castle', 'Castle'], ['tower', 'Tower'], ['rocket', 'Rocket'], ['robot', 'Robot'],
+    ['boat', 'Boat'], ['plane', 'Plane'], ['train', 'Train'], ['crane', 'Crane'], ['bridge', 'Bridge'], ['tree', 'Tree'], ['pyramid', 'Pyramid'], ['dog', 'Dog']];
+  const state = { model: 'car', text: '', colour: 'red', accent: '', size: '', fit: 4.8, bed: 220, explode: false, parts: [], label: '' };
+
+  // —— words → model ——
+  const hashStr = s => { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
+  const rng = seed => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const SYN = {
+    car: ['car', 'sports car', 'taxi', 'police car', 'police', 'jeep', 'vehicle'], truck: ['truck', 'lorry', 'fire truck', 'fire engine', 'pickup', 'van'],
+    house: ['house', 'home', 'cottage', 'hut', 'villa', 'building', 'shop', 'office'], tower: ['tower', 'lighthouse', 'skyscraper'], castle: ['castle', 'fort', 'palace', 'fortress'],
+    bridge: ['bridge'], boat: ['boat', 'ship', 'yacht', 'sailboat', 'ferry'], plane: ['plane', 'airplane', 'aeroplane', 'jet', 'aircraft'], robot: ['robot', 'droid', 'mascot'],
+    rocket: ['rocket', 'spaceship', 'shuttle'], crane: ['crane'], train: ['train', 'locomotive', 'railway'], tree: ['tree', 'forest', 'garden'], pyramid: ['pyramid', 'temple'], dog: ['dog', 'puppy', 'pet'],
+  };
+  const shade = c => ({ red: 'dark red', blue: 'dark blue', green: 'dark green', grey: 'darkgrey', white: 'grey', yellow: 'orange', tan: 'brown' }[c] || c);
+  function understand(text){
+    let t = ' ' + text.toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ') + ' ';
+    const MAT = { stone: 'grey', wood: 'brown', wooden: 'brown', metal: 'silver', golden: 'gold', sand: 'tan', snow: 'white' };
+    for (const [w, c] of Object.entries(MAT)) if (t.includes(' ' + w + ' ') && !NAMES.some(n => t.includes(' ' + n + ' '))) t = t.replace(' ' + w + ' ', ' ' + c + ' ');
+    let type = null, at = 1e9;
+    for (const [k, words] of Object.entries(SYN)) for (const w of words){ const i = t.indexOf(' ' + w + ' '); if (i >= 0 && i < at){ at = i; type = k; } }
+    const said = NAMES.map(c => [c, t.indexOf(' ' + c + ' ')]).filter(([, i]) => i >= 0).sort((a, b) => a[1] - b[1]).map(([c]) => c);
+    return { type, said, word: /\bfire\b/.test(t) ? 'fire' : /\bpolice\b/.test(t) ? 'police' : /\bflat\b/.test(t) ? 'flat' : null,
+      small: /\b(small|tiny|little|mini)\b/.test(t), big: /\b(big|large|huge|giant)\b/.test(t), tall: /\b(tall|high|two storey|two story)\b/.test(t),
+      garden: /\b(garden|trees|flowers|yard)\b/.test(t), rainbow: /\brainbow\b/.test(t) };
+  }
+
+  // —— the 15 model generators (part lists in studs and plates) ——
+  function kit(){
+    const parts = [];
+    const b = (x, z, y, w, d, h, color, o = {}) => parts.push({ kind: o.kind || 'brick', x, z, y, w, d, h, color, studs: o.studs !== false, dir: o.dir || 0 });
+    const slope = (x, z, y, w, d, color, dir) => parts.push({ kind: 'slope', x, z, y, w, d, h: 3, color, studs: true, dir });
+    const wheel = (x, z, y, r, color = 'black') => parts.push({ kind: 'wheel', x: x - r, z: z - 0.45, y, w: r * 2, d: 0.9, h: r * 2 / 0.4, r, color });
+    const round = (x, z, y, h, color) => parts.push({ kind: 'round', x, z, y, w: 1, d: 1, h, color, studs: true });
+    return { parts, b, slope, wheel, round };
+  }
+  function tree(k, x, z, y, R, s = 1){
+    k.b(x + 1, z + 1, y, 1, 1, Math.round(9 * s), 'trunk', { studs: false });
+    [[0, 0, 3, 3], [-0.5, -0.5, 4, 4], [0, 0, 3, 3], [0.5, 0.5, 2, 2], [1, 1, 1, 1]].forEach(([dx, dz, w, d], i) => k.b(x + dx, z + dz, y + Math.round(6 * s) + i * 3, w, d, 3, R() < 0.25 ? 'lime' : 'leaf'));
+  }
+  const G = {};
+  G.car = o => { const k = kit(), c = o.color, L = o.big ? 12 : o.small ? 8 : 10, W = 4;
+    k.b(0, 0, 2, L, W, 1, 'darkgrey', { studs: false });
+    for (const x of [1.5, L - 2.5]) for (const z of [-0.2, W - 0.8]) k.wheel(x + 0.5, z + 0.5, 0, 1.1);
+    k.b(0, 0, 3, 3, W, 3, c); k.b(L - 2, 0, 3, 2, W, 3, c); k.b(3, 0, 3, L - 5, 1, 3, c); k.b(3, W - 1, 3, L - 5, 1, 3, c);
+    k.b(0, 1, 4, 0.4, 2, 1, 'white', { studs: false, kind: 'deco' });
+    k.b(3, 0, 6, 1, W, 3, 'glass', { studs: false }); k.b(4, 0, 6, L - 7, 1, 3, 'glass', { studs: false }); k.b(4, W - 1, 6, L - 7, 1, 3, 'glass', { studs: false });
+    k.b(3, 0, 9, L - 5, W, 1, c); k.b(L - 3, 0, 6, 1, W, 3, c);
+    if (o.word === 'police'){ k.b(5, 1, 10, 1, 1, 1, 'blue'); k.b(6, 2, 10, 1, 1, 1, 'red'); }
+    return k.parts; };
+  G.truck = o => { const k = kit(), c = o.color, L = o.big ? 16 : 14, W = 5, fire = o.word !== 'plain';
+    k.b(0, 0, 2, L, W, 1, 'darkgrey', { studs: false });
+    for (const x of [2, L - 5, L - 3]) for (const z of [-0.2, W - 0.8]) k.wheel(x + 0.5, z + 0.5, 0, 1.2);
+    k.b(0, 0, 3, 4, W, 6, c); k.b(0, 0, 9, 4, W, 3, 'glass', { studs: false }); k.b(0, 0, 12, 4, W, 1, c); k.b(0, 1, 4, 0.4, 3, 1, 'white', { studs: false, kind: 'deco' });
+    if (fire){ k.b(4, 0, 3, L - 4, W, 6, c); k.b(5, 1, 9, L - 6, 3, 1, 'darkgrey'); for (let i = 0; i < L - 6; i++) k.b(5 + i, 1, 10, 1, 3, 1, i % 2 ? 'white' : 'silver'); k.b(1, 2, 13, 1, 1, 1, 'blue'); k.b(2, 2, 13, 1, 1, 1, o.accent || 'red'); }
+    return k.parts; };
+  G.house = o => { const k = kit(), c = o.color, W = o.big ? 10 : 8, D = 6, floors = o.tall ? 2 : 1, R = o.r;
+    k.b(-3, -3, 0, W + 6, D + 6, 1, 'green');
+    for (let f = 0; f < floors; f++) for (let row = 0; row < 3; row++){ const y = 1 + f * 9 + row * 3;
+      for (let x = 0; x < W; x++) for (const z of [0, D - 1]){ const win = row === 1 && (x === 1 || x === 2 || x === W - 3 || x === W - 2), door = f === 0 && z === D - 1 && x === Math.floor(W / 2) && row < 2;
+        if (door){ k.b(x, z, y, 1, 1, 3, 'brown', { studs: row === 1 }); continue; } k.b(x, z, y, 1, 1, 3, win ? 'glass' : (row === 0 && f === 0 ? 'white' : c), { studs: false }); }
+      for (let z = 1; z < D - 1; z++) for (const x of [0, W - 1]) k.b(x, z, y, 1, 1, 3, row === 1 && z === Math.floor(D / 2) ? 'glass' : c, { studs: false }); }
+    const top = 1 + floors * 9; k.b(0, 0, top, W, D, 1, 'white');
+    if (o.word !== 'flat') for (let i = 0; i < D / 2; i++){ k.slope(0, i, top + 1 + i * 3, W, 1, o.accent || 'dark red', 2); k.slope(0, D - 1 - i, top + 1 + i * 3, W, 1, o.accent || 'dark red', 0); }
+    k.b(W - 3, 1, top + 1, 1, 1, 6, 'darkgrey');
+    if (o.garden || !o.small){ tree(k, W + 1, -2, 1, R); tree(k, -2.5, D + 1, 1, R); }
+    return k.parts; };
+  G.tree = o => { const k = kit(); k.b(-3, -3, 0, 9, 9, 1, 'green'); tree(k, 0, 0, 1, o.r, o.big ? 1.5 : 1); if (!o.small) tree(k, 3.5, 3, 1, o.r, 0.7); return k.parts; };
+  G.tower = o => { const k = kit(), c = o.color, H = o.tall || o.big ? 14 : o.small ? 6 : 10, S = 4;
+    k.b(-2, -2, 0, S + 4, S + 4, 1, 'darkgrey');
+    for (let lv = 0; lv < H; lv++) for (let x = 0; x < S; x++) for (let z = 0; z < S; z++){ if (x > 0 && x < S - 1 && z > 0 && z < S - 1) continue;
+      const win = lv % 3 === 1 && ((x === 1 || x === 2) && (z === 0 || z === S - 1) || (z === 1 || z === 2) && (x === 0 || x === S - 1));
+      k.b(x, z, 1 + lv * 3, 1, 1, 3, win ? 'glass' : (lv % 2 ? c : shade(c)), { studs: false }); }
+    const top = 1 + H * 3; k.b(-1, -1, top, S + 2, S + 2, 1, 'darkgrey');
+    for (let x = -1; x < S + 1; x += 2) for (const z of [-1, S]) k.b(x, z, top + 1, 1, 1, 3, c);
+    for (let z = 1; z < S; z += 2) for (const x of [-1, S]) k.b(x, z, top + 1, 1, 1, 3, c);
+    k.round(1, 1, top + 1, 15, 'darkgrey'); k.b(2, 1, top + 10, 2, 0.25, 4, o.accent || 'yellow', { studs: false, kind: 'deco' });
+    return k.parts; };
+  G.castle = o => { const k = kit(), c = o.said.length ? o.color : 'grey', W = 14, roof = o.accent || 'dark blue';
+    k.b(-2, -2, 0, W + 4, W + 4, 1, 'green');
+    for (let lv = 0; lv < 4; lv++) for (let i = 0; i < W; i++) for (const [x, z] of [[i, 0], [i, W - 1], [0, i], [W - 1, i]]){ if (!(z === W - 1 && i >= 6 && i <= 7 && lv < 3)) k.b(x, z, 1 + lv * 3, 1, 1, 3, lv % 2 ? c : shade(c), { studs: false }); }
+    for (let i = 0; i < W; i += 2) for (const [x, z] of [[i, 0], [i, W - 1], [0, i], [W - 1, i]]) k.b(x, z, 13, 1, 1, 3, c);
+    for (const [x, z] of [[-1, -1], [W - 3, -1], [-1, W - 3], [W - 3, W - 3]]){ for (let lv = 0; lv < 7; lv++) k.b(x, z, 1 + lv * 3, 4, 4, 3, lv % 2 ? c : shade(c), { studs: lv === 6 }); k.slope(x, z, 22, 4, 2, roof, 2); k.slope(x, z + 2, 22, 4, 2, roof, 0); }
+    k.b(6, W - 1, 10, 2, 1, 3, c); k.b(6, W - 0.5, 1, 2, 0.4, 9, 'brown', { studs: false, kind: 'deco' });
+    return k.parts; };
+  G.bridge = o => { const k = kit(), c = o.color, L = o.big ? 22 : 18;
+    k.b(-2, -3, 0, L + 4, 10, 1, 'blue', { studs: false });
+    for (const x of [0, L - 3]) k.b(x - 2, -3, 1, 5, 10, 3, 'green');
+    for (const x of [Math.floor(L / 3), Math.floor(2 * L / 3)]) for (let lv = 0; lv < 3; lv++) k.b(x, 0, 1 + lv * 3, 2, 4, 3, 'grey');
+    k.b(0, 0, 10, L, 4, 1, c); for (let x = 0; x < L; x += 2) for (const z of [0, 3]) k.b(x, z, 11, 1, 1, 3, 'white'); for (const z of [0, 3]) k.b(0, z, 14, L, 1, 1, c);
+    return k.parts; };
+  G.boat = o => { const k = kit(), c = o.color, L = o.big ? 16 : 12;
+    k.b(-3, -4, 0, L + 6, 12, 1, 'blue', { studs: false });
+    [[2, L - 4, 1, 2], [1, L - 2, 0, 4], [0, L, 0, 4]].forEach(([x0, w, z0, d], i) => k.b(x0, z0, 1 + i * 3, w, d, 3, i === 2 ? 'white' : c));
+    k.b(0, 0, 10, L, 4, 1, 'tan'); k.b(L - 5, 1, 11, 3, 2, 3, 'white'); k.b(L - 5, 1, 14, 3, 2, 3, 'glass', { studs: false }); k.b(L - 5, 1, 17, 3, 2, 1, c);
+    k.round(4, 1, 11, 24, 'brown'); k.b(4.4, 1.9, 16, 0.25, 0.25, 12, 'white', { studs: false, kind: 'deco' });
+    return k.parts; };
+  G.plane = o => { const k = kit(), c = o.color, L = 14;
+    k.b(0, 0, 3, L, 2, 6, c); k.b(1, 0, 9, 3, 2, 2, 'glass', { studs: false });
+    k.b(4, -6, 4, 3, 14, 1, c); k.b(L - 2, -2, 8, 2, 6, 1, c); k.b(L - 2, 0, 9, 2, 1, 6, c);
+    k.b(-1, 0.5, 4, 1, 1, 3, 'darkgrey', { studs: false }); for (const z of [-1, 2]) k.wheel(3.5, z + 0.5, 0, 0.9);
+    return k.parts; };
+  G.robot = o => { const k = kit(), c = o.color;
+    for (const x of [0, 3]){ k.b(x, 0, 0, 2, 3, 1, 'darkgrey'); k.b(x, 0, 1, 2, 3, 9, 'grey', { studs: false }); }
+    k.b(0, 0, 10, 5, 3, 9, c); k.b(1, 3, 13, 3, 0.3, 3, 'glass', { studs: false, kind: 'deco' });
+    for (const x of [-2, 5]){ k.b(x, 0.5, 15, 2, 2, 3, 'grey'); k.b(x, 0.5, 9, 2, 2, 6, c, { studs: false }); }
+    k.b(1, 0, 19, 3, 3, 1, 'darkgrey'); k.b(1, 0, 20, 3, 3, 6, 'grey');
+    k.b(1, 3, 22, 1, 0.3, 1, 'azure', { studs: false, kind: 'deco' }); k.b(3, 3, 22, 1, 0.3, 1, 'azure', { studs: false, kind: 'deco' });
+    k.round(2, 1, 26, 6, 'darkgrey'); k.round(2, 1, 32, 2, o.accent || 'red');
+    return k.parts; };
+  G.rocket = o => { const k = kit(), c = o.said.length ? o.color : 'white', a = o.accent || 'red', H = o.big ? 12 : 9;
+    k.b(-4, -4, 0, 12, 12, 1, 'darkgrey');
+    for (let lv = 0; lv < H; lv++) k.b(0, 0, 1 + lv * 3, 4, 4, 3, lv === H - 3 ? 'glass' : lv % 4 === 3 ? a : c, { studs: false });
+    k.b(1, 1, 1 + H * 3, 2, 2, 3, c); k.b(1, 1, 4 + H * 3, 2, 2, 3, a); k.b(1.5, 1.5, 7 + H * 3, 1, 1, 3, a);
+    for (const [x, z, w, d] of [[-2, 1, 2, 2], [4, 1, 2, 2], [1, -2, 2, 2], [1, 4, 2, 2]]) k.b(x, z, 1, w, d, 6, a);
+    return k.parts; };
+  G.crane = o => { const k = kit(), c = o.said.length ? o.color : 'yellow', H = o.tall || o.big ? 12 : 9;
+    k.b(-3, -3, 0, 8, 8, 1, 'darkgrey'); k.b(-1, -1, 1, 4, 4, 3, 'grey');
+    for (let lv = 0; lv < H; lv++) k.b(0, 0, 4 + lv * 3, 2, 2, 3, lv % 2 ? c : shade(c), { studs: false });
+    const top = 4 + H * 3; k.b(-1, -1, top, 4, 4, 1, 'darkgrey'); k.b(0, 0, top + 1, 2, 2, 3, c);
+    k.b(2, 0, top + 1, 14, 2, 1, c); k.b(-7, 0, top + 1, 7, 2, 1, c); k.b(-7, 0, top + 2, 2, 2, 6, 'darkgrey');
+    k.b(12.8, 0.8, top - 16, 0.4, 0.4, 17, 'black', { studs: false, kind: 'deco' }); k.b(12, 0, top - 19, 2, 2, 3, c);
+    return k.parts; };
+  G.train = o => { const k = kit(), c = o.color;
+    k.b(-2, -1, 0, 30, 6, 1, 'darkgrey', { studs: false });
+    const car = (x0, eng) => { k.b(x0, 0, 3, 12, 4, 1, 'black'); for (const x of [x0 + 2, x0 + 9]) for (const z of [-0.2, 3.2]) k.wheel(x + 0.5, z + 0.5, 1, 1);
+      if (eng){ k.b(x0, 0, 4, 7, 4, 6, c); k.b(x0 + 7, 0, 4, 5, 4, 9, c); k.b(x0 + 7, 0, 13, 5, 4, 3, 'glass', { studs: false }); k.b(x0 + 7, 0, 16, 5, 4, 1, 'black'); k.round(x0 + 1, 1, 10, 6, 'black'); }
+      else { k.b(x0, 0, 4, 12, 4, 3, c); k.b(x0, 0, 7, 12, 4, 3, 'glass', { studs: false }); k.b(x0, 0, 10, 12, 4, 1, shade(c)); } };
+    car(-1, true); car(13, false); return k.parts; };
+  G.pyramid = o => { const k = kit(), c = o.said.length ? o.color : 'tan', n = o.big ? 10 : 8; for (let i = 0; i < n; i++) k.b(i, i, i * 3, 2 * (n - i), 2 * (n - i), 3, i % 2 ? c : shade(c)); return k.parts; };
+  G.dog = o => { const k = kit(), c = o.said.length ? o.color : 'tan';
+    for (const [x, z] of [[0, 0], [0, 2], [5, 0], [5, 2]]) k.b(x, z, 0, 1, 1, 6, c);
+    k.b(0, 0, 6, 6, 3, 6, c); k.b(-2, 0, 9, 3, 3, 6, c); k.b(-3, 1, 10, 1, 1, 3, 'black');
+    k.b(-2, 0, 15, 1, 1, 3, 'brown'); k.b(-2, 2, 15, 1, 1, 3, 'brown'); k.b(6, 1, 11, 1, 1, 6, c);
+    return k.parts; };
+
+  // —— printable geometry, millimetres, origin at the part's min corner, Y up ——
+  const box = (x0, y0, z0, w, h, d) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x0 + w / 2, y0 + h / 2, z0 + d / 2); return g; };
+  const cyl = (cx, y0, cz, r, h, seg = 24) => { const g = new THREE.CylinderGeometry(r, r, h, seg); g.translate(cx, y0 + h / 2, cz); return g; };
+  const tube = (cx, y0, cz, ri, ro, h, seg = 24) => { const g = new THREE.LatheGeometry([new THREE.Vector2(ri, 0), new THREE.Vector2(ro, 0), new THREE.Vector2(ro, h), new THREE.Vector2(ri, h), new THREE.Vector2(ri, 0)], seg); g.translate(cx, y0, cz); return g; };
+  function merge(geos){   // copies into typed arrays (no argument spreading: large models would overflow the call stack)
+    const list = geos.map(g => { const n = g.index ? g.toNonIndexed() : g; if (!n.attributes.normal) n.computeVertexNormals(); return n; });
+    let len = 0; list.forEach(g => { len += g.attributes.position.array.length; });
+    const pos = new Float32Array(len), nor = new Float32Array(len); let o = 0;
+    list.forEach(g => { pos.set(g.attributes.position.array, o); nor.set(g.attributes.normal.array, o); o += g.attributes.position.array.length; });
+    const m = new THREE.BufferGeometry(); m.setAttribute('position', new THREE.BufferAttribute(pos, 3)); m.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); return m;
+  }
+  const isStd = p => (p.kind === 'brick' || p.kind === 'slope') && Number.isInteger(p.w) && Number.isInteger(p.d) && p.w >= 1 && p.d >= 1 && Number.isInteger(p.h) && p.h >= 1;
+  function studs(g, p, H, fit, rows){ if (!p.studs) return; for (let i = 0; i < p.w; i++) for (let j = 0; j < (rows || p.d); j++) g.push(cyl(i * PITCH + PITCH / 2, H, j * PITCH + PITCH / 2, fit / 2, STUD_H)); }
+  function underside(g, p, H, depth){
+    const W = p.w * PITCH, D = (depth || p.d) * PITCH, h = H - TOP;
+    g.push(box(GAP, 0, GAP, W - 2 * GAP, h, WALL), box(GAP, 0, D - GAP - WALL, W - 2 * GAP, h, WALL), box(GAP, 0, GAP + WALL, WALL, h, D - 2 * GAP - 2 * WALL), box(W - GAP - WALL, 0, GAP + WALL, WALL, h, D - 2 * GAP - 2 * WALL));
+    const n = depth || p.d;
+    if (p.w >= 2 && n >= 2) for (let i = 1; i < p.w; i++) for (let j = 1; j < n; j++) g.push(tube(i * PITCH, 0, j * PITCH, TUBE_ID / 2, TUBE_OD / 2, h));
+    else if (p.w >= 2) for (let i = 1; i < p.w; i++) g.push(cyl(i * PITCH, 0, PITCH / 2, PIN_D / 2, h, 16));
+    else if (n >= 2) for (let j = 1; j < n; j++) g.push(cyl(PITCH / 2, 0, j * PITCH, PIN_D / 2, h, 16));
+    // 1-wide parts: 0.3 mm ribs on the inner walls at each stud, so a stud below is gripped (the cavity is 5.4 mm, the stud 4.8 mm)
+    const RIB = 0.3, rw = 1.0;
+    if (p.w === 1) for (let j = 0; j < n; j++) for (const x of [GAP + WALL, PITCH - GAP - WALL - RIB]) g.push(box(x, 0, j * PITCH + PITCH / 2 - rw / 2, RIB, h, rw));
+    if (n === 1) for (let i = 0; i < p.w; i++) for (const z of [GAP + WALL, PITCH - GAP - WALL - RIB]) g.push(box(i * PITCH + PITCH / 2 - rw / 2, 0, z, rw, h, RIB));
+  }
+  function partGeo(p, fit){
+    const H = p.h * PLATE, W = p.w * PITCH, D = p.d * PITCH, g = [];
+    if (p.kind === 'wheel'){ const R = p.r * PITCH; g.push(tube(R, 0, R, PIN_D / 2 + 0.1, R, D, 32)); return { geo: merge(g), flat: true }; }   // printed flat, axis up
+    if (p.kind === 'round'){ const r = PITCH / 2 - GAP; g.push(tube(PITCH / 2, 0, PITCH / 2, TUBE_ID / 2 + 0.05, r, H - TOP, 24), cyl(PITCH / 2, H - TOP, PITCH / 2, r, TOP, 24)); studs(g, p, H, fit); return { geo: merge(g) }; }
+    if (p.kind === 'slope' && p.d >= 2 && isStd(p)){   // 45°-ish slope: full-height back row with studs, sloped top down to a low front lip
+      const lip = 2.4, side = new THREE.Shape([new THREE.Vector2(GAP, 0), new THREE.Vector2(D - GAP, 0), new THREE.Vector2(D - GAP, lip), new THREE.Vector2(PITCH, H), new THREE.Vector2(GAP, H)]);
+      for (const x of [GAP, W - GAP - WALL]){ const s = new THREE.ExtrudeGeometry(side, { depth: WALL, bevelEnabled: false }); s.rotateY(-Math.PI / 2); s.translate(x + WALL, 0, 0); g.push(s); }
+      const top = new THREE.Shape([new THREE.Vector2(PITCH - 0.6, H), new THREE.Vector2(D - GAP, lip), new THREE.Vector2(D - GAP, Math.max(0.6, lip - 1.6)), new THREE.Vector2(PITCH - 0.6, H - 1.6)]);
+      const t = new THREE.ExtrudeGeometry(top, { depth: W - 2 * GAP, bevelEnabled: false }); t.rotateY(-Math.PI / 2); t.translate(W - GAP, 0, 0); g.push(t);
+      g.push(box(GAP, H - TOP, GAP, W - 2 * GAP, TOP, PITCH - GAP), box(GAP, 0, GAP, W - 2 * GAP, H - TOP, WALL), box(GAP, 0, D - GAP - WALL, W - 2 * GAP, lip, WALL));
+      if (p.w >= 2) for (let i = 1; i < p.w; i++) g.push(tube(i * PITCH, 0, PITCH, TUBE_ID / 2, TUBE_OD / 2, H - TOP - 0.2));
+      studs(g, p, H, fit, 1); return { geo: merge(g) };
+    }
+    if (isStd(p)){ g.push(box(GAP, H - TOP, GAP, W - 2 * GAP, TOP, D - 2 * GAP)); underside(g, p, H); studs(g, p, H, fit); return { geo: merge(g) }; }
+    // decorative pieces (thin trims, glass panels, flags): solid blocks, glue them on
+    g.push(box(0, 0, 0, Math.max(1.6, W - 2 * GAP), Math.max(1.2, H - GAP), Math.max(1.6, D - 2 * GAP))); return { geo: merge(g), deco: true };
+  }
+  function placed(p, fit){   // geometry where the part sits in the model (mm), with slopes turned and wheels on their side
+    const { geo } = partGeo(p, fit), W = p.w * PITCH, D = p.d * PITCH;
+    if (p.kind === 'wheel'){ const R = p.r * PITCH; geo.translate(-R, 0, -R); geo.rotateX(Math.PI / 2); geo.translate(R, R, 0); }
+    if (p.kind === 'slope' && p.dir){ geo.translate(-W / 2, 0, -D / 2); geo.rotateY(p.dir * Math.PI / 2); geo.translate(W / 2, 0, D / 2); }
+    geo.translate(p.x * PITCH, p.y * PLATE, p.z * PITCH); return geo;
+  }
+  const partName = p => p.kind === 'wheel' ? `wheel-${(p.r * 2 * PITCH).toFixed(0)}mm` : p.kind === 'round' ? `round-1x1x${p.h}p` : (p.kind === 'deco' || !isStd(p)) ? `trim-${+(p.w * PITCH).toFixed(1)}x${+(p.d * PITCH).toFixed(1)}x${+(p.h * PLATE).toFixed(1)}mm`
+    : `${p.kind === 'slope' && p.d >= 2 ? 'slope' : p.h < 3 ? 'plate' : 'brick'}-${p.w}x${p.d}${p.h > 3 ? 'x' + p.h / 3 : p.h === 2 ? 'x2p' : ''}${p.studs ? '' : '-smooth'}`;
+
+  // —— scene ——
+  const group = new THREE.Group(); group.name = 'Brick model'; group.visible = false; pivot.add(group);
+  // colours are sRGB hex; the renderer outputs sRGB, so convert to linear or they come out washed out
+  const lin = c => new THREE.Color(COLS[c] || c).convertSRGBToLinear();
+  const mats = new Map(), mat = c => mats.get(c) || (mats.set(c, c === 'glass' ? new THREE.MeshPhysicalMaterial({ color: lin('glass'), roughness: 0.08, transparent: true, opacity: 0.55, clearcoat: 1, envMapIntensity: 0.6 })
+    : new THREE.MeshStandardMaterial({ color: lin(c), roughness: 0.3, metalness: ['silver', 'gold'].includes(c) ? 0.5 : 0, envMapIntensity: 0.55 })), mats.get(c));
+  let size = [0, 0, 0];
+  function generate(){
+    const o = understand(state.text || state.model);
+    if (!o.type) o.type = state.model;
+    o.color = state.text && o.said[0] ? o.said[0] : state.colour; o.accent = (state.text && o.said[1]) || state.accent || '';
+    if (!state.text) o.said = [state.colour]; if (state.size === 'small') o.small = true; if (state.size === 'big') o.big = true;
+    if (o.type === 'car' && /police/.test(state.text)) o.word = 'police';
+    o.r = rng(hashStr((state.text || state.model) + state.colour));
+    let parts = G[o.type](o);
+    if (o.rainbow){ const rb = ['red', 'orange', 'yellow', 'lime', 'azure', 'blue', 'purple']; parts = parts.map(p => (p.color === o.color || p.color === shade(o.color)) ? { ...p, color: rb[Math.floor(p.y / 3) % rb.length] } : p); }
+    parts.forEach(p => { if (p.color === 'trunk') p.color = 'brown'; if (p.color === 'leaf') p.color = 'green'; });
+    // a part with anything resting on it needs studs, or the printed model won't hold together
+    const over = (a, b) => a.x < b.x + b.w - 0.01 && b.x < a.x + a.w - 0.01 && a.z < b.z + b.d - 0.01 && b.z < a.z + a.d - 0.01;
+    parts.forEach(p => { if (!p.studs && isStd(p) && parts.some(q => q !== p && Math.abs(q.y - (p.y + p.h)) < 0.01 && over(p, q))) p.studs = true; });
+    state.parts = parts; state.label = (MODELS.find(m => m[0] === o.type) || [0, o.type])[1]; state.type = o.type;
+    return parts;
+  }
+  function show(){
+    group.children.slice().forEach(m => { m.geometry.dispose(); group.remove(m); });
+    const parts = generate(), bb = new THREE.Box3();
+    let minX = 1e9, minZ = 1e9, maxX = -1e9, maxZ = -1e9, maxY = 0;
+    for (const p of parts){ minX = Math.min(minX, p.x); minZ = Math.min(minZ, p.z); maxX = Math.max(maxX, p.x + p.w); maxZ = Math.max(maxZ, p.z + p.d); maxY = Math.max(maxY, p.y + p.h); }
+    const cx = (minX + maxX) / 2 * PITCH, cz = (minZ + maxZ) / 2 * PITCH;
+    parts.forEach(p => {
+      const m = new THREE.Mesh(placed(p, state.fit), mat(p.color)); m.userData.part = p;
+      m.position.set(-cx, 0, -cz);
+      if (state.explode){ m.position.x += (p.x * PITCH + p.w * PITCH / 2 - cx) * 0.35; m.position.z += (p.z * PITCH + p.d * PITCH / 2 - cz) * 0.35; m.position.y += p.y * PLATE * 0.45; }
+      group.add(m);
+    });
+    size = [(maxX - minX) * PITCH, maxY * PLATE + STUD_H, (maxZ - minZ) * PITCH];
+    pivot.position.y = -size[1] / 2 * (state.explode ? 1.4 : 1);
+    const s = Math.max(size[0], size[2]) * 1.4; shadow.scale.set(s, s, 1); shadow.position.set(0, 0.05, 0);
+    const counts = new Map(); parts.forEach(p => { const k = partName(p) + '|' + p.color; counts.set(k, (counts.get(k) || 0) + 1); });
+    $('bkParts').innerHTML = [...counts].sort((a, b) => b[1] - a[1]).map(([k, n]) => { const [nm, c] = k.split('|'); return `<li><i style="background:${COLS[c] || c}"></i>${n} × ${nm} · ${c}</li>`; }).join('');
+    const colours = new Set(parts.map(p => p.color));
+    $('readout').innerHTML = `<span class="tag"><i>Model</i>${state.label}</span><span class="tag"><i>Parts</i>${parts.length}</span><span class="tag"><i>Size</i>${size[0].toFixed(0)} × ${size[2].toFixed(0)} × ${size[1].toFixed(0)} mm</span><span class="tag"><i>Colours</i>${colours.size}</span>`;
+    document.querySelectorAll('#bkModels button').forEach(b => b.setAttribute('aria-pressed', String(!state.text && b.dataset.m === state.model)));
+  }
+
+  // —— exports ——
+  const toHex = c => (COLS[c] || c).toUpperCase();
+  function bySlot(parts){ const m = new Map(); parts.forEach(p => { if (!m.has(p.color)) m.set(p.color, []); m.get(p.color).push(p); }); return m; }
+  function plates(){
+    const bed = state.bed, margin = 4, gapMM = 4, files = {}, lines = [`Print plates for ${state.label} (${state.parts.length} parts), bed ${bed} × ${bed} mm`, '', 'Print each file in the filament colour in its name. Studs face up, no supports needed.', 'Decorative "trim" pieces have no studs: glue them on. Wheels: push a 3 mm rod through the hole as an axle.', ''];
+    let plateNo = 0, tooBig = 0;
+    for (const [colour, list] of bySlot(state.parts)){
+      const items = list.map(p => { const { geo, flat } = partGeo(p, state.fit); geo.computeBoundingBox(); const b = geo.boundingBox; return { p, geo, w: b.max.x - b.min.x, d: b.max.z - b.min.z, ox: b.min.x, oz: b.min.z }; }).sort((a, b) => b.d - a.d || b.w - a.w);
+      let sheet = [], x = margin, z = margin, rowD = 0, n = 0;
+      const flush = () => { if (!sheet.length) return; plateNo++; n++; const fn = `plate-${String(plateNo).padStart(2, '0')}-${colour.replace(/ /g, '-')}-${toHex(colour).slice(1)}.stl`; files[fn] = stlBinary(sheet, colour); lines.push(`  ${fn}  →  ${colour} ${toHex(colour)}, ${sheet.length} parts`); sheet.forEach(g => g.dispose()); sheet = []; x = margin; z = margin; rowD = 0; };
+      for (const it of items){
+        if (it.w > bed - 2 * margin || it.d > bed - 2 * margin){ tooBig++; }
+        if (x + it.w > bed - margin && x > margin){ x = margin; z += rowD + gapMM; rowD = 0; }
+        if (z + it.d > bed - margin && z > margin) flush();
+        it.geo.translate(x - it.ox - bed / 2, 0, z - it.oz - bed / 2); sheet.push(it.geo);
+        x += it.w + gapMM; rowD = Math.max(rowD, it.d);
+      }
+      flush();
+    }
+    if (tooBig) lines.push('', `Note: ${tooBig} part(s) are larger than your bed. Choose a bigger bed, or scale those plates down in your slicer.`);
+    lines.push('', `Stud diameter ${state.fit.toFixed(2)} mm. Print one 2x2 test brick first and adjust "Stud fit" if parts are loose or too tight.`);
+    files['READ-ME-plates.txt'] = new TextEncoder().encode(lines.join('\r\n'));
+    return { zip: fflate.zipSync(files, { level: 6 }), plates: plateNo, tooBig };
+  }
+  function partsKit(){
+    const files = {}, groups = new Map(); state.parts.forEach(p => { const k = partName(p) + '|' + p.color; if (!groups.has(k)) groups.set(k, { p, n: 0 }); groups.get(k).n++; });
+    const csv = ['part,colour,hex,quantity,file']; let i = 0;
+    for (const [k, { p, n }] of groups){ i++; const [nm, c] = k.split('|'); const fn = `${String(i).padStart(2, '0')}-${nm}-${c.replace(/ /g, '-')}-x${n}.stl`; const { geo } = partGeo(p, state.fit); files[fn] = stlBinary([geo], nm); geo.dispose(); csv.push(`${nm},${c},${toHex(c)},${n},${fn}`); }
+    files['parts-list.csv'] = new TextEncoder().encode(csv.join('\r\n'));
+    return { zip: fflate.zipSync(files, { level: 6 }), kinds: groups.size };
+  }
+  function model3mf(){
+    const f = v => +v.toFixed(3), out = [], slots = [...bySlot(state.parts)];
+    out.push('<?xml version="1.0" encoding="UTF-8"?>\n<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">\n<metadata name="Title">' + state.label + '</metadata>\n<metadata name="Application">Logo Mug Studio</metadata>\n<resources>\n<basematerials id="1">\n');
+    slots.forEach(([c]) => out.push('<base name="' + c + '" displaycolor="' + toHex(c) + 'FF"/>\n')); out.push('</basematerials>\n');
+    slots.forEach(([c, list], n) => {
+      const w = weld(merge(list.map(p => placed(p, state.fit))));
+      out.push('<object id="' + (n + 2) + '" name="' + c + ' parts" type="model" pid="1" pindex="' + n + '"><mesh><vertices>\n');
+      for (let i = 0; i < w.verts.length; i += 3) out.push('<vertex x="' + f(w.verts[i]) + '" y="' + f(w.verts[i + 1]) + '" z="' + f(w.verts[i + 2]) + '"/>\n');
+      out.push('</vertices><triangles>\n'); for (let i = 0; i < w.tris.length; i += 3) out.push('<triangle v1="' + w.tris[i] + '" v2="' + w.tris[i + 1] + '" v3="' + w.tris[i + 2] + '"/>\n'); out.push('</triangles></mesh></object>\n');
+    });
+    const asm = slots.length + 2; out.push('<object id="' + asm + '" name="' + state.label + '" type="model"><components>'); slots.forEach((s, n) => out.push('<component objectid="' + (n + 2) + '"/>'));
+    out.push('</components></object>\n</resources>\n<build><item objectid="' + asm + '" transform="1 0 0 0 1 0 0 0 1 100 100 0"/></build>\n</model>\n');
+    const enc = new TextEncoder();
+    return fflate.zipSync({ '[Content_Types].xml': enc.encode('<?xml version="1.0" encoding="UTF-8"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/></Types>'),
+      '_rels/.rels': enc.encode('<?xml version="1.0" encoding="UTF-8"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>'),
+      '3D/3dmodel.model': enc.encode(out.join('')) }, { level: 6 });
+  }
+  function steps(){
+    const layers = [...new Set(state.parts.map(p => p.y))].sort((a, b) => a - b), groups = [];
+    for (const y of layers){ const list = group.children.filter(m => m.userData.part.y === y); if (groups.length && groups[groups.length - 1].length + list.length <= 12 && layers.length > 18) groups[groups.length - 1].push(...list); else groups.push(list); }
+    const r = stage.getBoundingClientRect(), pr = renderer.getPixelRatio(), W = 560, H = 420, spin = controls.autoRotate, vis = shadow.visible;
+    controls.autoRotate = false; renderer.setPixelRatio(1); renderer.setSize(W, H, false); camera.aspect = W / H; camera.updateProjectionMatrix();
+    const shots = [], done = new Set(), hl = [];
+    groups.forEach(list => {
+      list.forEach(m => done.add(m));
+      group.children.forEach(m => { m.visible = done.has(m); });
+      hl.splice(0).forEach(h => { group.remove(h); h.geometry.dispose(); });
+      list.forEach(m => { const e = new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry, 30), new THREE.LineBasicMaterial({ color: 0xff3d00 })); e.position.copy(m.position); group.add(e); hl.push(e); });
+      renderer.render(scene, camera); shots.push({ img: canvas.toDataURL('image/jpeg', 0.85), list: list.map(m => m.userData.part) });
+    });
+    hl.forEach(h => { group.remove(h); h.geometry.dispose(); }); group.children.forEach(m => { m.visible = true; });
+    renderer.setPixelRatio(pr); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); controls.autoRotate = spin; shadow.visible = vis;
+    const esc = s => String(s).replace(/[<>&]/g, '');
+    const count = list => { const m = new Map(); list.forEach(p => { const k = partName(p) + '|' + p.color; m.set(k, (m.get(k) || 0) + 1); }); return [...m].map(([k, n]) => { const [nm, c] = k.split('|'); return `<li><i style="background:${COLS[c] || c}"></i>${n} × ${nm} <span>${c}</span></li>`; }).join(''); };
+    const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(state.label)} · building steps</title>
+<style>body{font:14px/1.45 system-ui,sans-serif;margin:24px;color:#151922}h1{font-size:22px;margin:0 0 4px}p.sub{color:#5b6372;margin:0 0 18px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.step{border:1px solid #d8dce3;border-radius:10px;padding:10px;break-inside:avoid}.step h2{font-size:15px;margin:0 0 6px}.step img{width:100%;border-radius:6px;background:#eef0f3}
+ul{list-style:none;padding:0;margin:8px 0 0;font:12px ui-monospace,monospace}li{display:flex;gap:6px;align-items:center}li i{width:11px;height:11px;border-radius:3px;border:1px solid #ccc}li span{color:#5b6372}
+@media print{body{margin:10mm}.step{page-break-inside:avoid}}</style></head><body>
+<h1>${esc(state.label)}: building steps</h1><p class="sub">${state.parts.length} parts · ${shots.length} steps · new parts are outlined in orange · ${size[0].toFixed(0)} × ${size[2].toFixed(0)} × ${size[1].toFixed(0)} mm</p>
+<h2 style="font-size:15px">All parts</h2><ul>${count(state.parts)}</ul><div class="grid" style="margin-top:18px">
+${shots.map((s, i) => `<div class="step"><h2>Step ${i + 1}</h2><img src="${s.img}" alt="Step ${i + 1}"><ul>${count(s.list)}</ul></div>`).join('\n')}
+</div></body></html>`;
+    return { bytes: new TextEncoder().encode(html), n: shots.length };
+  }
+  function busyB(on){ ['dlBkPlates', 'dlBkKit', 'dlBk3mf', 'dlBkSteps', 'dlPng'].forEach(id => { $(id).disabled = on; }); }
+  const base = () => slug() + '-' + (state.text ? state.text : state.label).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
+  async function run(label, fn){ busyB(true); status(label); await new Promise(r => setTimeout(r, 30)); try { await fn(); } catch (e){ status('Export failed: ' + (e && e.message ? e.message : e)); } busyB(false); }
+
+  // —— panel ——
+  function ui(){
+    $('bkModels').innerHTML = MODELS.map(([k, n]) => `<button type="button" data-m="${k}" aria-pressed="false">${n}</button>`).join('');
+    const NATURAL = { castle: 'grey', crane: 'yellow', rocket: 'white', pyramid: 'tan', dog: 'tan', bridge: 'grey', tree: 'green' };
+    $('bkModels').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.model = b.dataset.m; state.text = ''; $('bkText').value = ''; if (NATURAL[state.model]){ state.colour = NATURAL[state.model]; markColour(); } show(); });
+    $('bkAsk').addEventListener('submit', e => { e.preventDefault(); const t = $('bkText').value.trim(); const o = understand(t);
+      if (t && !o.type){ status('Not sure what to build. Try one of: ' + MODELS.map(m => m[1].toLowerCase()).join(', ') + '.'); return; }
+      state.text = t; if (o.said[0]) { state.colour = o.said[0]; markColour(); } show(); status(''); });
+    const sw = $('bkColours'); PICK.forEach(c => { const b = document.createElement('button'); b.type = 'button'; b.className = 'sw'; b.style.background = COLS[c]; b.title = c; b.dataset.c = c; b.setAttribute('aria-label', c); b.addEventListener('click', () => { state.colour = c; markColour(); show(); }); sw.appendChild(b); });
+    $('bkAccent').innerHTML = '<option value="">Automatic</option>' + PICK.map(c => `<option value="${c}">${c}</option>`).join('');
+    $('bkAccent').addEventListener('change', e => { state.accent = e.target.value; show(); });
+    $('bkSize').addEventListener('change', e => { state.size = e.target.value; show(); });
+    $('bkFit').addEventListener('input', e => { state.fit = +e.target.value; $('bkFitOut').textContent = state.fit.toFixed(2) + ' mm'; show(); }); $('bkFitOut').textContent = state.fit.toFixed(2) + ' mm';
+    $('bkBed').addEventListener('change', e => { state.bed = +e.target.value; });
+    $('bkExplode').addEventListener('change', e => { state.explode = e.target.checked; show(); });
+    $('dlBkPlates').addEventListener('click', () => run('Laying out print plates…', async () => { const { zip, plates: n, tooBig } = plates(); await deliver(base() + '-print-plates.zip', zip, 'application/zip'); status(statusEl.textContent + ` ${n} plate file(s), one per colour batch.` + (tooBig ? ` ${tooBig} part(s) are bigger than the bed: see READ-ME.` : '')); }));
+    $('dlBkKit').addEventListener('click', () => run('Building parts kit…', async () => { const { zip, kinds } = partsKit(); await deliver(base() + '-parts-kit.zip', zip, 'application/zip'); status(statusEl.textContent + ` ${kinds} part types and parts-list.csv inside.`); }));
+    $('dlBk3mf').addEventListener('click', () => run('Building 3MF…', async () => { await deliver(base() + '.3mf', model3mf(), 'model/3mf'); }));
+    $('dlBkSteps').addEventListener('click', () => run('Drawing building steps…', async () => { const { bytes, n } = steps(); await deliver(base() + '-building-steps.html', bytes, 'text/html'); status(statusEl.textContent + ` ${n} steps. Open it in a browser and print or save as PDF.`); }));
+    markColour();
+  }
+  function markColour(){ document.querySelectorAll('#bkColours .sw').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === state.colour))); }
+  ui();
+  return { show, group, state, understand, partGeo, plates, partsKit, model3mf, steps };
+})();
 
 // ---------- start ----------
 function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
