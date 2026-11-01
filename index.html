@@ -5,125 +5,181 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Poppins:wght@700&family=Open+Sans:wght@700&family=Carlito:wght@700&family=Montserrat:wght@800&family=Playfair+Display:wght@700&family=Pacifico&family=Bebas+Neue&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: full-height turntable stage on the left, a print-spec control sheet on the right; stacks on phones. */
+/* Layout: a clean 3D stage on the left, a tabbed control panel (Logo · Product · Export) on the right; stacks on phones. */
 :root{
-  --bg:#eceef2; --stage:#e3e6ec; --panel:#fbfbfc; --ink:#151922; --muted:#5b6372;
-  --line:#d8dce3; --accent:#2a43c4; --accent-ink:#ffffff; --soft:#e8ebf7;
+  --bg:#f3f2ee; --stage:#e7e5df; --stage2:#f7f6f3; --panel:#ffffff; --ink:#1a1a18; --muted:#6b6a64;
+  --line:#e6e4dd; --accent:#0f6b5e; --accent-ink:#ffffff; --soft:#edf3f1; --primary:#1a1a18; --primary-ink:#ffffff;
+  --raise:0 1px 2px rgba(26,26,24,.08),0 2px 8px rgba(26,26,24,.06);
   --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
   --body:"Instrument Sans", "Segoe UI", system-ui, sans-serif;
   --mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#101319; --stage:#141821; --panel:#181c25; --ink:#e8ebf1; --muted:#9aa2b0;
-  --line:#2a303c; --accent:#8496ff; --accent-ink:#0c0f1d; --soft:#20263a; color-scheme:dark }}
+  --bg:#141413; --stage:#191918; --stage2:#222220; --panel:#1b1b19; --ink:#eeede8; --muted:#a09e96;
+  --line:#2f2f2b; --accent:#4fd1b8; --accent-ink:#06231d; --soft:#1d2a27; --primary:#eeede8; --primary-ink:#141413;
+  --raise:0 1px 2px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.3); color-scheme:dark }}
 :root[data-theme="dark"]{
-  --bg:#101319; --stage:#141821; --panel:#181c25; --ink:#e8ebf1; --muted:#9aa2b0;
-  --line:#2a303c; --accent:#8496ff; --accent-ink:#0c0f1d; --soft:#20263a; color-scheme:dark }
+  --bg:#141413; --stage:#191918; --stage2:#222220; --panel:#1b1b19; --ink:#eeede8; --muted:#a09e96;
+  --line:#2f2f2b; --accent:#4fd1b8; --accent-ink:#06231d; --soft:#1d2a27; --primary:#eeede8; --primary-ink:#141413;
+  --raise:0 1px 2px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.3); color-scheme:dark }
 [hidden]{display:none!important}
-html,body{height:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45}
 *{box-sizing:border-box}
-.app{display:grid;grid-template-columns:minmax(0,1fr) 370px;height:100%}
-.stage{position:relative;background:radial-gradient(120% 90% at 50% 40%, var(--panel) 0%, var(--stage) 70%);overflow:hidden;min-width:0;touch-action:none}
-#gl{display:block;width:100%;height:100%}
-.brand{position:absolute;top:18px;left:max(18px, env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:2px;pointer-events:none}
-.brand h1{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.01em;margin:0}
-.brand span{font-size:12px;color:var(--muted)}
-.readout{position:absolute;left:max(18px, env(safe-area-inset-left,0px));bottom:18px;display:flex;flex-wrap:wrap;gap:6px;font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;max-width:calc(100% - 140px)}
-.readout b{font-weight:500}
-.tag{background:color-mix(in srgb, var(--panel) 82%, transparent);border:1px solid var(--line);border-radius:6px;padding:4px 8px;backdrop-filter:blur(6px);color:var(--ink)}
-.tag i{font-style:normal;color:var(--muted);margin-right:4px}
-.stage-actions{position:absolute;right:18px;bottom:18px;display:flex;gap:6px}
-.pvbar{position:absolute;top:70px;left:max(18px, env(safe-area-inset-left,0px));right:18px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:none}
-.pvseg{display:flex;flex-wrap:wrap;gap:4px;padding:3px;border:1px solid var(--line);border-radius:9px;background:color-mix(in srgb, var(--panel) 85%, transparent);backdrop-filter:blur(6px);pointer-events:auto}
-.pvseg button{font:500 12px var(--body);color:var(--muted);background:none;border:0;border-radius:6px;padding:6px 10px;cursor:pointer}
-.pvseg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
-.pvinfo{font:12px var(--mono);color:var(--ink);background:color-mix(in srgb, var(--panel) 85%, transparent);border:1px solid var(--line);border-radius:7px;padding:5px 9px;max-width:min(420px, 100%);pointer-events:auto}
-.pvinfo .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
-.pvinfo .chips span{display:inline-flex;align-items:center;gap:4px}
-.pvinfo .chips i{width:11px;height:11px;border-radius:50%;border:1px solid var(--line);display:inline-block}
-.iconbtn{font:500 12px var(--body);color:var(--ink);background:color-mix(in srgb, var(--panel) 82%, transparent);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;backdrop-filter:blur(6px)}
-.iconbtn[aria-pressed="true"]{background:var(--soft);border-color:var(--accent);color:var(--accent)}
-.check-pill{display:flex;align-items:center;gap:6px;cursor:pointer}
-.check-pill input{accent-color:var(--accent);width:15px;height:15px;margin:0}
-.drop{position:absolute;inset:14px;border:2px dashed var(--accent);border-radius:14px;display:grid;place-items:center;font-family:var(--display);font-size:20px;color:var(--accent);background:color-mix(in srgb, var(--soft) 70%, transparent);pointer-events:none}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-.panel{background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;padding-block:20px 28px;padding-left:max(20px, env(safe-area-inset-left,0px));padding-right:max(20px, env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px;min-width:0}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 400px;height:100%}
+
+/* ---- stage ---- */
+.stage{position:relative;background:radial-gradient(110% 85% at 50% 38%, var(--stage2) 0%, var(--stage) 72%);overflow:hidden;min-width:0;touch-action:none}
+#gl{display:block;width:100%;height:100%}
+.brand{position:absolute;top:16px;left:max(18px, env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:1px;pointer-events:none}
+.brand h1{font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:-.01em;margin:0}
+.brand span{font-size:12px;color:var(--muted)}
+.stage-upload{position:absolute;top:14px;right:max(16px, env(safe-area-inset-right,0px));font-weight:600;font-size:13px;background:var(--panel);color:var(--ink);border:1px solid var(--line);box-shadow:var(--raise);border-radius:999px;padding:8px 14px;overflow:hidden;cursor:pointer}
+.stage-upload:hover{border-color:var(--ink)}.stage-upload:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.pvbar{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:max-content;max-width:calc(100% - 330px)}
+.pvseg{display:flex;gap:2px;padding:3px;border-radius:999px;background:color-mix(in srgb, var(--panel) 88%, transparent);border:1px solid var(--line);box-shadow:var(--raise);backdrop-filter:blur(8px);pointer-events:auto}
+.pvseg button{font-weight:600;font-size:12.5px;color:var(--muted);background:none;border:0;border-radius:999px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.pvseg button:hover{color:var(--ink)}
+.pvseg button[aria-pressed="true"]{background:var(--primary);color:var(--primary-ink)}
+.pvinfo{font-size:12.5px;line-height:1.4;color:var(--ink);background:color-mix(in srgb, var(--panel) 92%, transparent);border:1px solid var(--line);border-radius:12px;padding:8px 12px;max-width:min(420px,100%);pointer-events:auto;box-shadow:var(--raise)}
+.pvinfo .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.pvinfo .chips span{display:inline-flex;align-items:center;gap:5px}
+.pvinfo .chips i{width:11px;height:11px;border-radius:50%;border:1px solid var(--line);display:inline-block}
+.readout{position:absolute;left:max(16px, env(safe-area-inset-left,0px));bottom:16px;display:flex;flex-wrap:wrap;gap:6px;font-size:12.5px;font-variant-numeric:tabular-nums;max-width:calc(100% - 210px)}
+.readout b{font-weight:600}
+.tag{background:color-mix(in srgb, var(--panel) 86%, transparent);border:1px solid var(--line);border-radius:8px;padding:4px 9px;backdrop-filter:blur(8px)}
+.tag i{font-style:normal;color:var(--muted);margin-right:5px}
+.stage-actions{position:absolute;right:max(16px, env(safe-area-inset-right,0px));bottom:16px;display:flex;gap:6px}
+.iconbtn{font-weight:600;font-size:12.5px;color:var(--ink);background:color-mix(in srgb, var(--panel) 88%, transparent);border:1px solid var(--line);border-radius:999px;padding:7px 12px;cursor:pointer;backdrop-filter:blur(8px)}
+.iconbtn:hover{border-color:var(--ink)}
+.check-pill{display:flex;align-items:center;gap:7px}
+.check-pill input{accent-color:var(--primary);width:14px;height:14px;margin:0}
+.drop{position:absolute;inset:14px;border:2px dashed var(--accent);border-radius:18px;display:grid;place-items:center;font-family:var(--display);font-size:20px;color:var(--accent);background:color-mix(in srgb, var(--soft) 78%, transparent);pointer-events:none}
+
+/* ---- panel: tabs + panes ---- */
+.panel{background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;display:flex;flex-direction:column;min-width:0}
+.ptabs{display:grid;grid-template-columns:repeat(3,1fr);position:sticky;top:0;z-index:4;background:var(--panel);border-bottom:1px solid var(--line)}
+.ptabs button{background:none;border:0;border-bottom:2px solid transparent;padding:15px 8px 13px;font-weight:600;font-size:14px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.ptabs button em{font-style:normal;font-size:11.5px;font-weight:700;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--bg);color:var(--muted)}
+.ptabs button:hover{color:var(--ink)}
+.ptabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.ptabs button[aria-selected="true"] em{background:var(--primary);color:var(--primary-ink)}
+.pane{padding:22px max(20px, env(safe-area-inset-right,0px)) 32px max(20px, env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:20px}
+.pane>h2{font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:-.02em;margin:0 0 -8px}
+.pane>.lead{margin:0;color:var(--muted);font-size:14px}
+.grp{display:flex;flex-direction:column;gap:12px}
+.grp>h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.pnext{display:flex;justify-content:flex-end;padding-top:6px}
 .sec{display:flex;flex-direction:column;gap:12px}
-.sec>h2{font-family:var(--display);font-size:15px;font-weight:700;margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.sec>h2 small{font:500 11px var(--mono);color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
-.rule{height:1px;background:var(--line)}
-.mc{display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px}
-.filaments{display:flex;flex-wrap:wrap;gap:6px}
-.fil{display:flex;align-items:center;gap:6px;font:500 12px var(--mono);border:1px solid var(--line);border-radius:999px;padding:3px 9px 3px 3px;background:var(--bg)}
-.fil i{width:18px;height:18px;border-radius:50%;border:1px solid var(--line);display:inline-block}
-.textblock{display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:10px;padding:12px}
-.lbl{font-weight:500;display:block;margin-bottom:5px}
-select.text{appearance:auto;padding:8px}
-.mob{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg)}
-.mob summary{cursor:pointer;font-weight:600;color:var(--accent)}
-.mob-body{display:flex;flex-direction:column;gap:14px;margin-top:12px}
-.mob-step{display:flex;flex-direction:column;gap:6px;font-size:13px}
-.mob-step span{color:var(--muted)}
-.mob-step input.native{position:static;opacity:1;width:100%;height:auto;font-size:14px;color:var(--ink)}
-.pastebox{min-height:64px;border:2px dashed var(--line);border-radius:8px;padding:12px;color:var(--muted);text-align:center;display:grid;place-items:center;font-size:13px;-webkit-user-select:text;user-select:text;overflow:hidden}
-.pastebox:focus{border-color:var(--accent);outline:none}
-.step{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font:600 12px var(--mono);margin-right:8px;vertical-align:2px}
-.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px}
-.presets button{font:500 12px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
-.presets button small{font:400 10.5px var(--mono);color:var(--muted)}
-.presets button[aria-pressed="true"]{border-color:var(--accent);background:var(--soft);color:var(--accent)}
-.depthbox{display:flex;flex-direction:column;gap:6px}
-.depthbox span{font-size:12px;color:var(--muted)}
-#depthPrev{width:100%;max-height:110px;object-fit:contain;border-radius:6px;border:1px solid var(--line);background:#000;image-rendering:auto}
-.seg.seg3{grid-template-columns:1fr 1fr 1fr}
-.seg.small button{padding:6px 4px;font-size:12.5px}
-.upload{position:relative;display:flex;gap:12px;align-items:center;border:1px dashed var(--line);border-radius:10px;padding:10px;cursor:pointer}
-.upload:hover,.upload:focus-within{border-color:var(--accent)}
-.thumb{width:64px;height:48px;border-radius:6px;background:repeating-conic-gradient(var(--line) 0 25%, transparent 0 50%) 0 0/10px 10px;display:grid;place-items:center;flex:none;overflow:hidden}
-.thumb canvas{max-width:100%;max-height:100%}
-.upload div{min-width:0}
-.upload strong{display:block;font-weight:600}
-.upload .fn{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.upload input,.stage-upload input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0}
-.stage-upload{position:absolute;top:18px;right:max(18px, env(safe-area-inset-right,0px));font:600 13px var(--body);background:var(--accent);color:var(--accent-ink);border-radius:8px;padding:9px 14px;overflow:hidden;cursor:pointer}
-.stage-upload:focus-within{outline:2px solid var(--ink);outline-offset:2px}
-.alt{display:flex;flex-wrap:wrap;gap:8px}
-.alt button{font:500 12.5px var(--body);color:var(--accent);background:none;border:1px solid var(--line);border-radius:7px;padding:6px 10px;cursor:pointer}
-.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));border:1px solid var(--line);border-radius:8px;padding:3px;gap:3px}
-.seg button{font:500 13px var(--body);color:var(--muted);background:none;border:0;border-radius:6px;padding:7px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px}
-.seg button small{font-size:11px;font-weight:400}
-.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
-.field{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center}
-.field label{font-weight:500}
-.field output{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.field input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--accent)}
-.check{display:flex;align-items:center;gap:8px;font-weight:500;cursor:pointer}
-.check input{accent-color:var(--accent);width:16px;height:16px}
-.swatches{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.sw{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);cursor:pointer;padding:0;position:relative}
-.sw[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:2px}
-.sw-custom{width:28px;height:28px;border:1px solid var(--line);border-radius:50%;padding:0;background:none;cursor:pointer;overflow:hidden}
+
+/* ---- controls ---- */
+.lbl{font-weight:600;font-size:13px;display:block;margin-bottom:6px}
+.text{width:100%;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.text:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+select.text{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.field label{font-weight:600;font-size:13px}
+.field output{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.field input[type=range]{grid-column:1/-1}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:24px;background:transparent;cursor:pointer;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:var(--line)}
+input[type=range]::-moz-range-track{height:4px;border-radius:4px;background:var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--primary);border:3px solid var(--panel);box-shadow:0 0 0 1px var(--line),var(--raise);margin-top:-7px}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--primary);border:3px solid var(--panel);box-shadow:0 0 0 1px var(--line)}
+input[type=range]:focus-visible{outline:none}input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--accent);outline-offset:2px}
+.check{display:flex;align-items:center;gap:12px;font-weight:500;font-size:14px;cursor:pointer;line-height:1.35}
+.check input{-webkit-appearance:none;appearance:none;width:38px;height:22px;border-radius:99px;background:var(--line);position:relative;flex:none;cursor:pointer;margin:0;transition:background .18s}
+.check input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .18s}
+.check input:checked{background:var(--primary)}
+.check input:checked::after{transform:translateX(16px);background:var(--primary-ink)}
+.check-pill input{-webkit-appearance:auto;appearance:auto;width:14px;height:14px;background:none;border-radius:0}.check-pill input::after{content:none}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:3px;background:var(--bg);border-radius:12px}
+.seg.seg3{grid-template-columns:repeat(3,1fr);grid-auto-flow:row}
+.seg button{background:none;border:0;border-radius:9px;padding:9px 6px;font-weight:600;font-size:13.5px;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.25}
+.seg button small{font-size:11.5px;font-weight:400;opacity:.85}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:var(--raise)}
+.seg.small button{padding:7px 4px;font-size:13px}
+.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px}
+.presets button{font-weight:600;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px}
+.presets button small{font-size:11.5px;font-weight:400;color:var(--muted)}
+.presets button:hover{border-color:var(--muted)}
+.presets button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.swatches{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.sw{width:30px;height:30px;border-radius:50%;border:1px solid color-mix(in srgb, var(--ink) 18%, transparent);cursor:pointer;padding:0;position:relative}
+.sw[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:3px}
+.sw-custom{width:30px;height:30px;border:1px solid var(--line);border-radius:50%;padding:0;background:none;cursor:pointer;overflow:hidden}
 .sw-custom::-webkit-color-swatch-wrapper{padding:0}.sw-custom::-webkit-color-swatch{border:0;border-radius:50%}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.text{width:100%;font:15px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px}
-.text:focus{outline:2px solid var(--accent);outline-offset:1px}
-.btn{font:600 14px var(--body);border-radius:9px;padding:11px 12px;cursor:pointer;border:1px solid var(--accent);display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}
-.btn small{font:400 11.5px var(--body);opacity:.85}
-.btn.primary{background:var(--accent);color:var(--accent-ink)}
-.btn.ghost{background:none;color:var(--accent)}
-.btn:disabled{opacity:.5;cursor:progress}
-.note{font-size:12px;color:var(--muted);margin:0}
-.status{font-size:12.5px;min-height:1.4em;color:var(--accent);margin:0}
-button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.sub{display:flex;flex-direction:column;gap:12px;border-left:2px solid var(--soft);padding-left:12px}
+.sub{display:flex;flex-direction:column;gap:14px;padding:14px;background:var(--bg);border-radius:14px}
+.sub .text{background:var(--panel)}
+.sub .seg{background:color-mix(in srgb, var(--ink) 7%, transparent)}
+.card{display:flex;flex-direction:column;gap:12px;border:1px solid var(--line);border-radius:14px;padding:14px}
+.textblock{display:flex;flex-direction:column;gap:14px;padding:14px;border-radius:14px;background:var(--bg)}
+.textblock .text{background:var(--panel)}
+.mc{display:flex;flex-direction:column;gap:12px}
+.filaments{display:flex;flex-wrap:wrap;gap:6px}
+.fil{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:3px 10px 3px 3px;background:var(--panel)}
+.fil i{width:18px;height:18px;border-radius:50%;border:1px solid var(--line);display:inline-block}
+details.adv{border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+details.adv>summary{cursor:pointer;font-weight:600;font-size:13.5px;padding:11px 14px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.adv>summary::-webkit-details-marker{display:none}
+details.adv>summary::after{content:"";width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-2px);transition:transform .15s}
+details.adv[open]>summary::after{transform:rotate(-135deg)}
+details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14px 16px}
+.mob{border-radius:12px}
+.mob summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--muted)}
+.mob summary:hover{color:var(--ink)}
+.mob-body{display:flex;flex-direction:column;gap:14px;margin-top:12px}
+.mob-step{display:flex;flex-direction:column;gap:6px;font-size:13px}.mob-step span{color:var(--muted)}
+.mob-step input.native{position:static;opacity:1;width:100%;height:auto;font-size:14px;color:var(--ink)}
+.pastebox{min-height:64px;border:2px dashed var(--line);border-radius:10px;padding:12px;color:var(--muted);text-align:center;display:grid;place-items:center;font-size:13px;-webkit-user-select:text;user-select:text;overflow:hidden}
+.pastebox:focus{border-color:var(--accent);outline:none}
+.upload{position:relative;display:flex;gap:14px;align-items:center;border:1.5px dashed color-mix(in srgb, var(--ink) 22%, transparent);border-radius:14px;padding:14px;cursor:pointer;background:var(--bg);transition:border-color .15s}
+.upload:hover,.upload:focus-within{border-color:var(--ink)}
+.thumb{width:72px;height:56px;border-radius:8px;background:repeating-conic-gradient(color-mix(in srgb, var(--ink) 9%, transparent) 0 25%, transparent 0 50%) 0 0/10px 10px,var(--panel);border:1px solid var(--line);display:grid;place-items:center;flex:none;overflow:hidden}
+.thumb canvas{max-width:100%;max-height:100%}
+.upload div{min-width:0}.upload strong{display:block;font-weight:700}
+.upload .fn{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.upload input,.stage-upload input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0}
+.alt{display:flex;flex-wrap:wrap;gap:8px}
+.alt button{font-weight:600;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
+.alt button:hover{border-color:var(--ink)}
+.depthbox{display:flex;flex-direction:column;gap:6px}.depthbox span{font-size:12.5px;color:var(--muted)}
+#depthPrev{width:100%;max-height:110px;object-fit:contain;border-radius:8px;border:1px solid var(--line);background:#000}
+.btn{font-weight:700;font-size:14.5px;border-radius:12px;padding:13px 16px;cursor:pointer;border:1px solid var(--line);display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;width:100%;transition:transform .12s,border-color .12s}
+.btn small{font-weight:400;font-size:12.5px;line-height:1.4;opacity:.8}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.btn.ghost{background:var(--panel);color:var(--ink)}
+.btn.ghost:hover{border-color:var(--ink)}
+.btn:disabled{opacity:.5;cursor:progress;transform:none}
+.btn.next{width:auto;flex-direction:row;align-items:center;gap:8px;padding:11px 18px}
+.note{font-size:12.5px;color:var(--muted);margin:0;line-height:1.5}
+.status{font-size:13px;min-height:1.4em;color:var(--accent);font-weight:600;margin:0}
+
 @media (max-width:820px){
-  .app{grid-template-columns:1fr;grid-template-rows:56vh auto;height:auto}
+  .app{grid-template-columns:1fr;grid-template-rows:54vh auto;height:auto}
   html,body{height:auto}
   .panel{border-left:0;border-top:1px solid var(--line);overflow:visible}
-  .stage-actions{right:max(18px, env(safe-area-inset-right,0px))}
-  .readout{max-width:calc(100% - 36px);bottom:58px}
+  .pvbar{left:max(14px, env(safe-area-inset-left,0px));transform:none;align-items:flex-start;top:50px;max-width:calc(100% - 28px)}
+  .brand span{display:none}
+  .app{grid-template-rows:56vh auto}
+  .readout{max-width:calc(100% - 190px);bottom:14px;font-size:11.5px;gap:4px}
+  .tag{padding:3px 7px;border-radius:7px}
+  .stage-actions{bottom:14px}
+  .iconbtn{padding:6px 10px;font-size:12px}
+  .pvseg button{padding:5px 10px;font-size:12px}
+  .pvinfo{font-size:11.5px;padding:5px 10px;max-width:calc(100vw - 28px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pvinfo:has(.chips){white-space:normal}
+  .stage-upload{padding:6px 12px;font-size:12px}
+  .pane{padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))}
 }
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 
 <div class="app">
@@ -149,126 +205,157 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
   </section>
 
   <aside class="panel">
-    <div class="sec">
-      <h2><span><span class="step">1</span>Logo</span><small>PNG · SVG · JPG</small></h2>
-      <label class="upload" for="file">
-        <span class="thumb" id="thumb"></span>
-        <div><strong>Upload company logo</strong><span class="fn" id="fname">Sample: Lifecure</span></div>
-        <input type="file" id="file" class="logo-input" accept="image/*,.svg,.png,.jpg,.jpeg,.webp" aria-label="Upload company logo">
-      </label>
-      <div class="alt"><button type="button" id="textLogo">Text only (no image)</button><button type="button" id="sampleLogo">Sample logo</button></div>
-      <details class="mob" id="mobHelp">
-        <summary>Upload not opening on your phone?</summary>
-        <div class="mob-body">
-          <div class="mob-step"><b>Option A · Choose file</b>
-            <input type="file" id="fileNative" class="logo-input native" accept="image/*" aria-label="Choose logo image">
-          </div>
-          <div class="mob-step"><b>Option B · Paste</b>
-            <span>Copy your logo (long-press it in Gallery, Photos or a website, then Copy). Then long-press the box below and tap Paste.</span>
-            <div id="pasteBox" class="pastebox" contenteditable="true" role="textbox" aria-label="Paste logo here" inputmode="none">Long-press here, then Paste</div>
-          </div>
-          <div class="mob-step"><b>Option C · Open in your browser</b>
-            <span>Open this page in Chrome or Safari using the artifact's Share or Open in browser menu. Upload works normally there.</span>
-          </div>
-        </div>
-      </details>
-      <label class="check"><input type="checkbox" id="dropWhite"> Leave out white parts (product colour shows through)</label>
-      <label class="check" id="bgRow" hidden><input type="checkbox" id="removeBg" checked> Remove background</label>
-      <div class="field"><label for="stickerW">White sticker border</label><output id="stickerWOut"></output><input type="range" id="stickerW" min="0" max="8" step="0.5" value="0"></div>
+    <div class="ptabs" role="tablist" aria-label="Steps">
+      <button role="tab" id="tab-logo" data-pane="logo" aria-selected="true" aria-controls="pane-logo"><em>1</em>Logo</button>
+      <button role="tab" id="tab-product" data-pane="product" aria-selected="false" aria-controls="pane-product" tabindex="-1"><em>2</em>Product</button>
+      <button role="tab" id="tab-export" data-pane="export" aria-selected="false" aria-controls="pane-export" tabindex="-1"><em>3</em>Export</button>
+    </div>
 
-      <div class="textblock">
-        <div><label for="logoText" class="lbl">Text with logo</label>
-        <input class="text" id="logoText" value="lifecure" maxlength="40" placeholder="Company name or tagline (leave empty for none)"></div>
-        <div class="row2">
-          <div><label for="textFont" class="lbl">Font</label>
-            <select class="text" id="textFont">
-              <option value="800|'Baloo 2'">Rounded (Baloo)</option>
-              <option value="700|Poppins">Modern (Poppins)</option>
-              <option value="700|'Open Sans'">Clean (Open Sans)</option>
-              <option value="700|Carlito">Corporate (Carlito)</option>
-              <option value="800|Montserrat">Bold (Montserrat)</option>
-              <option value="700|'Playfair Display'">Elegant (Playfair)</option>
-              <option value="400|Pacifico">Script (Pacifico)</option>
-              <option value="400|'Bebas Neue'">Tall (Bebas Neue)</option>
-            </select></div>
-          <div><label for="textPos" class="lbl">Place text</label>
-            <select class="text" id="textPos">
-              <option value="below">Below logo</option>
-              <option value="above">Above logo</option>
-              <option value="right">Right of logo</option>
-            </select></div>
-        </div>
-        <div class="row2">
-          <div class="field"><label for="textSize">Text size</label><output id="textSizeOut"></output><input type="range" id="textSize" min="8" max="45" step="1" value="27"></div>
-          <div class="swatches"><span class="lbl" style="margin:0">Text colour</span><input type="color" class="sw-custom" id="textColor" value="#12939a" aria-label="Text colour"></div>
-        </div>
-      </div>
-      <div class="seg" role="group" aria-label="Logo style">
-        <button id="modePrint" aria-pressed="false">Printed<small>Full colour decal</small></button>
-        <button id="modeRaised" aria-pressed="true">Raised<small>Embossed for 3D print</small></button>
+    <!-- 1 · LOGO -->
+    <div class="pane" id="pane-logo" role="tabpanel" aria-labelledby="tab-logo">
+      <div class="grp">
+        <label class="upload" for="file">
+          <span class="thumb" id="thumb"></span>
+          <div><strong>Upload company logo</strong><span class="fn" id="fname">Sample: Lifecure</span><span class="fn">PNG, SVG or JPG</span></div>
+          <input type="file" id="file" class="logo-input" accept="image/*,.svg,.png,.jpg,.jpeg,.webp" aria-label="Upload company logo">
+        </label>
+        <div class="alt"><button type="button" id="textLogo">Text only (no image)</button><button type="button" id="sampleLogo">Use sample logo</button></div>
+        <details class="mob" id="mobHelp">
+          <summary>Upload not opening on your phone?</summary>
+          <div class="mob-body">
+            <div class="mob-step"><b>Option A · Choose file</b>
+              <input type="file" id="fileNative" class="logo-input native" accept="image/*" aria-label="Choose logo image">
+            </div>
+            <div class="mob-step"><b>Option B · Paste</b>
+              <span>Copy your logo (long-press it in Gallery, Photos or a website, then Copy). Then long-press the box below and tap Paste.</span>
+              <div id="pasteBox" class="pastebox" contenteditable="true" role="textbox" aria-label="Paste logo here" inputmode="none">Long-press here, then Paste</div>
+            </div>
+            <div class="mob-step"><b>Option C · Open in your browser</b>
+              <span>Open this page in Chrome or Safari. Upload works normally there.</span>
+            </div>
+          </div>
+        </details>
+        <label class="check"><input type="checkbox" id="dropWhite"> <span>Leave out white parts (the product colour shows through)</span></label>
+        <label class="check" id="bgRow" hidden><input type="checkbox" id="removeBg" checked> <span>Remove background</span></label>
+        <div class="field"><label for="stickerW">White sticker border</label><output id="stickerWOut"></output><input type="range" id="stickerW" min="0" max="8" step="0.5" value="0"></div>
       </div>
 
-      <div class="field"><label for="lw">Design width</label><output id="lwOut"></output><input type="range" id="lw" min="15" max="130" step="1" value="52"></div>
-      <div class="row2">
-        <div class="field"><label for="la">Position</label><output id="laOut"></output><input type="range" id="la" min="-180" max="180" step="1" value="0"></div>
-        <div class="field"><label for="ly">Height</label><output id="lyOut"></output><input type="range" id="ly" min="0" max="100" step="1" value="44"></div>
+      <div class="grp">
+        <h3>How it's made</h3>
+        <div class="seg" role="group" aria-label="Logo style">
+          <button id="modePrint" aria-pressed="false">Printed<small>Full colour decal</small></button>
+          <button id="modeRaised" aria-pressed="true">Raised<small>Embossed for 3D print</small></button>
+        </div>
       </div>
-      <label class="check"><input type="checkbox" id="both"> Logo on both sides</label>
+
+      <div class="grp">
+        <h3>Size and position</h3>
+        <div class="field"><label for="lw">Design width</label><output id="lwOut"></output><input type="range" id="lw" min="15" max="130" step="1" value="52"></div>
+        <div class="row2">
+          <div class="field"><label for="la">Position</label><output id="laOut"></output><input type="range" id="la" min="-180" max="180" step="1" value="0"></div>
+          <div class="field"><label for="ly">Height</label><output id="lyOut"></output><input type="range" id="ly" min="0" max="100" step="1" value="44"></div>
+        </div>
+        <label class="check"><input type="checkbox" id="both"> <span>Logo on both sides</span></label>
+      </div>
+
+      <div class="grp">
+        <h3>Text with logo</h3>
+        <div class="textblock">
+          <div><label for="logoText" class="lbl">Text</label>
+          <input class="text" id="logoText" value="lifecure" maxlength="40" placeholder="Company name or tagline (leave empty for none)"></div>
+          <div class="row2">
+            <div><label for="textFont" class="lbl">Font</label>
+              <select class="text" id="textFont">
+                <option value="800|'Baloo 2'">Rounded (Baloo)</option>
+                <option value="700|Poppins">Modern (Poppins)</option>
+                <option value="700|'Open Sans'">Clean (Open Sans)</option>
+                <option value="700|Carlito">Corporate (Carlito)</option>
+                <option value="800|Montserrat">Bold (Montserrat)</option>
+                <option value="700|'Playfair Display'">Elegant (Playfair)</option>
+                <option value="400|Pacifico">Script (Pacifico)</option>
+                <option value="400|'Bebas Neue'">Tall (Bebas Neue)</option>
+              </select></div>
+            <div><label for="textPos" class="lbl">Place text</label>
+              <select class="text" id="textPos">
+                <option value="below">Below logo</option>
+                <option value="above">Above logo</option>
+                <option value="right">Right of logo</option>
+              </select></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label for="textSize">Text size</label><output id="textSizeOut"></output><input type="range" id="textSize" min="8" max="45" step="1" value="27"></div>
+            <div class="swatches"><span class="lbl" style="margin:0">Text colour</span><input type="color" class="sw-custom" id="textColor" value="#12939a" aria-label="Text colour"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="sub" id="raisedOpts">
-        <div class="seg small seg3" role="group" aria-label="Height from">
-          <button id="hsLayered" aria-pressed="true">Layered<small>Sticker + logo</small></button>
-          <button id="hsShape" aria-pressed="false">Logo shape<small>Flat raised top</small></button>
-          <button id="hsDepth" aria-pressed="false">Depth map<small>Brighter = higher</small></button>
-        </div>
         <div class="field"><label for="depth">Relief depth</label><output id="depthOut"></output><input type="range" id="depth" min="0.4" max="3" step="0.1" value="1.6"></div>
-        <div class="field" id="thrRow" hidden><label for="thr">Edge threshold</label><output id="thrOut"></output><input type="range" id="thr" min="0.1" max="0.9" step="0.05" value="0.5"></div>
         <div class="seg small" role="group" aria-label="Raised logo colour">
           <button id="rcFull" aria-pressed="true">Full colour<small>Keeps logo colours</small></button>
           <button id="rcSingle" aria-pressed="false">One colour<small>Pick a colour</small></button>
         </div>
-        <div class="swatches" id="logoColorRow" hidden aria-label="Logo colour"><span style="font-weight:500;margin-right:4px">Logo colour</span><input type="color" class="sw-custom" id="logoColor" value="#1d2c7a" aria-label="Logo colour"></div>
-        <label class="check"><input type="checkbox" id="invert"> <span id="invertLabel">Invert (raise the background)</span></label>
-        <div class="field"><label for="smooth">Edge smoothing</label><output id="smoothOut"></output><input type="range" id="smooth" min="0" max="5" step="1" value="2"></div>
-        <label class="check"><input type="checkbox" id="hiDetail"> High detail mesh (slower, best for small text)</label>
-        <div class="depthbox"><span>Height map used for the relief (white = highest)</span><canvas id="depthPrev" width="10" height="10"></canvas></div>
+        <div class="swatches" id="logoColorRow" hidden aria-label="Logo colour"><span style="font-weight:600;margin-right:4px">Logo colour</span><input type="color" class="sw-custom" id="logoColor" value="#1d2c7a" aria-label="Logo colour"></div>
+        <details class="adv">
+          <summary>More relief options</summary>
+          <div class="adv-body">
+            <div class="seg seg3 small" role="group" aria-label="Height from">
+              <button id="hsLayered" aria-pressed="true">Layered<small>Sticker + logo</small></button>
+              <button id="hsShape" aria-pressed="false">Logo shape<small>Flat raised top</small></button>
+              <button id="hsDepth" aria-pressed="false">Depth map<small>Brighter = higher</small></button>
+            </div>
+            <div class="field" id="thrRow" hidden><label for="thr">Edge threshold</label><output id="thrOut"></output><input type="range" id="thr" min="0.1" max="0.9" step="0.05" value="0.5"></div>
+            <label class="check"><input type="checkbox" id="invert"> <span id="invertLabel">Invert (raise the background)</span></label>
+            <div class="field"><label for="smooth">Edge smoothing</label><output id="smoothOut"></output><input type="range" id="smooth" min="0" max="5" step="1" value="2"></div>
+            <label class="check"><input type="checkbox" id="hiDetail"> <span>High detail mesh (slower, best for small text)</span></label>
+            <div class="depthbox"><span>Height map used for the relief (white = highest)</span><canvas id="depthPrev" width="10" height="10"></canvas></div>
+          </div>
+        </details>
       </div>
+      <div class="pnext"><button type="button" class="btn primary next" data-go="product">Next: Product →</button></div>
     </div>
 
-    <div class="rule"></div>
-
-    <div class="sec">
-      <h2><span><span class="step">2</span>Product</span><small>Millimetres</small></h2>
-      <div class="seg" role="group" aria-label="Product">
-        <button id="prodMug" aria-pressed="true">Mug<small>Cup with optional handle</small></button>
-        <button id="prodPen" aria-pressed="false">Pen holder<small>Round desk cup</small></button>
-        <button id="prodDuo" aria-pressed="false">Duo organiser<small>Cup + tray, flat front</small></button>
+    <!-- 2 · PRODUCT -->
+    <div class="pane" id="pane-product" role="tabpanel" aria-labelledby="tab-product" hidden>
+      <div class="grp">
+        <h3>What are you making?</h3>
+        <div class="seg" role="group" aria-label="Product">
+          <button id="prodMug" aria-pressed="true">Mug<small>Cup with optional handle</small></button>
+          <button id="prodPen" aria-pressed="false">Pen holder<small>Round desk cup</small></button>
+          <button id="prodDuo" aria-pressed="false">Duo organiser<small>Cup + tray, flat front</small></button>
+        </div>
+        <div class="presets" id="presets" role="group" aria-label="Shape"></div>
       </div>
-      <div class="presets" id="presets" role="group" aria-label="Shape"></div>
-      <div class="swatches" id="glazes" aria-label="Glaze colour"></div>
-      <div class="row2">
-        <div class="field"><label for="mh">Height</label><output id="mhOut"></output><input type="range" id="mh" min="70" max="130" step="1" value="100"></div>
-        <div class="field"><label for="md">Diameter</label><output id="mdOut"></output><input type="range" id="md" min="60" max="110" step="1" value="84"></div>
+      <div class="grp">
+        <h3>Colour</h3>
+        <div class="swatches" id="glazes" aria-label="Glaze colour"></div>
       </div>
-      <div class="row2">
-        <div class="field"><label for="mt">Taper</label><output id="mtOut"></output><input type="range" id="mt" min="-16" max="20" step="1" value="0"></div>
-        <div class="field"><label for="mw">Wall</label><output id="mwOut"></output><input type="range" id="mw" min="2" max="8" step="0.5" value="6"></div>
+      <div class="grp">
+        <h3>Dimensions</h3>
+        <div class="row2">
+          <div class="field"><label for="mh">Height</label><output id="mhOut"></output><input type="range" id="mh" min="70" max="130" step="1" value="100"></div>
+          <div class="field"><label for="md">Diameter</label><output id="mdOut"></output><input type="range" id="md" min="60" max="110" step="1" value="84"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="mt">Taper</label><output id="mtOut"></output><input type="range" id="mt" min="-16" max="20" step="1" value="0"></div>
+          <div class="field"><label for="mw">Wall</label><output id="mwOut"></output><input type="range" id="mw" min="2" max="8" step="0.5" value="6"></div>
+        </div>
+        <label class="check" id="handleRow"><input type="checkbox" id="handle"> <span>Handle</span></label>
       </div>
-      <label class="check" id="handleRow"><input type="checkbox" id="handle"> Handle</label>
-      <div class="sub" id="texOpts">
+      <div class="grp sub" id="texOpts">
         <div class="seg small seg3" role="group" aria-label="Surface">
           <button id="txSmooth" aria-pressed="true">Smooth<small>Plain glaze</small></button>
           <button id="txQuilt" aria-pressed="false">Quilted<small>Padded grid</small></button>
           <button id="txRib" aria-pressed="false">Ribbed<small>Vertical ribs</small></button>
         </div>
-        <div id="texFields" hidden>
+        <div id="texFields" hidden style="display:flex;flex-direction:column;gap:14px">
           <div class="row2">
             <div class="field"><label for="texDepth">Texture depth</label><output id="texDepthOut"></output><input type="range" id="texDepth" min="0.4" max="2.5" step="0.1" value="1.4"></div>
             <div class="field"><label for="texCols">Columns</label><output id="texColsOut"></output><input type="range" id="texCols" min="10" max="36" step="1" value="20"></div>
           </div>
           <div class="field" id="texRowField"><label for="texRow">Row height</label><output id="texRowOut"></output><input type="range" id="texRow" min="6" max="22" step="1" value="11"></div>
         </div>
-        <label class="check" id="cuffRow"><input type="checkbox" id="cuff"> Folded top cuff</label>
+        <label class="check" id="cuffRow"><input type="checkbox" id="cuff"> <span>Folded top cuff</span></label>
         <div class="field" id="cuffField" hidden><label for="cuffH">Cuff height</label><output id="cuffHOut"></output><input type="range" id="cuffH" min="8" max="35" step="1" value="18"></div>
       </div>
       <div class="sub" id="duoOpts" hidden>
@@ -287,26 +374,36 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
           </select></div>
         <div class="field"><label for="mb">Base thickness</label><output id="mbOut"></output><input type="range" id="mb" min="3" max="15" step="1" value="6"></div>
       </div>
+      <div class="pnext"><button type="button" class="btn primary next" data-go="export">Next: Export →</button></div>
     </div>
 
-    <div class="rule"></div>
-
-    <div class="sec">
-      <h2><span><span class="step">3</span>Download</span><small>GLB · STL · PNG</small></h2>
-      <div><label for="company" style="font-weight:500;display:block;margin-bottom:5px">Company name (used for file names)</label>
-      <input class="text" id="company" value="Lifecure"></div>
-      <label class="check"><input type="checkbox" id="glbLights" checked> Include studio lights in GLB (keeps it from looking black in simple viewers)</label>
-      <button class="btn primary" id="dlGlb">Download GLB<small>3D model with colours and logo · for AR, Blender, web</small></button>
-      <div class="mc">
-        <button class="btn primary" id="dl3mf">Download 3MF · multi-colour print<small>Logo colours pre-assigned to filaments · Bambu Studio, PrusaSlicer, OrcaSlicer</small></button>
-        <div class="field"><label for="nColors">Filament colours</label><output id="nColorsOut"></output><input type="range" id="nColors" min="2" max="6" step="1" value="5"></div>
-        <div class="filaments" id="filaments" aria-label="Filament slots"></div>
+    <!-- 3 · EXPORT -->
+    <div class="pane" id="pane-export" role="tabpanel" aria-labelledby="tab-export" hidden>
+      <div class="grp">
+        <div><label for="company" class="lbl">Company name (used for file names)</label>
+        <input class="text" id="company" value="Lifecure"></div>
       </div>
-      <button class="btn ghost" id="dlStlSet">Download STL colour set (.zip)<small>One STL per filament colour · load all together, pick a filament for each part · works in Cura too</small></button>
-      <button class="btn ghost" id="dlStl">Download STL · single colour<small>One solid mesh in mm · any slicer</small></button>
-      <button class="btn ghost" id="dlPng">Save preview image (PNG)<small>Transparent background · for mockups, catalogues, client approval</small></button>
+      <div class="grp">
+        <h3>3D model</h3>
+        <label class="check"><input type="checkbox" id="glbLights" checked> <span>Include studio lights in the GLB (keeps it from looking black in simple viewers)</span></label>
+        <button class="btn primary" id="dlGlb">Download GLB<small>3D model with colours and logo · for AR, Blender, web</small></button>
+      </div>
+      <div class="grp">
+        <h3>For 3D printing</h3>
+        <div class="mc">
+          <button class="btn primary" id="dl3mf">Download 3MF · multi-colour print<small>Logo colours pre-assigned to filaments · Bambu Studio, PrusaSlicer, OrcaSlicer</small></button>
+          <div class="field"><label for="nColors">Filament colours</label><output id="nColorsOut"></output><input type="range" id="nColors" min="2" max="6" step="1" value="5"></div>
+          <div class="filaments" id="filaments" aria-label="Filament slots"></div>
+        </div>
+        <button class="btn ghost" id="dlStlSet">Download STL colour set (.zip)<small>One STL per filament colour · load all together, pick a filament for each part · works in Cura too</small></button>
+        <button class="btn ghost" id="dlStl">Download STL · single colour<small>One solid mesh in mm · any slicer</small></button>
+      </div>
+      <div class="grp">
+        <h3>For mockups</h3>
+        <button class="btn ghost" id="dlPng">Save preview image (PNG)<small>Transparent background · for catalogues and client approval</small></button>
+      </div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
-      <p class="note">Use <b>Raised</b> style before exporting STL so the logo becomes real geometry. A printed decal only shows in the GLB. In the Claude viewer files are saved as .zip; unzip to get the model.</p>
+      <p class="note">Use the <b>Raised</b> style before exporting STL so the logo becomes real geometry. A printed decal only shows in the GLB. If a download arrives as a .zip, unzip it to get the model.</p>
     </div>
   </aside>
 </div>
@@ -1696,4 +1793,21 @@ loadSample();
 })();
 </script>
 
+
+<script>
+/* tabs: Logo / Product / Export */
+(function(){
+  const tabs = [...document.querySelectorAll('.ptabs [role="tab"]')], panel = document.querySelector('.panel');
+  function go(name, focus){
+    tabs.forEach(t => { const on = t.dataset.pane === name; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; document.getElementById('pane-' + t.dataset.pane).hidden = !on; if (on && focus) t.focus(); });
+    panel.scrollTo({top: 0});
+    const bar = document.querySelector('.ptabs'); if (bar.getBoundingClientRect().top < 0) bar.scrollIntoView({block: 'start'});
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => go(t.dataset.pane));
+    t.addEventListener('keydown', e => { const k = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (k){ e.preventDefault(); go(tabs[(i + k + tabs.length) % tabs.length].dataset.pane, true); } });
+  });
+  document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+})();
+</script>
 </body></html>
