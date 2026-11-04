@@ -119,6 +119,12 @@ input[type=range]:focus-visible{outline:none}input[type=range]:focus-visible::-w
 .sub .text{background:var(--panel)}
 .sub .seg{background:color-mix(in srgb, var(--ink) 7%, transparent)}
 .card{display:flex;flex-direction:column;gap:12px;border:1px solid var(--line);border-radius:14px;padding:14px}
+.layer{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:14px;background:var(--bg);border:1px solid var(--line)}
+.layer .text{background:var(--panel)}
+.layer-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.layer-head b{font-size:13px}
+.layer-head button{font-weight:600;font-size:12.5px;color:var(--muted);background:none;border:0;cursor:pointer;padding:4px 6px;border-radius:8px}
+.layer-head button:hover{color:var(--ink);background:var(--panel)}
 .textblock{display:flex;flex-direction:column;gap:14px;padding:14px;border-radius:14px;background:var(--bg)}
 .textblock .text{background:var(--panel)}
 .mc{display:flex;flex-direction:column;gap:12px}
@@ -289,6 +295,13 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
         </div>
       </div>
 
+      <div class="grp">
+        <h3>Extra text</h3>
+        <div id="layers" style="display:flex;flex-direction:column;gap:12px"></div>
+        <div class="alt"><button type="button" id="addLayer">+ Add text</button></div>
+        <span class="note">Put extra lines anywhere on the product: a tagline, a website, a name, a date. Left/right is measured from the front centre, height from the bottom. They print raised or printed, the same as the logo.</span>
+      </div>
+
       <div class="sub" id="raisedOpts">
         <div class="field"><label for="depth">Relief depth</label><output id="depthOut"></output><input type="range" id="depth" min="0.4" max="3" step="0.1" value="1.6"></div>
         <div class="seg small" role="group" aria-label="Raised logo colour">
@@ -420,7 +433,7 @@ const $ = id => document.getElementById(id);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const S = {
-  product:'mug', divider:0, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
+  product:'mug', divider:0, layers:[], duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
   mode:'raised', logoW:52, angle:0, ly:44, both:false,
   depth:1.6, thr:0.5, invert:false, heightSrc:'layered', reliefColor:'full', smooth:2, hiDetail:false, logoColor:'#1d2c7a', removeBg:true, stickerW:0, nColors:5, text:'', textFont:"800|'Baloo 2'", textPos:'below', textSize:27, textColor:'#12939a'
 };
@@ -617,7 +630,7 @@ function duoGeometries(){
   out.push(['Tray floor', extrudeAt(new THREE.Shape(toShapePts(cav2)), 0, S.base)]);
   return out;
 }
-function duoLogoX(L){ const D = duoLayout(); const half = (D.x1 - D.xp) / 2 - L.w / 2 - D.rc*0.5; return (D.xp + D.x1) / 2 + Math.max(0, half) * (S.angle / 180); }
+function duoLogoX(L){ if (L && L.flatX !== undefined) return L.flatX; const D = duoLayout(); const half = (D.x1 - D.xp) / 2 - L.w / 2 - D.rc*0.5; return (D.xp + D.x1) / 2 + Math.max(0, half) * (S.angle / 180); }
 
 function handleGeometry(){
   const y1 = S.H*0.80, y2 = S.H*0.24, r1 = R(y1), r2 = R(y2), reach = Math.max(26, S.H*0.3);
@@ -655,7 +668,7 @@ let logoSrc = null;      // canvas of original logo
 let logoProc = null;     // canvas with transparent background
 let logoOpaque = false;
 let logoName = 'Sample: OTAGA';
-let logoInk = null, labelCache = null;
+let logoInk = null, labelCache = null, logoBase = null, layerL = null;
 let textTimer = 0;
 function textChanged(){ clearTimeout(textTimer); textTimer = setTimeout(() => { processLogo(); rebuild(); }, 120); }
 let logoHadBg = false, lastImg = null;
@@ -850,8 +863,8 @@ function processLogo(){
   if (S.stickerW > 0 && !S.dropWhite) c = addSticker(c, S.stickerW);
   const stEl = $('stickerW'); stEl.disabled = !!S.dropWhite; stEl.closest('.field').style.opacity = S.dropWhite ? '0.45' : '';
   $('stickerWOut').textContent = S.dropWhite ? 'Off · white left out' : (S.stickerW ? S.stickerW + '%' : 'Off');
-  logoProc = c;
-  logoInk = computeInk(c); labelCache = null;
+  logoBase = c; logoProc = c;
+  logoInk = computeInk(c); logoInk._for = c; labelCache = null;
   const t = $('thumb'); t.innerHTML = ''; const tc = document.createElement('canvas');
   const sc = Math.min(128/c.width, 96/c.height); tc.width = Math.max(1, c.width*sc); tc.height = Math.max(1, c.height*sc);
   tc.getContext('2d').drawImage(c, 0, 0, tc.width, tc.height); t.appendChild(tc);
@@ -891,6 +904,7 @@ function trim(c, opaque){
 }
 
 function logoLayout(){
+  if (layerL) return layerL;
   const flat = S.product === 'duo', DL = flat ? duoLayout() : null;
   const aspect = logoProc.width / logoProc.height, lo = flat ? 3 : bandLo(), hi = flat ? DL.H2 - 3 : bandHi(), bandH = hi - lo;
   let w = S.logoW, h = w / aspect;
@@ -899,7 +913,7 @@ function logoLayout(){
   const yc = lo + h/2 + (bandH - h) * (S.ly/100);
   return {w, h, yc, lo, hi};
 }
-const angles = () => { if (S.product === 'duo') return [0]; const a = S.angle*Math.PI/180; return S.both ? [a, a+Math.PI] : [a]; };
+const angles = () => { if (S.product === 'duo') return [0]; const a = S.angle*Math.PI/180 + (layerL ? layerL.shiftA : 0); return S.both ? [a, a+Math.PI] : [a]; };
 
 function decalMesh(L){
   if (S.product === 'duo'){
@@ -938,7 +952,7 @@ function drawDepthPreview(mask, w, h){
   g.putImageData(img, 0, 0);
 }
 function reliefGrid(L, pal){
-  const aspect = L.w / L.h, long = S.hiDetail ? 520 : 340;
+  const aspect = L.w / L.h, long = gridLong(L);
   const N = Math.max(8, Math.round(aspect >= 1 ? long : long*aspect)), M = Math.max(8, Math.round(aspect >= 1 ? long/aspect : long));
   const mc = document.createElement('canvas'); mc.width = N+1; mc.height = M+1;
   const depthMode = S.heightSrc === 'depth';
@@ -1004,7 +1018,7 @@ function colourReliefSolid(L, a0, G, k){
   return g;
 }
 function reliefMesh(L, a0){
-  const aspect = L.w / L.h, long = S.hiDetail ? 520 : 340;
+  const aspect = L.w / L.h, long = gridLong(L);
   const N = Math.max(8, Math.round(aspect >= 1 ? long : long*aspect)), M = Math.max(8, Math.round(aspect >= 1 ? long/aspect : long));
   const mc = document.createElement('canvas'); mc.width = N+1; mc.height = M+1;
   const depthMode = S.heightSrc === 'depth';
@@ -1082,6 +1096,77 @@ function disposeMug(){
 let pending = false;
 function rebuild(){ if (pending) return; pending = true; requestAnimationFrame(() => { pending = false; build(); }); }
 
+// ---------- extra text layers ----------
+function gridLong(L){ const base = S.hiDetail ? 520 : 340; return layerL ? Math.max(base, Math.min(780, Math.round(Math.max(L.w, L.h) / 0.2))) : base; }
+function layerRanges(){
+  if (S.product === 'duo'){ const D = duoLayout(); return {x: Math.floor((D.x1 - D.xp)/2 - 4), y0: 3, y1: Math.floor(D.H2 - 3)}; }
+  return {x: Math.floor(Math.PI * R(S.H/2)), y0: Math.ceil(S.base + 3), y1: Math.floor(S.H - 6)};
+}
+function composeLayers(list){
+  const Lb = logoLayout(), flat = S.product === 'duo', Rm = flat ? 1 : R(Lb.yc);
+  const D = flat ? duoLayout() : null;
+  const logoX = flat ? duoLogoX(Lb) : S.angle*Math.PI/180 * Rm;          // logo centre: mm on the front panel, or arc mm around the product
+  const zeroX = flat ? (D.xp + D.x1)/2 : 0;                              // a layer at 0 sits at the front centre
+  const rg = layerRanges(), m = document.createElement('canvas').getContext('2d');
+  const els = [{img: logoBase, cx: 0, cy: Lb.yc, w: Lb.w, h: Lb.h, rot: 0}];
+  list.forEach(t => {
+    const [wt, fam] = t.font.split('|'), fsmm = t.size / 0.72;
+    m.font = wt + ' 100px ' + fam + ', system-ui, sans-serif';
+    const met = m.measureText(t.text), asc = met.actualBoundingBoxAscent || 72, desc = met.actualBoundingBoxDescent || 20;
+    const w = (met.width / 100) * fsmm, h = ((asc + desc) / 100) * fsmm;
+    const y = Math.min(rg.y1, Math.max(rg.y0, t.y)), x = Math.max(-rg.x, Math.min(rg.x, t.x));
+    els.push({t, wt, fam, fsmm, asc, desc, cx: zeroX + x - logoX, cy: y, w, h, rot: (t.rot || 0) * Math.PI / 180});
+  });
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  els.forEach(e => { const c = Math.abs(Math.cos(e.rot)), sn = Math.abs(Math.sin(e.rot)), hx = e.w/2*c + e.h/2*sn, hy = e.w/2*sn + e.h/2*c;
+    x0 = Math.min(x0, e.cx - hx); x1 = Math.max(x1, e.cx + hx); y0 = Math.min(y0, e.cy - hy); y1 = Math.max(y1, e.cy + hy); });
+  x0 -= 0.6; x1 += 0.6; y0 -= 0.6; y1 += 0.6;
+  const bw = x1 - x0, bh = y1 - y0, ppm = Math.min(14, 3600 / Math.max(bw, bh));
+  const cv = document.createElement('canvas'); cv.width = Math.ceil(bw * ppm); cv.height = Math.ceil(bh * ppm);
+  const g = cv.getContext('2d'), PX = x => (x - x0) * ppm, PY = y => (y1 - y) * ppm;
+  els.forEach(e => {
+    if (e.img){ g.drawImage(e.img, PX(e.cx - e.w/2), PY(e.cy + e.h/2), e.w * ppm, e.h * ppm); return; }
+    g.save(); g.translate(PX(e.cx), PY(e.cy)); g.rotate(-e.rot);
+    const fpx = e.fsmm * ppm; g.font = e.wt + ' ' + fpx + 'px ' + e.fam + ', system-ui, sans-serif';
+    g.fillStyle = e.t.color; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    g.fillText(e.t.text, 0, ((e.asc - e.desc) / 2 / 100) * e.fsmm * ppm);
+    g.restore();
+  });
+  logoProc = cv; logoInk = computeInk(cv); labelCache = null;
+  const cxm = (x0 + x1) / 2;
+  layerL = {w: bw, h: bh, yc: (y0 + y1) / 2, lo: Math.min(Lb.lo, y0), hi: Math.max(Lb.hi, y1), shiftA: flat ? 0 : cxm / Rm, flatX: flat ? logoX + cxm : undefined};
+}
+let layerTimer = 0;
+function layersChanged(){ clearTimeout(layerTimer); layerTimer = setTimeout(rebuild, 120); }
+const FONT_OPTS = Array.from(document.querySelectorAll('#textFont option')).map(o => [o.value, o.textContent]);
+function renderLayers(){
+  const wrap = $('layers'), rg = layerRanges(); wrap.innerHTML = '';
+  S.layers.forEach((t, i) => {
+    const d = document.createElement('div'); d.className = 'layer'; d.dataset.i = i;
+    const fx = v => v === 0 ? 'Centre' : (v > 0 ? v + ' mm right' : (-v) + ' mm left');
+    d.innerHTML = '<div class="layer-head"><b>Text ' + (i + 1) + '</b><button type="button" data-act="del">Remove</button></div>'
+      + '<input class="text" data-k="text" maxlength="60" aria-label="Text ' + (i+1) + '">'
+      + '<div class="row2"><div><label class="lbl">Font</label><select class="text" data-k="font">' + FONT_OPTS.map(([v, l]) => '<option value="' + v.replace(/"/g, '&quot;') + '">' + l + '</option>').join('') + '</select></div>'
+      + '<div class="swatches"><span class="lbl" style="margin:0">Colour</span><input type="color" class="sw-custom" data-k="color" aria-label="Text colour"></div></div>'
+      + '<div class="field"><label>Left / right</label><output data-o="x"></output><input type="range" data-k="x" min="' + (-rg.x) + '" max="' + rg.x + '" step="1"></div>'
+      + '<div class="field"><label>Height</label><output data-o="y"></output><input type="range" data-k="y" min="' + rg.y0 + '" max="' + rg.y1 + '" step="0.5"></div>'
+      + '<div class="row2"><div class="field"><label>Size</label><output data-o="size"></output><input type="range" data-k="size" min="3" max="30" step="0.5"></div>'
+      + '<div class="field"><label>Rotate</label><output data-o="rot"></output><input type="range" data-k="rot" min="-90" max="90" step="1"></div></div>';
+    wrap.appendChild(d);
+    d.querySelector('[data-k=text]').value = t.text; d.querySelector('[data-k=font]').value = t.font; d.querySelector('[data-k=color]').value = t.color;
+    ['x','y','size','rot'].forEach(k => { d.querySelector('[data-k=' + k + ']').value = t[k]; });
+    const out = () => { d.querySelector('[data-o=x]').textContent = fx(t.x); d.querySelector('[data-o=y]').textContent = t.y + ' mm';
+      d.querySelector('[data-o=size]').textContent = t.size + ' mm'; d.querySelector('[data-o=rot]').textContent = t.rot + '°'; };
+    out(); d._out = out;
+  });
+}
+function addLayer(){
+  const L = logoProc ? logoLayout() : {lo: 20}, rg = layerRanges();
+  const y = Math.max(rg.y0 + 2, Math.min(rg.y1, Math.round(L.lo - 6)));
+  S.layers.push({text: 'Your text here', font: S.textFont, color: S.textColor || '#1a1a18', x: 0, y, size: 6, rot: 0});
+  renderLayers(); layersChanged();
+  const last = $('layers').lastElementChild; if (last){ const inp = last.querySelector('[data-k=text]'); inp.focus(); inp.select(); }
+}
 function build(){
   disposeMug();
   bodyMat.color.set(S.color); logoMat.color.set(S.logoColor);
@@ -1090,6 +1175,10 @@ function build(){
   else { const body = new THREE.Mesh(bodyGeometry(), bodyMat); body.name = 'Mug body'; mug.add(body); }
   if (S.handle && S.product === 'mug'){ const h = new THREE.Mesh(handleGeometry(), bodyMat); h.name = 'Handle'; mug.add(h); }
   if (S.product === 'pen' && S.divider) dividerGeometry().forEach((g, i) => { const d = new THREE.Mesh(g, bodyMat); d.name = 'Divider ' + (i + 1); mug.add(d); });
+  layerL = null; if (logoBase) logoProc = logoBase;
+  const activeLayers = S.layers.filter(t => t.text.trim());
+  if (logoBase && activeLayers.length){ composeLayers(activeLayers); }
+  else if (logoBase && logoInk && logoInk._for !== logoBase){ logoInk = computeInk(logoBase); logoInk._for = logoBase; labelCache = null; }
   if (logoProc){
     const L = logoLayout();
     if (S.mode === 'print') mug.add(decalMesh(L));
@@ -1226,7 +1315,17 @@ function applyPreset(key, p){
   $('presets').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.p === key)));
   rebuild();
 }
-function setProduct(prod){
+$('addLayer').addEventListener('click', addLayer);
+$('layers').addEventListener('click', e => { const b = e.target.closest('[data-act=del]'); if (!b) return; const i = +b.closest('.layer').dataset.i; S.layers.splice(i, 1); renderLayers(); layersChanged(); });
+$('layers').addEventListener('input', e => {
+  const el = e.target, k = el.dataset.k, card = el.closest('.layer'); if (!k || !card) return;
+  const t = S.layers[+card.dataset.i]; t[k] = (k === 'text' || k === 'font' || k === 'color') ? el.value : parseFloat(el.value);
+  if (card._out) card._out();
+  if (k === 'font' && document.fonts && document.fonts.load){ const [w, f] = t.font.split('|'); Promise.race([document.fonts.load(w + ' 40px ' + f, t.text || 'Aa'), new Promise(r => setTimeout(r, 2000))]).then(layersChanged, layersChanged); }
+  else layersChanged();
+});
+function setProduct(prod){ setProduct0(prod); renderLayers(); }
+function setProduct0(prod){
   S.product = prod;
   $('prodMug').setAttribute('aria-pressed', String(prod === 'mug'));
   $('prodPen').setAttribute('aria-pressed', String(prod === 'pen'));
