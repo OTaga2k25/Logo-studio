@@ -759,7 +759,7 @@ function stepsGeometries(){
   for (let i = 0; i <= n; i++){
     const h = i === 0 ? hs[0] : i === n ? hs[n-1] : Math.max(hs[i-1], hs[i]);
     const x = -W/2 + wb * i + (i === 0 ? t/2 : i === n ? -t/2 : 0);
-    box('Wall ' + (i+1), t, h, Dp, x, 0, 0);
+    box('Wall ' + (i+1), t, h, Dp - 1.2, x, 0, 0);   // tucked inside the front and back panels so their faces don't overlap
   }
   return out;
 }
