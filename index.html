@@ -121,6 +121,15 @@ input[type=range]:focus-visible{outline:none}input[type=range]:focus-visible::-w
 .card{display:flex;flex-direction:column;gap:12px;border:1px solid var(--line);border-radius:14px;padding:14px}
 .layer{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:14px;background:var(--bg);border:1px solid var(--line)}
 .layer .text{background:var(--panel)}
+.layer textarea.text{resize:vertical;min-height:52px;line-height:1.35;font-family:var(--body)}
+.lseg{display:flex;gap:2px;padding:3px;border-radius:10px;background:var(--panel);border:1px solid var(--line)}
+.lseg button{flex:1;font-weight:600;font-size:12.5px;color:var(--muted);background:none;border:0;border-radius:7px;padding:5px 6px;cursor:pointer}
+.lseg button[aria-pressed="true"]{background:var(--primary);color:var(--primary-ink)}
+.lplace{display:grid;grid-template-columns:repeat(3,30px);gap:3px}
+.lplace button{width:30px;height:24px;border-radius:6px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-size:12px;color:var(--muted);padding:0}
+.lplace button:hover{border-color:var(--ink);color:var(--ink)}
+.lrow{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.lrow>div{display:flex;flex-direction:column;gap:6px}
 .layer-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .layer-head b{font-size:13px}
 .layer-head button{font-weight:600;font-size:12.5px;color:var(--muted);background:none;border:0;cursor:pointer;padding:4px 6px;border-radius:8px}
@@ -1102,6 +1111,28 @@ function layerRanges(){
   if (S.product === 'duo'){ const D = duoLayout(); return {x: Math.floor((D.x1 - D.xp)/2 - 4), y0: 3, y1: Math.floor(D.H2 - 3)}; }
   return {x: Math.floor(Math.PI * R(S.H/2)), y0: Math.ceil(S.base + 3), y1: Math.floor(S.H - 6)};
 }
+function layerLines(t, m, fsmm){
+  // split on Enter, then wrap to the paragraph width (mm) if one is set
+  const paras = String(t.text).split(/\r?\n/), out = [], k = fsmm / 100;
+  paras.forEach(p => {
+    if (!t.wrap){ out.push(p); return; }
+    const words = p.split(/\s+/).filter(Boolean); let line = '';
+    if (!words.length){ out.push(''); return; }
+    words.forEach(w => { const test = line ? line + ' ' + w : w; if (line && m.measureText(test).width * k > t.wrap){ out.push(line); line = w; } else line = test; });
+    out.push(line);
+  });
+  return out;
+}
+function measureLayer(t){
+  const [wt, fam] = t.font.split('|'), fsmm = t.size / 0.72, m = document.createElement('canvas').getContext('2d');
+  m.font = wt + ' 100px ' + fam + ', system-ui, sans-serif';
+  const lines = layerLines(t, m, fsmm), k = fsmm / 100;
+  const ref = m.measureText('Hgjy'), asc = ref.actualBoundingBoxAscent || 72, desc = ref.actualBoundingBoxDescent || 20;
+  const widths = lines.map(l => m.measureText(l).width * k), lh = fsmm * (t.lh || 1.2);
+  const w = Math.max(t.wrap && t.align !== 'center' ? t.wrap : 0, ...widths, 0.5), h = (lines.length - 1) * lh + (asc + desc) * k;
+  const rot = (t.rot || 0) * Math.PI / 180, c = Math.abs(Math.cos(rot)), sn = Math.abs(Math.sin(rot));
+  return {wt, fam, fsmm, lines, widths, lh, ascmm: asc * k, w, h, rot, hx: w/2*c + h/2*sn, hy: w/2*sn + h/2*c};
+}
 function composeLayers(list){
   const Lb = logoLayout(), flat = S.product === 'duo', Rm = flat ? 1 : R(Lb.yc);
   const D = flat ? duoLayout() : null;
@@ -1110,12 +1141,9 @@ function composeLayers(list){
   const rg = layerRanges(), m = document.createElement('canvas').getContext('2d');
   const els = [{img: logoBase, cx: 0, cy: Lb.yc, w: Lb.w, h: Lb.h, rot: 0}];
   list.forEach(t => {
-    const [wt, fam] = t.font.split('|'), fsmm = t.size / 0.72;
-    m.font = wt + ' 100px ' + fam + ', system-ui, sans-serif';
-    const met = m.measureText(t.text), asc = met.actualBoundingBoxAscent || 72, desc = met.actualBoundingBoxDescent || 20;
-    const w = (met.width / 100) * fsmm, h = ((asc + desc) / 100) * fsmm;
+    const M = measureLayer(t);
     const y = Math.min(rg.y1, Math.max(rg.y0, t.y)), x = Math.max(-rg.x, Math.min(rg.x, t.x));
-    els.push({t, wt, fam, fsmm, asc, desc, cx: zeroX + x - logoX, cy: y, w, h, rot: (t.rot || 0) * Math.PI / 180});
+    els.push(Object.assign({t, cx: zeroX + x - logoX, cy: y}, M));
   });
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
   els.forEach(e => { const c = Math.abs(Math.cos(e.rot)), sn = Math.abs(Math.sin(e.rot)), hx = e.w/2*c + e.h/2*sn, hy = e.w/2*sn + e.h/2*c;
@@ -1127,9 +1155,10 @@ function composeLayers(list){
   els.forEach(e => {
     if (e.img){ g.drawImage(e.img, PX(e.cx - e.w/2), PY(e.cy + e.h/2), e.w * ppm, e.h * ppm); return; }
     g.save(); g.translate(PX(e.cx), PY(e.cy)); g.rotate(-e.rot);
-    const fpx = e.fsmm * ppm; g.font = e.wt + ' ' + fpx + 'px ' + e.fam + ', system-ui, sans-serif';
-    g.fillStyle = e.t.color; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-    g.fillText(e.t.text, 0, ((e.asc - e.desc) / 2 / 100) * e.fsmm * ppm);
+    const fpx = e.fsmm * ppm, al = e.t.align || 'center'; g.font = e.wt + ' ' + fpx + 'px ' + e.fam + ', system-ui, sans-serif';
+    g.fillStyle = e.t.color; g.textAlign = al === 'left' ? 'left' : al === 'right' ? 'right' : 'center'; g.textBaseline = 'alphabetic';
+    const ax = al === 'left' ? -e.w/2 : al === 'right' ? e.w/2 : 0;
+    e.lines.forEach((ln, i) => g.fillText(ln, ax * ppm, (-e.h/2 + e.ascmm + i * e.lh) * ppm));
     g.restore();
   });
   logoProc = cv; logoInk = computeInk(cv); labelCache = null;
@@ -1142,28 +1171,37 @@ const FONT_OPTS = Array.from(document.querySelectorAll('#textFont option')).map(
 function renderLayers(){
   const wrap = $('layers'), rg = layerRanges(); wrap.innerHTML = '';
   S.layers.forEach((t, i) => {
+    if (!t.align) t.align = 'center'; if (!t.lh) t.lh = 1.2; if (t.wrap === undefined) t.wrap = 0;
     const d = document.createElement('div'); d.className = 'layer'; d.dataset.i = i;
     const fx = v => v === 0 ? 'Centre' : (v > 0 ? v + ' mm right' : (-v) + ' mm left');
     d.innerHTML = '<div class="layer-head"><b>Text ' + (i + 1) + '</b><button type="button" data-act="del">Remove</button></div>'
-      + '<input class="text" data-k="text" maxlength="60" aria-label="Text ' + (i+1) + '">'
+      + '<textarea class="text" data-k="text" maxlength="300" rows="2" aria-label="Text ' + (i+1) + '" placeholder="Type a line or a short paragraph. Press Enter for a new line."></textarea>'
+      + '<div class="lrow"><div><span class="lbl" style="margin:0">Align</span><div class="lseg">'
+      + ['left','center','right'].map(a => '<button type="button" data-act="align" data-v="' + a + '" aria-pressed="' + ((t.align || 'center') === a) + '">' + (a === 'center' ? 'Centre' : a[0].toUpperCase() + a.slice(1)) + '</button>').join('') + '</div></div>'
+      + '<div><span class="lbl" style="margin:0">Quick place</span><div class="lplace">'
+      + [['tl','↖'],['tc','↑'],['tr','↗'],['ml','←'],['mc','•'],['mr','→'],['bl','↙'],['bc','↓'],['br','↘']].map(([v, l]) => '<button type="button" data-act="place" data-v="' + v + '" title="Snap here">' + l + '</button>').join('') + '</div></div></div>'
       + '<div class="row2"><div><label class="lbl">Font</label><select class="text" data-k="font">' + FONT_OPTS.map(([v, l]) => '<option value="' + v.replace(/"/g, '&quot;') + '">' + l + '</option>').join('') + '</select></div>'
       + '<div class="swatches"><span class="lbl" style="margin:0">Colour</span><input type="color" class="sw-custom" data-k="color" aria-label="Text colour"></div></div>'
       + '<div class="field"><label>Left / right</label><output data-o="x"></output><input type="range" data-k="x" min="' + (-rg.x) + '" max="' + rg.x + '" step="1"></div>'
       + '<div class="field"><label>Height</label><output data-o="y"></output><input type="range" data-k="y" min="' + rg.y0 + '" max="' + rg.y1 + '" step="0.5"></div>'
       + '<div class="row2"><div class="field"><label>Size</label><output data-o="size"></output><input type="range" data-k="size" min="3" max="30" step="0.5"></div>'
-      + '<div class="field"><label>Rotate</label><output data-o="rot"></output><input type="range" data-k="rot" min="-90" max="90" step="1"></div></div>';
+      + '<div class="field"><label>Rotate</label><output data-o="rot"></output><input type="range" data-k="rot" min="-180" max="180" step="1"></div></div>'
+      + '<div class="row2"><div class="field"><label>Paragraph width</label><output data-o="wrap"></output><input type="range" data-k="wrap" min="0" max="' + Math.min(200, rg.x * 2) + '" step="1"></div>'
+      + '<div class="field"><label>Line spacing</label><output data-o="lh"></output><input type="range" data-k="lh" min="0.9" max="2.2" step="0.05"></div></div>';
     wrap.appendChild(d);
     d.querySelector('[data-k=text]').value = t.text; d.querySelector('[data-k=font]').value = t.font; d.querySelector('[data-k=color]').value = t.color;
-    ['x','y','size','rot'].forEach(k => { d.querySelector('[data-k=' + k + ']').value = t[k]; });
+    ['x','y','size','rot','wrap','lh'].forEach(k => { d.querySelector('[data-k=' + k + ']').value = t[k]; });
     const out = () => { d.querySelector('[data-o=x]').textContent = fx(t.x); d.querySelector('[data-o=y]').textContent = t.y + ' mm';
-      d.querySelector('[data-o=size]').textContent = t.size + ' mm'; d.querySelector('[data-o=rot]').textContent = t.rot + '°'; };
+      d.querySelector('[data-o=size]').textContent = t.size + ' mm'; d.querySelector('[data-o=rot]').textContent = t.rot + '°';
+      d.querySelector('[data-o=wrap]').textContent = t.wrap ? t.wrap + ' mm' : 'Auto'; d.querySelector('[data-o=lh]').textContent = (+t.lh).toFixed(2) + '×';
+      ['x','y','rot'].forEach(k => { const el = d.querySelector('[data-k=' + k + ']'); if (+el.value !== t[k]) el.value = t[k]; }); };
     out(); d._out = out;
   });
 }
 function addLayer(){
   const L = logoProc ? logoLayout() : {lo: 20}, rg = layerRanges();
   const y = Math.max(rg.y0 + 2, Math.min(rg.y1, Math.round(L.lo - 6)));
-  S.layers.push({text: 'Your text here', font: S.textFont, color: S.textColor || '#1a1a18', x: 0, y, size: 6, rot: 0});
+  S.layers.push({text: 'Your text here', font: S.textFont, color: S.textColor || '#1a1a18', x: 0, y, size: 6, rot: 0, align: 'center', lh: 1.2, wrap: 0});
   renderLayers(); layersChanged();
   const last = $('layers').lastElementChild; if (last){ const inp = last.querySelector('[data-k=text]'); inp.focus(); inp.select(); }
 }
@@ -1316,7 +1354,21 @@ function applyPreset(key, p){
   rebuild();
 }
 $('addLayer').addEventListener('click', addLayer);
-$('layers').addEventListener('click', e => { const b = e.target.closest('[data-act=del]'); if (!b) return; const i = +b.closest('.layer').dataset.i; S.layers.splice(i, 1); renderLayers(); layersChanged(); });
+$('layers').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const card = b.closest('.layer'), i = +card.dataset.i, t = S.layers[i];
+  if (b.dataset.act === 'del'){ S.layers.splice(i, 1); renderLayers(); layersChanged(); return; }
+  if (b.dataset.act === 'align'){ t.align = b.dataset.v; card.querySelectorAll('[data-act=align]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); layersChanged(); return; }
+  if (b.dataset.act === 'place'){
+    // snap to an edge or the middle of the area you can see / print on
+    const rg = layerRanges(), M = measureLayer(t), v = b.dataset.v, pad = 2;
+    const xr = S.product === 'duo' ? rg.x : Math.min(rg.x, Math.round(R(S.H/2) * 1.05));
+    const ys = {t: rg.y1 - M.hy - pad, m: (rg.y0 + rg.y1) / 2, b: rg.y0 + M.hy + pad};
+    const xs = {l: -xr + M.hx + pad, c: 0, r: xr - M.hx - pad};
+    t.y = Math.round(ys[v[0]] * 2) / 2; t.x = Math.round(xs[v[1]]);
+    if (card._out) card._out(); layersChanged();
+  }
+});
 $('layers').addEventListener('input', e => {
   const el = e.target, k = el.dataset.k, card = el.closest('.layer'); if (!k || !card) return;
   const t = S.layers[+card.dataset.i]; t[k] = (k === 'text' || k === 'font' || k === 'color') ? el.value : parseFloat(el.value);
