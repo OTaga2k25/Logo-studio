@@ -357,6 +357,8 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
           <button id="prodSteps" aria-pressed="false">Step organiser<small>Bays rising like stairs</small></button>
           <button id="prodTubes" aria-pressed="false">Tube cluster<small>Round tubes on a logo base</small></button>
           <button id="prodCard" aria-pressed="false">Card + pen holder<small>Business cards and pens</small></button>
+          <button id="prodBlock" aria-pressed="false">Pen block<small>Solid block with pen holes</small></button>
+          <button id="prodMonitor" aria-pressed="false">Monitor holder<small>Pens go in the screen</small></button>
         </div>
         <div class="presets" id="presets" role="group" aria-label="Shape"></div>
       </div>
@@ -393,6 +395,23 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
         </div>
         <label class="check" id="cuffRow"><input type="checkbox" id="cuff"> <span>Folded top cuff</span></label>
         <div class="field" id="cuffField" hidden><label for="cuffH">Cuff height</label><output id="cuffHOut"></output><input type="range" id="cuffH" min="8" max="35" step="1" value="18"></div>
+      </div>
+      <div class="sub" id="blockOpts" hidden>
+        <div class="row2">
+          <div><label for="pbRows" class="lbl">Rows of holes</label>
+            <select class="text" id="pbRows"><option value="1">1 row</option><option value="2">2 rows</option><option value="3">3 rows</option></select></div>
+          <div class="field"><label for="pbHole">Hole size</label><output id="pbHoleOut"></output><input type="range" id="pbHole" min="9" max="20" step="0.5" value="13"></div>
+        </div>
+        <div class="field"><label for="pbDepth">Block depth</label><output id="pbDepthOut"></output><input type="range" id="pbDepth" min="28" max="90" step="1" value="52"></div>
+        <label class="check"><input type="checkbox" id="pbStagger" checked> <span>Stagger the rows</span></label>
+        <span class="note">Height is the block's height, Width its width. Holes are spaced to fill the width.</span>
+      </div>
+      <div class="sub" id="monitorOpts" hidden>
+        <div class="row2">
+          <div class="field"><label for="mnDepth">Screen depth</label><output id="mnDepthOut"></output><input type="range" id="mnDepth" min="24" max="70" step="1" value="38"></div>
+          <div class="field"><label for="mnNeck">Stand height</label><output id="mnNeckOut"></output><input type="range" id="mnNeck" min="8" max="45" step="1" value="24"></div>
+        </div>
+        <span class="note">Height is the screen's height, Width its width. Pens drop in from the top of the screen; the logo sits on the screen inside the bezel.</span>
       </div>
       <div class="sub" id="tubesOpts" hidden>
         <div><label for="tbLayout" class="lbl">Layout</label>
@@ -529,7 +548,7 @@ const $ = id => document.getElementById(id);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const S = {
-  product:'mug', divider:0, layers:[], tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
+  product:'mug', divider:0, layers:[], pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
   mode:'raised', logoW:52, angle:0, ly:44, both:false,
   depth:1.6, thr:0.5, invert:false, heightSrc:'layered', reliefColor:'full', smooth:2, hiDetail:false, logoColor:'#1d2c7a', removeBg:true, stickerW:0, nColors:5, text:'', textFont:"800|'Baloo 2'", textPos:'below', textSize:27, textColor:'#12939a'
 };
@@ -744,19 +763,67 @@ function duoGeometries(){
   out.push(['Tray floor', extrudeAt(new THREE.Shape(toShapePts(cav2)), 0, S.base)]);
   return out;
 }
-const FLAT_PRODUCTS = ['duo', 'caddy', 'hex', 'phone', 'hexcup', 'steps', 'tubes', 'card'];
+const FLAT_PRODUCTS = ['duo', 'caddy', 'hex', 'phone', 'hexcup', 'steps', 'tubes', 'card', 'block', 'monitor'];
 const isFlat = () => FLAT_PRODUCTS.includes(S.product);
 const cadFootH = () => S.cadFoot ? 6 : 0;
 function frontInfo(){
   // the flat front panel that carries the logo: x range, front face z, usable height
   if (S.product === 'duo'){ const D = duoLayout(); return {x0: D.xp, x1: D.x1, zf: D.zf, lo: 3, hi: D.H2 - 3, rc: D.rc}; }
   if (S.product === 'hex'){ const P = hexPlinth(); return {x0: P.x0, x1: P.x1, zf: P.z1, lo: 3, hi: S.hexBase - 3, rc: P.rc}; }
+  if (S.product === 'block') return {x0: -S.D/2, x1: S.D/2, zf: S.pbDepth/2, lo: 3, hi: S.H - 3, rc: 8};
+  if (S.product === 'monitor'){ const M = monitorLayout(); return {x0: -S.D/2 + 8, x1: S.D/2 - 8, zf: M.zf, lo: M.y0 + 13, hi: M.y0 + S.H - 9, rc: 1}; }
   if (S.product === 'tubes'){ const P = tubesPlinth(); return {x0: P.x0, x1: P.x1, zf: P.z1, lo: 3, hi: S.tbBase - 3, rc: P.rc}; }
   if (S.product === 'card'){ const C = cardLayout(); return {x0: C.cx0, x1: C.cx1, zf: C.zf, lo: S.base + 3, hi: S.cpFront - 3, rc: 2}; }
   if (S.product === 'hexcup'){ const n = +S.hcSides, a = S.D/2, side = 2*a*Math.tan(Math.PI/n); return {x0: -side/2, x1: side/2, zf: a, lo: S.base + 4, hi: S.H - (S.hcBand ? 14 : 6), rc: 1}; }
   if (S.product === 'steps'){ const W = S.D * S.stBays; return {x0: -W/2, x1: W/2, zf: S.stDepth/2, lo: S.base + 3, hi: S.H * S.stLow/100 - 4, rc: 2}; }
   if (S.product === 'phone'){ const P = phoneProfile(); return {x0: -S.D/2, x1: S.D/2, zf: P.zF, lo: 3, hi: S.phLip - 3, rc: 3}; }
   const W = S.D, f = cadFootH(); return {x0: -W/2, x1: W/2, zf: S.cadDepth/2, lo: f + 3, hi: f + S.H * S.cadFront/100 - 3, rc: 6};
+}
+// ---------- pen block ----------
+function blockHoles(){
+  const rows = +S.pbRows, d = S.pbHole, pitch = d + 6, W = S.D, Dp = S.pbDepth, out = [];
+  const zSpan = Math.max(0, Dp - 2 * (d/2 + 8)), zs = rows === 1 ? [0] : Array.from({length: rows}, (_, i) => -zSpan/2 + zSpan * i / (rows - 1));
+  zs.forEach((z, r) => {
+    const off = S.pbStagger && rows > 1 && r % 2 ? pitch / 2 : 0, span = W - 2 * (d/2 + 8) - off;
+    const n = Math.max(1, Math.floor(span / pitch) + 1), x0 = -((n - 1) * pitch) / 2 + off / 2;
+    for (let i = 0; i < n; i++) out.push([x0 + i * pitch, z]);
+  });
+  return out;
+}
+function blockGeometries(){
+  const W = S.D, Dp = S.pbDepth, H = S.H, b = Math.max(4, S.base), r = S.pbHole/2 + 0.2, out = [];
+  const body = roundedRectShape(-W/2, W/2, -Dp/2, Dp/2, 8);
+  const top = roundedRectShape(-W/2, W/2, -Dp/2, Dp/2, 8);
+  blockHoles().forEach(([x, z]) => { const h = new THREE.Path(); h.absarc(x, -z, r, 0, Math.PI*2, true); top.holes.push(h); });
+  const g1 = new THREE.ExtrudeGeometry(body, {depth: b, bevelEnabled: false, curveSegments: 16}); g1.rotateX(-Math.PI/2); out.push(['Block base', g1]);
+  const g2 = new THREE.ExtrudeGeometry(top, {depth: H - b + 0.3, bevelEnabled: false, curveSegments: 40}); g2.rotateX(-Math.PI/2); g2.translate(0, b - 0.3, 0); out.push(['Block', g2]);
+  return out;
+}
+// ---------- monitor pen holder ----------
+function monitorLayout(){
+  const foot = 6, y0 = foot + S.mnNeck, Ds = S.mnDepth, zc = 4;   // screen box sits a little forward of the stand
+  return {foot, y0, Ds, zc, zf: zc + Ds/2};
+}
+function monitorGeometries(){
+  const M = monitorLayout(), W = S.D, H = S.H, t = S.wall, b = S.base, out = [], o = 0.3;
+  const box = (name, w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y + h/2, z); out.push([name, g]); };
+  // hollow screen, open at the top
+  const shell = roundedRectShape(-W/2, W/2, M.zc - M.Ds/2, M.zc + M.Ds/2, 4), inner = roundedRectShape(-W/2 + t, W/2 - t, M.zc - M.Ds/2 + t, M.zc + M.Ds/2 - t, 2.5);
+  shell.holes.push(new THREE.Path(inner.getPoints(8).reverse()));
+  const gs = new THREE.ExtrudeGeometry(shell, {depth: H, bevelEnabled: false, curveSegments: 10}); gs.rotateX(-Math.PI/2); gs.translate(0, M.y0, 0); out.push(['Screen', gs]);
+  box('Screen floor', W - 2*t + 2*o, b, M.Ds - 2*t + 2*o, 0, M.y0, M.zc);
+  // bezel: a raised frame around the screen face, with a small power button
+  const bz = 1.4, bw = 6;
+  box('Bezel top', W - 2, bw, bz + o, 0, M.y0 + H - bw - 1, M.zf + bz/2 - o/2);
+  box('Bezel bottom', W - 2, bw + 3, bz + o, 0, M.y0 + 1, M.zf + bz/2 - o/2);
+  box('Bezel left', bw, H - 2, bz + o, -W/2 + 1 + bw/2, M.y0 + 1, M.zf + bz/2 - o/2);
+  box('Bezel right', bw, H - 2, bz + o, W/2 - 1 - bw/2, M.y0 + 1, M.zf + bz/2 - o/2);
+  const btn = new THREE.CylinderGeometry(1.6, 1.6, 1.2, 24); btn.rotateX(Math.PI/2); btn.translate(W/2 - 12, M.y0 + 1 + (bw + 3)/2, M.zf + bz + 0.4); out.push(['Power button', btn]);
+  // neck and foot
+  box('Stand', Math.min(26, W * 0.22), S.mnNeck + 2*o, 12, 0, M.foot - o, M.zc - M.Ds/2 + 8);
+  const fw = Math.min(W * 0.6, 110), fd = Math.max(48, M.Ds + 14);
+  const fg = new THREE.ExtrudeGeometry(roundedRectShape(-fw/2, fw/2, M.zc - fd/2 - 4, M.zc + fd/2 - 4, 8), {depth: M.foot, bevelEnabled: false, curveSegments: 16}); fg.rotateX(-Math.PI/2); out.push(['Foot', fg]);
+  return out;
 }
 // ---------- tube cluster ----------
 function tubeCells(){
@@ -1503,7 +1570,9 @@ function build(){
   disposeMug();
   bodyMat.color.set(S.color); logoMat.color.set(S.logoColor);
   bodyMat.roughness = isFlat() ? 0.68 : 0.32; bodyMat.clearcoat = isFlat() ? 0.05 : 0.7; bodyMat.envMapIntensity = isFlat() ? 0.42 : 0.8;
-  if (S.product === 'tubes') tubesGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
+  if (S.product === 'block') blockGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
+  else if (S.product === 'monitor') monitorGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
+  else if (S.product === 'tubes') tubesGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
   else if (S.product === 'card') cardGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
   else if (S.product === 'hexcup') hexcupGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
   else if (S.product === 'steps') stepsGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
@@ -1525,7 +1594,7 @@ function build(){
     $('lwOut').textContent = L.w.toFixed(0) + ' × ' + L.h.toFixed(0) + ' mm';
   }
   pivot.position.y = -S.H/2;
-  const s = S.product === 'tubes' ? (tubesPlinth().x1 - tubesPlinth().x0) * 1.3 : S.product === 'card' ? S.D * 1.3 : S.product === 'hexcup' ? S.D * 1.8 : S.product === 'steps' ? Math.max(S.D * S.stBays, S.stDepth) * 1.4 : S.product === 'phone' ? Math.max(S.D, S.H) * 1.5 : S.product === 'hex' ? (hexPlinth().x1 - hexPlinth().x0) * 1.4 : S.product === 'caddy' ? Math.max(S.D, S.cadDepth) * 1.6 : S.product === 'duo' ? Math.max(S.D, S.duoLen) * 1.5 : S.D * 1.7; shadow.scale.set(s, s, 1); shadow.position.set(S.handle && S.product === 'mug' ? 8 : 0, 0.05, 0);
+  const s = S.product === 'block' ? S.D * 1.3 : S.product === 'monitor' ? S.D * 1.2 : S.product === 'tubes' ? (tubesPlinth().x1 - tubesPlinth().x0) * 1.3 : S.product === 'card' ? S.D * 1.3 : S.product === 'hexcup' ? S.D * 1.8 : S.product === 'steps' ? Math.max(S.D * S.stBays, S.stDepth) * 1.4 : S.product === 'phone' ? Math.max(S.D, S.H) * 1.5 : S.product === 'hex' ? (hexPlinth().x1 - hexPlinth().x0) * 1.4 : S.product === 'caddy' ? Math.max(S.D, S.cadDepth) * 1.6 : S.product === 'duo' ? Math.max(S.D, S.duoLen) * 1.5 : S.D * 1.7; shadow.scale.set(s, s, 1); shadow.position.set(S.handle && S.product === 'mug' ? 8 : 0, 0.05, 0);
   updateReadout();
   if (typeof showFilaments === 'function') try { showFilaments(); } catch (e) {}
   if (typeof schedulePreview === 'function' && typeof previewGroup !== 'undefined') schedulePreview();
@@ -1564,7 +1633,7 @@ function updateReadout(){
     `<span class="tag"><i>H</i><b>${sz.y.toFixed(0)}</b></span>` +
     `<span class="tag"><i>W</i><b>${sz.x.toFixed(0)}</b></span>` +
     `<span class="tag"><i>D</i><b>${sz.z.toFixed(0)} mm</b></span>` +
-    (S.product === 'tubes' ? `<span class="tag"><i>Tubes</i><b>${tubeCells().length}</b></span>` : S.product === 'card' ? `<span class="tag"><i>Holds</i><b>cards + pens</b></span>` : S.product === 'hexcup' ? `<span class="tag"><i>Fits</i><b>≈ ${Math.max(4, Math.floor(Math.pow((S.D - 2*S.wall)/2, 2) * 0.42 / 21))} pens</b></span>` : S.product === 'steps' ? `<span class="tag"><i>Bays</i><b>${S.stBays}</b></span>` : S.product === 'phone' ? `<span class="tag"><i>Fits</i><b>phones up to ${S.phSlot} mm</b></span>` : S.product === 'hex' ? `<span class="tag"><i>Fits</i><b>≈ ${hexCells().length * Math.max(2, Math.floor(Math.pow((S.D - 2*S.wall) / 9.5, 2) * 0.8))} pens</b></span>` : S.product === 'caddy' ? `<span class="tag"><i>Holds</i><b>phone + pens</b></span>` : S.product === 'duo' ? `<span class="tag"><i>Holds</i><b>cup + tray</b></span>` : S.product === 'pen'
+    (S.product === 'block' ? `<span class="tag"><i>Holes</i><b>${blockHoles().length}</b></span>` : S.product === 'monitor' ? `<span class="tag"><i>Holds</i><b>pens in the screen</b></span>` : S.product === 'tubes' ? `<span class="tag"><i>Tubes</i><b>${tubeCells().length}</b></span>` : S.product === 'card' ? `<span class="tag"><i>Holds</i><b>cards + pens</b></span>` : S.product === 'hexcup' ? `<span class="tag"><i>Fits</i><b>≈ ${Math.max(4, Math.floor(Math.pow((S.D - 2*S.wall)/2, 2) * 0.42 / 21))} pens</b></span>` : S.product === 'steps' ? `<span class="tag"><i>Bays</i><b>${S.stBays}</b></span>` : S.product === 'phone' ? `<span class="tag"><i>Fits</i><b>phones up to ${S.phSlot} mm</b></span>` : S.product === 'hex' ? `<span class="tag"><i>Fits</i><b>≈ ${hexCells().length * Math.max(2, Math.floor(Math.pow((S.D - 2*S.wall) / 9.5, 2) * 0.8))} pens</b></span>` : S.product === 'caddy' ? `<span class="tag"><i>Holds</i><b>phone + pens</b></span>` : S.product === 'duo' ? `<span class="tag"><i>Holds</i><b>cup + tray</b></span>` : S.product === 'pen'
       ? `<span class="tag"><i>Fits</i><b>≈ ${penCount()} pens</b></span>`
       : `<span class="tag"><i>Holds</i><b>≈ ${Math.round(capacityMl() / 5) * 5} ml</b></span>`);
 }
@@ -1610,6 +1679,16 @@ const PRESETS = {
     ['latte', 'Tall latte', '~450 ml', {mh:118, md:84, mt:4, mw:4, mb:6, handle:true}],
     ['espresso', 'Espresso', '~150 ml', {mh:70, md:64, mt:3, mw:3.5, mb:6, handle:true}],
     ['tumbler', 'Tumbler', 'no handle', {mh:125, md:80, mt:12, mw:4, mb:6, handle:false}]
+  ],
+  block: [
+    ['pbClassic', 'Pen block', 'staggered holes', {mh:60, md:120, mw:3, mb:4, handle:false, color:'#2b2d33', pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, logoW:100, ly:50, texture:'smooth'}],
+    ['pbLong', 'Long block', '1 row', {mh:48, md:150, mw:3, mb:4, handle:false, pbRows:1, pbHole:13, pbDepth:34, pbStagger:false, logoW:120, texture:'smooth'}],
+    ['pbBig', 'Big block', '3 rows', {mh:65, md:130, mw:3, mb:4, handle:false, pbRows:3, pbHole:12, pbDepth:72, pbStagger:true, logoW:110, texture:'smooth'}]
+  ],
+  monitor: [
+    ['mnClassic', 'Monitor', 'desk screen', {mh:80, md:124, mw:3, mb:4, handle:false, color:'#2b2d33', mnDepth:38, mnNeck:24, logoW:90, ly:50, texture:'smooth'}],
+    ['mnWide', 'Ultrawide', 'wide screen', {mh:68, md:170, mw:3, mb:4, handle:false, mnDepth:36, mnNeck:20, logoW:130, texture:'smooth'}],
+    ['mnRetro', 'Retro', 'deep, cream', {mh:88, md:110, mw:3, mb:4, handle:false, color:'#f2f0ec', mnDepth:62, mnNeck:14, logoW:80, texture:'smooth'}]
   ],
   tubes: [
     ['tbRow', 'Tube cluster', 'row of 3', {mh:110, md:44, mw:2.6, mb:4, handle:false, color:'#2f4cb3', tbLayout:'row3', tbBase:28, tbStep:18, logoW:100, ly:50, texture:'smooth'}],
@@ -1675,7 +1754,7 @@ function applyPreset(key, p){
   $('handle').checked = p.handle; S.handle = p.handle;
   if (p.divider !== undefined){ S.divider = p.divider; $('divider').value = String(p.divider); }
   setTexture(p.texture || (S.product === 'duo' ? 'ribbed' : 'smooth'), true);
-  [['tbBase','tbBase'],['tbStep','tbStep'],['cpCup','cpCup'],['cpFront','cpFront'],['cpSlot','cpSlot'],['stDepth','stDepth'],['stLow','stLow'],['phAngle','phAngle'],['phSlot','phSlot'],['phLip','phLip'],['hexBase','hexBase'],['hexStep','hexStep'],['cadDepth','cadDepth'],['cadFront','cadFront'],['cadSlot','cadSlot'],['duoLen','duoLen'],['duoH2','duoH2'],['texCols','texCols'],['texDepth','texDepth'],['lw','logoW'],['ly','ly']].forEach(([id, k]) => { if (p[k] !== undefined){ $(id).value = p[k]; $(id).dispatchEvent(new Event('input')); } });
+  [['pbHole','pbHole'],['pbDepth','pbDepth'],['mnDepth','mnDepth'],['mnNeck','mnNeck'],['tbBase','tbBase'],['tbStep','tbStep'],['cpCup','cpCup'],['cpFront','cpFront'],['cpSlot','cpSlot'],['stDepth','stDepth'],['stLow','stLow'],['phAngle','phAngle'],['phSlot','phSlot'],['phLip','phLip'],['hexBase','hexBase'],['hexStep','hexStep'],['cadDepth','cadDepth'],['cadFront','cadFront'],['cadSlot','cadSlot'],['duoLen','duoLen'],['duoH2','duoH2'],['texCols','texCols'],['texDepth','texDepth'],['lw','logoW'],['ly','ly']].forEach(([id, k]) => { if (p[k] !== undefined){ $(id).value = p[k]; $(id).dispatchEvent(new Event('input')); } });
   if (p.depth){ $('depth').value = p.depth; $('depth').dispatchEvent(new Event('input')); }
   if (p.text !== undefined){ S.text = p.text; $('logoText').value = p.text; }
   if (p.textColor){ S.textColor = p.textColor; $('textColor').value = p.textColor; }
@@ -1690,6 +1769,8 @@ function applyPreset(key, p){
   S.cuff = !!p.cuff; $('cuff').checked = S.cuff; if (p.cuffH){ S.cuffH = p.cuffH; $('cuffH').value = p.cuffH; $('cuffHOut').textContent = p.cuffH + ' mm'; } $('cuffField').hidden = !S.cuff;
   if (p.twist !== undefined){ S.twist = p.twist; $('twist').value = p.twist; $('twist').dispatchEvent(new Event('input')); }
   S.slant = p.slant || 0; $('slant').value = Math.round(S.slant * 100); $('slantOut').textContent = S.slant ? Math.round(S.slant * 100) + '%' : 'Flat';
+  if (p.pbRows){ S.pbRows = p.pbRows; $('pbRows').value = String(p.pbRows); }
+  if (p.pbStagger !== undefined){ S.pbStagger = p.pbStagger; $('pbStagger').checked = p.pbStagger; }
   if (p.tbLayout){ S.tbLayout = p.tbLayout; $('tbLayout').value = p.tbLayout; }
   if (p.hcSides){ S.hcSides = p.hcSides; $('hcSides').value = String(p.hcSides); }
   if (p.hcBand !== undefined){ S.hcBand = p.hcBand; $('hcBand').checked = p.hcBand; }
@@ -1744,13 +1825,16 @@ function setProduct0(prod){
   $('prodSteps').setAttribute('aria-pressed', String(prod === 'steps')); $('stepsOpts').hidden = prod !== 'steps';
   $('prodTubes').setAttribute('aria-pressed', String(prod === 'tubes')); $('tubesOpts').hidden = prod !== 'tubes';
   $('prodCard').setAttribute('aria-pressed', String(prod === 'card')); $('cardOpts').hidden = prod !== 'card';
+  $('prodBlock').setAttribute('aria-pressed', String(prod === 'block')); $('blockOpts').hidden = prod !== 'block';
+  $('prodMonitor').setAttribute('aria-pressed', String(prod === 'monitor')); $('monitorOpts').hidden = prod !== 'monitor';
+  $('mh').min = (prod === 'block' || prod === 'monitor') ? 40 : 70; $('mw').closest('.field').hidden = prod === 'block';
   const flatP = FLAT_PRODUCTS.includes(prod);
   ['txSmooth','txQuilt','txRib'].forEach(id => $(id).closest('.seg').hidden = flatP);
   $('cuffRow').hidden = flatP; if (flatP){ S.cuff = false; $('cuffField').hidden = true; }
   $('both').closest('label').hidden = flatP;
   $('mt').closest('.field').hidden = flatP;
-  $('md').closest('.field').querySelector('label').textContent = (prod === 'caddy' || prod === 'phone' || prod === 'card') ? 'Width' : prod === 'tubes' ? 'Tube diameter' : prod === 'hex' ? 'Cell width' : prod === 'hexcup' ? 'Across flats' : prod === 'steps' ? 'Bay width' : 'Diameter';
-  $('md').min = prod === 'hex' ? 20 : prod === 'tubes' ? 25 : prod === 'card' ? 130 : prod === 'steps' ? 28 : prod === 'phone' ? 50 : prod === 'hexcup' ? 50 : 60; $('md').max = prod === 'hex' ? 45 : prod === 'tubes' ? 70 : prod === 'card' ? 220 : prod === 'steps' ? 70 : (prod === 'caddy' ? 160 : prod === 'phone' ? 160 : 110);
+  $('md').closest('.field').querySelector('label').textContent = (prod === 'caddy' || prod === 'phone' || prod === 'card' || prod === 'block' || prod === 'monitor') ? 'Width' : prod === 'tubes' ? 'Tube diameter' : prod === 'hex' ? 'Cell width' : prod === 'hexcup' ? 'Across flats' : prod === 'steps' ? 'Bay width' : 'Diameter';
+  $('md').min = prod === 'hex' ? 20 : prod === 'tubes' ? 25 : prod === 'card' ? 130 : (prod === 'block' || prod === 'monitor') ? 80 : prod === 'steps' ? 28 : prod === 'phone' ? 50 : prod === 'hexcup' ? 50 : 60; $('md').max = prod === 'hex' ? 45 : prod === 'tubes' ? 70 : (prod === 'card' || prod === 'block' || prod === 'monitor') ? 220 : prod === 'steps' ? 70 : (prod === 'caddy' ? 160 : prod === 'phone' ? 160 : 110);
   $('mh').max = prod === 'phone' ? 160 : 130; $('mw').max = prod === 'phone' ? 8 : 8;
   const first = PRESETS[prod][0];
   renderPresets(first[0]);
@@ -1766,6 +1850,10 @@ $('prodHexcup').addEventListener('click', () => { if (S.product !== 'hexcup') se
 $('prodSteps').addEventListener('click', () => { if (S.product !== 'steps') setProduct('steps'); });
 $('prodTubes').addEventListener('click', () => { if (S.product !== 'tubes') setProduct('tubes'); });
 $('prodCard').addEventListener('click', () => { if (S.product !== 'card') setProduct('card'); });
+$('prodBlock').addEventListener('click', () => { if (S.product !== 'block') setProduct('block'); });
+$('prodMonitor').addEventListener('click', () => { if (S.product !== 'monitor') setProduct('monitor'); });
+$('pbRows').addEventListener('change', e => { S.pbRows = +e.target.value; rebuild(); });
+$('pbStagger').addEventListener('change', e => { S.pbStagger = e.target.checked; rebuild(); });
 $('tbLayout').addEventListener('change', e => { S.tbLayout = e.target.value; rebuild(); });
 $('hcSides').addEventListener('change', e => { S.hcSides = +e.target.value; rebuild(); });
 $('hcBand').addEventListener('change', e => { S.hcBand = e.target.checked; rebuild(); });
@@ -1805,6 +1893,7 @@ bindRange('cuffH', 'cuffH', v => v + ' mm');
 bindRange('duoLen', 'duoLen', v => v + ' mm');
 $('slant').addEventListener('input', e => { S.slant = parseFloat(e.target.value) / 100; $('slantOut').textContent = S.slant ? e.target.value + '%' : 'Flat'; rebuild(); });
 $('slantOut').textContent = 'Flat';
+bindRange('pbHole', 'pbHole', v => v + ' mm'); bindRange('pbDepth', 'pbDepth', v => v + ' mm'); bindRange('mnDepth', 'mnDepth', v => v + ' mm'); bindRange('mnNeck', 'mnNeck', v => v + ' mm');
 bindRange('tbBase', 'tbBase', v => v + ' mm'); bindRange('tbStep', 'tbStep', v => v ? v + ' mm' : 'All the same');
 bindRange('cpCup', 'cpCup', v => v + ' mm'); bindRange('cpFront', 'cpFront', v => v + ' mm'); bindRange('cpSlot', 'cpSlot', v => v + ' mm');
 bindRange('stDepth', 'stDepth', v => v + ' mm'); bindRange('stLow', 'stLow', v => v + '%');
