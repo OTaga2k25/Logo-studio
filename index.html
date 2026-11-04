@@ -428,6 +428,7 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
             <option value="1">One divider · 2 sections</option>
             <option value="2">Cross · 4 sections</option>
           </select></div>
+        <div class="field"><label for="slant">Slanted top</label><output id="slantOut"></output><input type="range" id="slant" min="0" max="50" step="1" value="0"></div>
         <div class="field"><label for="mb">Base thickness</label><output id="mbOut"></output><input type="range" id="mb" min="3" max="15" step="1" value="6"></div>
       </div>
       <div class="pnext"><button type="button" class="btn primary next" data-go="export">Next: Export →</button></div>
@@ -476,7 +477,7 @@ const $ = id => document.getElementById(id);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const S = {
-  product:'mug', divider:0, layers:[], phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
+  product:'mug', divider:0, layers:[], slant:0, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
   mode:'raised', logoW:52, angle:0, ly:44, both:false,
   depth:1.6, thr:0.5, invert:false, heightSrc:'layered', reliefColor:'full', smooth:2, hiDetail:false, logoColor:'#1d2c7a', removeBg:true, stickerW:0, nColors:5, text:'', textFont:"800|'Baloo 2'", textPos:'below', textSize:27, textColor:'#12939a'
 };
@@ -524,7 +525,15 @@ new ResizeObserver(resize).observe(stage); resize();
 const Rt = () => S.D/2, Rb = () => S.D/2 - S.taper/2;
 const R = y => Rb() + (Rt() - Rb()) * Math.min(1, Math.max(0, y / S.H));
 const cuffOn = () => S.cuff && S.cuffH > 0;
-const bandLo = () => S.base + 4 + (S.texture !== 'smooth' ? 2 : 0), bandHi = () => cuffOn() ? S.H - S.cuffH - 4 : S.H - 9;
+const slantF = a => 1 - (S.slant || 0) * (1 + Math.cos(a)) / 2;
+const bandLo = () => S.base + 4 + (S.texture !== 'smooth' ? 2 : 0), bandHi = () => {
+  let h = cuffOn() ? S.H - S.cuffH - 4 : S.H - 9;
+  if (S.product === 'pen' && S.slant > 0){
+    const as = [S.angle * Math.PI / 180]; if (S.both) as.push(as[0] + Math.PI);
+    const f = Math.min(...as.map(slantF)), b0 = S.base + 1; h = b0 + (h - b0) * f;
+  }
+  return h;
+};
 const texAmp = () => (S.texture === 'smooth' || isFlat()) ? 0 : S.texDepth;
 const ss = x => { x = Math.min(1, Math.max(0, x)); return x*x*(3-2*x); };
 function surfaceBump(y, phi){
@@ -591,6 +600,16 @@ function bodyGeometry(){
         const x = P.getX(q), z = P.getZ(q), r = Math.hypot(x, z) || 1;
         P.setX(q, x * (r + d) / r); P.setZ(q, z * (r + d) / r);
       }
+    }
+    g.computeVertexNormals();
+  }
+  if (S.product === 'pen' && S.slant > 0){
+    // slanted top: full height at the back, lower at the front (angle 0 = front)
+    const P = g.attributes.position, b0 = S.base + 1;
+    for (let q = 0; q < P.count; q++){
+      const y = P.getY(q); if (y <= b0) continue;
+      const f = slantF(Math.atan2(P.getX(q), P.getZ(q)));
+      P.setY(q, b0 + (y - b0) * f);
     }
     g.computeVertexNormals();
   }
@@ -1371,7 +1390,8 @@ function penCount(){
   return Math.max(1, Math.floor(Math.PI * r * r * 0.42 / (Math.PI * 4.6 * 4.6)) - (sections > 1 ? sections : 0));
 }
 function dividerGeometry(){
-  const yTop = S.base + (S.H - S.base) * 0.62, t = 2.4;
+  let yTop = S.base + (S.H - S.base) * 0.62; const t = 2.4;
+  if (S.slant > 0) yTop = Math.min(yTop, S.base + 1 + (S.H - S.base - 1) * (1 - S.slant) - 6);
   const rIn = Math.min(R(S.base), R(yTop)) - S.wall + 0.9, h = yTop - S.base + 0.6;
   const geos = [];
   const a = new THREE.BoxGeometry(rIn * 2, h, t); a.translate(0, S.base - 0.6 + h/2, 0); geos.push(a);
@@ -1460,6 +1480,8 @@ const PRESETS = {
     ['duoWide', 'Wide desk', 'long tray', {mh:105, md:68, mt:0, mw:3, mb:4, handle:false, duoLen:175, duoH2:58, texCols:24, texDepth:2.2}]
   ],
   pen: [
+    ['penSlant', 'Slanted', 'angled top', {mh:115, md:80, mt:0, mw:3.5, mb:8, handle:false, divider:0, slant:0.36, texture:'smooth', color:'#2f4cb3', ly:30}],
+    ['penSlantRib', 'Slanted ribbed', 'angled + ribs', {mh:115, md:82, mt:0, mw:3.5, mb:8, handle:false, divider:0, slant:0.32, texture:'ribbed', texCols:26, texDepth:1.3, color:'#2b2d33', ly:30}],
     ['penQuilt', 'Quilted cuff', 'padded + cuff', {mh:108, md:86, mt:9, mw:3.5, mb:8, handle:false, divider:0, texture:'quilted', cuff:true, cuffH:20, color:'#f2f0ec'}],
     ['penRound', 'Classic', 'Ø80 · 105', {mh:105, md:80, mt:0, mw:3.5, mb:8, handle:false, divider:0}],
     ['penFlare', 'Flared', 'wide top', {mh:100, md:84, mt:10, mw:3.5, mb:8, handle:false, divider:0}],
@@ -1494,6 +1516,7 @@ function applyPreset(key, p){
     if (document.fonts && document.fonts.load) Promise.race([document.fonts.load(fw + ' 40px ' + ff, S.text || 'Aa'), new Promise(r => setTimeout(r, 2000))]).then(go, go); else go();
   }
   S.cuff = !!p.cuff; $('cuff').checked = S.cuff; if (p.cuffH){ S.cuffH = p.cuffH; $('cuffH').value = p.cuffH; $('cuffHOut').textContent = p.cuffH + ' mm'; } $('cuffField').hidden = !S.cuff;
+  S.slant = p.slant || 0; $('slant').value = Math.round(S.slant * 100); $('slantOut').textContent = S.slant ? Math.round(S.slant * 100) + '%' : 'Flat';
   if (p.hexLayout){ S.hexLayout = p.hexLayout; $('hexLayout').value = p.hexLayout; }
   if (p.cadSplit !== undefined){ S.cadSplit = p.cadSplit; $('cadSplit').checked = p.cadSplit; }
   if (p.cadFoot !== undefined){ S.cadFoot = p.cadFoot; $('cadFoot').checked = p.cadFoot; }
@@ -1585,6 +1608,8 @@ bindRange('texCols', 'texCols', v => v + '');
 bindRange('texRow', 'texRow', v => v + ' mm');
 bindRange('cuffH', 'cuffH', v => v + ' mm');
 bindRange('duoLen', 'duoLen', v => v + ' mm');
+$('slant').addEventListener('input', e => { S.slant = parseFloat(e.target.value) / 100; $('slantOut').textContent = S.slant ? e.target.value + '%' : 'Flat'; rebuild(); });
+$('slantOut').textContent = 'Flat';
 bindRange('phAngle', 'phAngle', v => v + '°'); bindRange('phSlot', 'phSlot', v => v + ' mm'); bindRange('phLip', 'phLip', v => v + ' mm');
 bindRange('hexBase', 'hexBase', v => v + ' mm'); bindRange('hexStep', 'hexStep', v => v ? v + ' mm' : 'All the same');
 bindRange('cadDepth', 'cadDepth', v => v + ' mm'); bindRange('cadFront', 'cadFront', v => v + '%'); bindRange('cadSlot', 'cadSlot', v => v + ' mm');
