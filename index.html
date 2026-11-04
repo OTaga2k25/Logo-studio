@@ -346,6 +346,7 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
           <button id="prodPen" aria-pressed="false">Pen holder<small>Round desk cup</small></button>
           <button id="prodDuo" aria-pressed="false">Duo organiser<small>Cup + tray, flat front</small></button>
           <button id="prodCaddy" aria-pressed="false">Desk caddy<small>Phone slot + pen bays</small></button>
+          <button id="prodHex" aria-pressed="false">Honeycomb stand<small>Hexagon tubes, logo base</small></button>
         </div>
         <div class="presets" id="presets" role="group" aria-label="Shape"></div>
       </div>
@@ -380,6 +381,19 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
         </div>
         <label class="check" id="cuffRow"><input type="checkbox" id="cuff"> <span>Folded top cuff</span></label>
         <div class="field" id="cuffField" hidden><label for="cuffH">Cuff height</label><output id="cuffHOut"></output><input type="range" id="cuffH" min="8" max="35" step="1" value="18"></div>
+      </div>
+      <div class="sub" id="hexOpts" hidden>
+        <div><label for="hexLayout" class="lbl">Layout</label>
+          <select class="text" id="hexLayout">
+            <option value="flower">Honeycomb · 7 cells</option>
+            <option value="wave">Wave · 5 cells in two rows</option>
+            <option value="trio">Trio · 3 cells in a row</option>
+          </select></div>
+        <div class="row2">
+          <div class="field"><label for="hexBase">Logo base height</label><output id="hexBaseOut"></output><input type="range" id="hexBase" min="18" max="50" step="1" value="30"></div>
+          <div class="field"><label for="hexStep">Height steps</label><output id="hexStepOut"></output><input type="range" id="hexStep" min="0" max="40" step="1" value="16"></div>
+        </div>
+        <span class="note">Height sets the tallest tube; each step towards the front is shorter by Height steps. Cell width is the across-flats size of each hexagon.</span>
       </div>
       <div class="sub" id="caddyOpts" hidden>
         <div class="row2">
@@ -453,7 +467,7 @@ const $ = id => document.getElementById(id);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const S = {
-  product:'mug', divider:0, layers:[], cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
+  product:'mug', divider:0, layers:[], hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
   mode:'raised', logoW:52, angle:0, ly:44, both:false,
   depth:1.6, thr:0.5, invert:false, heightSrc:'layered', reliefColor:'full', smooth:2, hiDetail:false, logoColor:'#1d2c7a', removeBg:true, stickerW:0, nColors:5, text:'', textFont:"800|'Baloo 2'", textPos:'below', textSize:27, textColor:'#12939a'
 };
@@ -650,12 +664,48 @@ function duoGeometries(){
   out.push(['Tray floor', extrudeAt(new THREE.Shape(toShapePts(cav2)), 0, S.base)]);
   return out;
 }
-const isFlat = () => S.product === 'duo' || S.product === 'caddy';
+const isFlat = () => S.product === 'duo' || S.product === 'caddy' || S.product === 'hex';
 const cadFootH = () => S.cadFoot ? 6 : 0;
 function frontInfo(){
   // the flat front panel that carries the logo: x range, front face z, usable height
   if (S.product === 'duo'){ const D = duoLayout(); return {x0: D.xp, x1: D.x1, zf: D.zf, lo: 3, hi: D.H2 - 3, rc: D.rc}; }
+  if (S.product === 'hex'){ const P = hexPlinth(); return {x0: P.x0, x1: P.x1, zf: P.z1, lo: 3, hi: S.hexBase - 3, rc: P.rc}; }
   const W = S.D, f = cadFootH(); return {x0: -W/2, x1: W/2, zf: S.cadDepth/2, lo: f + 3, hi: f + S.H * S.cadFront/100 - 3, rc: 6};
+}
+// ---------- honeycomb pen stand ----------
+function hexCells(){
+  // tube centres (x, z; front is +z) and how many steps shorter than the tallest each one is
+  const s = S.D - S.wall * 0.5, dz = s * Math.sqrt(3) / 2;
+  if (S.hexLayout === 'trio') return [[-s, 0, 1], [0, 0, 0], [s, 0, 1]];
+  if (S.hexLayout === 'wave') return [[-s/2, -dz/2, 0], [s/2, -dz/2, 0], [-s, dz/2, 2], [0, dz/2, 1], [s, dz/2, 2]];
+  const c = [[0, 0, 0]];
+  [[0, 2], [60, 3], [120, 3], [180, 2], [240, 1], [300, 1]].forEach(([a, st]) => { const r = a * Math.PI / 180; c.push([Math.cos(r) * s, Math.sin(r) * s, st]); });
+  return c;
+}
+function hexPlinth(){
+  const R0 = S.D / Math.sqrt(3), m = 4;
+  let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+  hexCells().forEach(([x, z]) => { x0 = Math.min(x0, x - S.D/2); x1 = Math.max(x1, x + S.D/2); z0 = Math.min(z0, z - R0); z1 = Math.max(z1, z + R0); });
+  return {x0: x0 - m, x1: x1 + m, z0: z0 - m, z1: z1 + m, rc: 8};
+}
+function hexGeometries(){
+  const out = [], P = hexPlinth(), hb = S.hexBase, t = S.wall, R0 = S.D / Math.sqrt(3), Ri = R0 - 2 * t / Math.sqrt(3);
+  // hexagons with a point to the front and back, flat sides facing their neighbours
+  const hexPts = (cx, cz, r) => { const o = []; for (let k = 0; k < 6; k++){ const a = (30 + 60 * k) * Math.PI / 180; o.push(new THREE.Vector2(cx + Math.cos(a) * r, -(cz + Math.sin(a) * r))); } return o; };
+  const pl = new THREE.Shape(), r = P.rc, X0 = P.x0, X1 = P.x1, Z0 = P.z0, Z1 = P.z1;
+  pl.moveTo(X0 + r, -Z1); pl.lineTo(X1 - r, -Z1); pl.absarc(X1 - r, -Z1 + r, r, -Math.PI/2, 0, false);
+  pl.lineTo(X1, -Z0 - r); pl.absarc(X1 - r, -Z0 - r, r, 0, Math.PI/2, false);
+  pl.lineTo(X0 + r, -Z0); pl.absarc(X0 + r, -Z0 - r, r, Math.PI/2, Math.PI, false);
+  pl.lineTo(X0, -Z1 + r); pl.absarc(X0 + r, -Z1 + r, r, Math.PI, Math.PI * 1.5, false);
+  const pg = new THREE.ExtrudeGeometry(pl, {depth: hb, bevelEnabled: false, curveSegments: 16}); pg.rotateX(-Math.PI/2);
+  out.push(['Logo base', pg]);
+  hexCells().forEach(([cx, cz, st], i) => {
+    const h = Math.max(hb + 15, S.H - st * S.hexStep) - hb + 1;
+    const sh = new THREE.Shape(hexPts(cx, cz, R0)); sh.holes.push(new THREE.Path(hexPts(cx, cz, Ri).reverse()));
+    const g = new THREE.ExtrudeGeometry(sh, {depth: h, bevelEnabled: false}); g.rotateX(-Math.PI/2); g.translate(0, hb - 1, 0);
+    out.push(['Tube ' + (i + 1), g]);
+  });
+  return out;
 }
 function caddyGeometries(){
   const W = S.D, Dp = S.cadDepth, H = S.H, t = S.wall, b = S.base, f = cadFootH(), out = [], o = 0.4;
@@ -1249,7 +1299,8 @@ function build(){
   disposeMug();
   bodyMat.color.set(S.color); logoMat.color.set(S.logoColor);
   bodyMat.roughness = isFlat() ? 0.68 : 0.32; bodyMat.clearcoat = isFlat() ? 0.05 : 0.7; bodyMat.envMapIntensity = isFlat() ? 0.42 : 0.8;
-  if (S.product === 'caddy') caddyGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
+  if (S.product === 'hex') hexGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
+  else if (S.product === 'caddy') caddyGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
   else if (S.product === 'duo') duoGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
   else { const body = new THREE.Mesh(bodyGeometry(), bodyMat); body.name = 'Mug body'; mug.add(body); }
   if (S.handle && S.product === 'mug'){ const h = new THREE.Mesh(handleGeometry(), bodyMat); h.name = 'Handle'; mug.add(h); }
@@ -1265,7 +1316,7 @@ function build(){
     $('lwOut').textContent = L.w.toFixed(0) + ' × ' + L.h.toFixed(0) + ' mm';
   }
   pivot.position.y = -S.H/2;
-  const s = S.product === 'caddy' ? Math.max(S.D, S.cadDepth) * 1.6 : S.product === 'duo' ? Math.max(S.D, S.duoLen) * 1.5 : S.D * 1.7; shadow.scale.set(s, s, 1); shadow.position.set(S.handle && S.product === 'mug' ? 8 : 0, 0.05, 0);
+  const s = S.product === 'hex' ? (hexPlinth().x1 - hexPlinth().x0) * 1.4 : S.product === 'caddy' ? Math.max(S.D, S.cadDepth) * 1.6 : S.product === 'duo' ? Math.max(S.D, S.duoLen) * 1.5 : S.D * 1.7; shadow.scale.set(s, s, 1); shadow.position.set(S.handle && S.product === 'mug' ? 8 : 0, 0.05, 0);
   updateReadout();
   if (typeof showFilaments === 'function') try { showFilaments(); } catch (e) {}
   if (typeof schedulePreview === 'function' && typeof previewGroup !== 'undefined') schedulePreview();
@@ -1303,7 +1354,7 @@ function updateReadout(){
     `<span class="tag"><i>H</i><b>${sz.y.toFixed(0)}</b></span>` +
     `<span class="tag"><i>W</i><b>${sz.x.toFixed(0)}</b></span>` +
     `<span class="tag"><i>D</i><b>${sz.z.toFixed(0)} mm</b></span>` +
-    (S.product === 'caddy' ? `<span class="tag"><i>Holds</i><b>phone + pens</b></span>` : S.product === 'duo' ? `<span class="tag"><i>Holds</i><b>cup + tray</b></span>` : S.product === 'pen'
+    (S.product === 'hex' ? `<span class="tag"><i>Fits</i><b>≈ ${hexCells().length * Math.max(2, Math.floor(Math.pow((S.D - 2*S.wall) / 9.5, 2) * 0.8))} pens</b></span>` : S.product === 'caddy' ? `<span class="tag"><i>Holds</i><b>phone + pens</b></span>` : S.product === 'duo' ? `<span class="tag"><i>Holds</i><b>cup + tray</b></span>` : S.product === 'pen'
       ? `<span class="tag"><i>Fits</i><b>≈ ${penCount()} pens</b></span>`
       : `<span class="tag"><i>Holds</i><b>≈ ${Math.round(capacityMl() / 5) * 5} ml</b></span>`);
 }
@@ -1350,6 +1401,11 @@ const PRESETS = {
     ['espresso', 'Espresso', '~150 ml', {mh:70, md:64, mt:3, mw:3.5, mb:6, handle:true}],
     ['tumbler', 'Tumbler', 'no handle', {mh:125, md:80, mt:12, mw:4, mb:6, handle:false}]
   ],
+  hex: [
+    ['hexFlower', 'Honeycomb', '7 cells', {mh:105, md:30, mw:2.4, mb:4, handle:false, color:'#d8a531', hexLayout:'flower', hexBase:30, hexStep:14, logoW:90, ly:50, dropWhite:false, texture:'smooth'}],
+    ['hexWave', 'Wave', '5 cells', {mh:100, md:32, mw:2.4, mb:4, handle:false, hexLayout:'wave', hexBase:30, hexStep:18, logoW:90, texture:'smooth'}],
+    ['hexTrio', 'Trio', '3 in a row', {mh:95, md:34, mw:2.4, mb:4, handle:false, hexLayout:'trio', hexBase:28, hexStep:12, logoW:90, texture:'smooth'}]
+  ],
   caddy: [
     ['cadWalnut', 'Desk caddy', 'phone + pens', {mh:105, md:100, mw:4, mb:4, handle:false, color:'#4f2b1a', cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, logoW:62, ly:50, dropWhite:false, texture:'smooth'}],
     ['cadCompact', 'Compact', '85 mm', {mh:92, md:85, mw:3.5, mb:4, handle:false, cadDepth:85, cadFront:46, cadSlot:30, cadSplit:true, cadFoot:true, texture:'smooth'}],
@@ -1382,7 +1438,7 @@ function applyPreset(key, p){
   $('handle').checked = p.handle; S.handle = p.handle;
   if (p.divider !== undefined){ S.divider = p.divider; $('divider').value = String(p.divider); }
   setTexture(p.texture || (S.product === 'duo' ? 'ribbed' : 'smooth'), true);
-  [['cadDepth','cadDepth'],['cadFront','cadFront'],['cadSlot','cadSlot'],['duoLen','duoLen'],['duoH2','duoH2'],['texCols','texCols'],['texDepth','texDepth'],['lw','logoW'],['ly','ly']].forEach(([id, k]) => { if (p[k] !== undefined){ $(id).value = p[k]; $(id).dispatchEvent(new Event('input')); } });
+  [['hexBase','hexBase'],['hexStep','hexStep'],['cadDepth','cadDepth'],['cadFront','cadFront'],['cadSlot','cadSlot'],['duoLen','duoLen'],['duoH2','duoH2'],['texCols','texCols'],['texDepth','texDepth'],['lw','logoW'],['ly','ly']].forEach(([id, k]) => { if (p[k] !== undefined){ $(id).value = p[k]; $(id).dispatchEvent(new Event('input')); } });
   if (p.depth){ $('depth').value = p.depth; $('depth').dispatchEvent(new Event('input')); }
   if (p.text !== undefined){ S.text = p.text; $('logoText').value = p.text; }
   if (p.textColor){ S.textColor = p.textColor; $('textColor').value = p.textColor; }
@@ -1395,6 +1451,7 @@ function applyPreset(key, p){
     if (document.fonts && document.fonts.load) Promise.race([document.fonts.load(fw + ' 40px ' + ff, S.text || 'Aa'), new Promise(r => setTimeout(r, 2000))]).then(go, go); else go();
   }
   S.cuff = !!p.cuff; $('cuff').checked = S.cuff; if (p.cuffH){ S.cuffH = p.cuffH; $('cuffH').value = p.cuffH; $('cuffHOut').textContent = p.cuffH + ' mm'; } $('cuffField').hidden = !S.cuff;
+  if (p.hexLayout){ S.hexLayout = p.hexLayout; $('hexLayout').value = p.hexLayout; }
   if (p.cadSplit !== undefined){ S.cadSplit = p.cadSplit; $('cadSplit').checked = p.cadSplit; }
   if (p.cadFoot !== undefined){ S.cadFoot = p.cadFoot; $('cadFoot').checked = p.cadFoot; }
   if (p.color){ S.color = p.color; bodyMat.color.set(p.color); custom.value = p.color; markGlaze(); }
@@ -1435,12 +1492,15 @@ function setProduct0(prod){
   $('duoOpts').hidden = prod !== 'duo';
   $('prodCaddy').setAttribute('aria-pressed', String(prod === 'caddy'));
   $('caddyOpts').hidden = prod !== 'caddy';
-  const flatP = prod === 'duo' || prod === 'caddy';
+  $('prodHex').setAttribute('aria-pressed', String(prod === 'hex'));
+  $('hexOpts').hidden = prod !== 'hex';
+  const flatP = prod === 'duo' || prod === 'caddy' || prod === 'hex';
   ['txSmooth','txQuilt','txRib'].forEach(id => $(id).closest('.seg').hidden = flatP);
   $('cuffRow').hidden = flatP; if (flatP){ S.cuff = false; $('cuffField').hidden = true; }
   $('both').closest('label').hidden = flatP;
   $('mt').closest('.field').hidden = flatP;
-  $('md').closest('.field').querySelector('label').textContent = prod === 'caddy' ? 'Width' : 'Diameter';
+  $('md').closest('.field').querySelector('label').textContent = prod === 'caddy' ? 'Width' : prod === 'hex' ? 'Cell width' : 'Diameter';
+  $('md').min = prod === 'hex' ? 20 : 60; $('md').max = prod === 'hex' ? 45 : (prod === 'caddy' ? 160 : 110);
   const first = PRESETS[prod][0];
   renderPresets(first[0]);
   applyPreset(first[0], first[3]);
@@ -1449,6 +1509,8 @@ $('prodMug').addEventListener('click', () => { if (S.product !== 'mug') setProdu
 $('prodPen').addEventListener('click', () => { if (S.product !== 'pen') setProduct('pen'); });
 $('prodDuo').addEventListener('click', () => { if (S.product !== 'duo') setProduct('duo'); });
 $('prodCaddy').addEventListener('click', () => { if (S.product !== 'caddy') setProduct('caddy'); });
+$('prodHex').addEventListener('click', () => { if (S.product !== 'hex') setProduct('hex'); });
+$('hexLayout').addEventListener('change', e => { S.hexLayout = e.target.value; rebuild(); });
 $('cadSplit').addEventListener('change', e => { S.cadSplit = e.target.checked; rebuild(); });
 $('cadFoot').addEventListener('change', e => { S.cadFoot = e.target.checked; rebuild(); });
 $('dropWhite').addEventListener('change', e => { S.dropWhite = e.target.checked; processLogo(); rebuild(); });
@@ -1476,6 +1538,7 @@ bindRange('texCols', 'texCols', v => v + '');
 bindRange('texRow', 'texRow', v => v + ' mm');
 bindRange('cuffH', 'cuffH', v => v + ' mm');
 bindRange('duoLen', 'duoLen', v => v + ' mm');
+bindRange('hexBase', 'hexBase', v => v + ' mm'); bindRange('hexStep', 'hexStep', v => v ? v + ' mm' : 'All the same');
 bindRange('cadDepth', 'cadDepth', v => v + ' mm'); bindRange('cadFront', 'cadFront', v => v + '%'); bindRange('cadSlot', 'cadSlot', v => v + ' mm');
 bindRange('duoH2', 'duoH2', v => v + '%');
 bindRange('mw', 'wall', v => v.toFixed(1) + ' mm');
