@@ -846,7 +846,10 @@ function processLogo(){
     g2.putImageData(d, 0, 0);
   }
   if (S.text.trim()) c = composeText(c);
-  if (S.stickerW > 0) c = addSticker(c, S.stickerW);
+  // a white sticker border would bring back the white that 'Leave out white parts' removes
+  if (S.stickerW > 0 && !S.dropWhite) c = addSticker(c, S.stickerW);
+  const stEl = $('stickerW'); stEl.disabled = !!S.dropWhite; stEl.closest('.field').style.opacity = S.dropWhite ? '0.45' : '';
+  $('stickerWOut').textContent = S.dropWhite ? 'Off · white left out' : (S.stickerW ? S.stickerW + '%' : 'Off');
   logoProc = c;
   logoInk = computeInk(c); labelCache = null;
   const t = $('thumb'); t.innerHTML = ''; const tc = document.createElement('canvas');
