@@ -281,7 +281,7 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
         </div>
       </div>
 
-      <div class="grp">
+      <div class="grp" id="grpMade">
         <h3>How it's made</h3>
         <div class="seg" role="group" aria-label="Logo style">
           <button id="modePrint" aria-pressed="false">Printed<small>Full colour decal</small></button>
@@ -289,7 +289,7 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
         </div>
       </div>
 
-      <div class="grp">
+      <div class="grp" id="grpSize">
         <h3>Size and position</h3>
         <div class="field"><label for="lw">Design width</label><output id="lwOut"></output><input type="range" id="lw" min="15" max="130" step="1" value="52"></div>
         <div class="row2">
@@ -330,7 +330,7 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
         </div>
       </div>
 
-      <div class="grp">
+      <div class="grp" id="grpExtra">
         <h3>Extra text</h3>
         <div id="layers" style="display:flex;flex-direction:column;gap:12px"></div>
         <div class="alt"><button type="button" id="addLayer">+ Add text</button></div>
@@ -380,6 +380,7 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
           <button id="prodCard" aria-pressed="false">Card + pen holder<small>Business cards and pens</small></button>
           <button id="prodBlock" aria-pressed="false">Pen block<small>Solid block with pen holes</small></button>
           <button id="prodMonitor" aria-pressed="false">Monitor holder<small>Pens go in the screen</small></button>
+          <button id="prodShadow" aria-pressed="false">Shadow lamp<small>Your logo as a shadow</small></button>
         </div>
         <div class="presets" id="presets" role="group" aria-label="Shape"></div>
       </div>
@@ -387,7 +388,7 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
         <h3>Colour</h3>
         <div class="swatches" id="glazes" aria-label="Glaze colour"></div>
       </div>
-      <div class="grp">
+      <div class="grp" id="grpDims">
         <h3>Dimensions</h3>
         <div class="row2">
           <div class="field"><label for="mh">Height</label><output id="mhOut"></output><input type="range" id="mh" min="70" max="130" step="1" value="100"></div>
@@ -416,6 +417,26 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
         </div>
         <label class="check" id="cuffRow"><input type="checkbox" id="cuff"> <span>Folded top cuff</span></label>
         <div class="field" id="cuffField" hidden><label for="cuffH">Cuff height</label><output id="cuffHOut"></output><input type="range" id="cuffH" min="8" max="35" step="1" value="18"></div>
+      </div>
+      <div class="sub" id="shadowOpts" hidden>
+        <div>
+          <span class="lbl">Where the lamp sits · tap the picture</span>
+          <canvas id="slPick" width="300" height="220" style="width:100%;max-width:300px;aspect-ratio:300/220;border-radius:12px;border:1px solid var(--line);background:var(--bg);cursor:crosshair;touch-action:none"></canvas>
+          <div class="alt" style="margin-top:6px"><button type="button" id="slCentre">Put the lamp in the middle of the shape</button></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="slSize">Shadow size</label><output id="slSizeOut"></output><input type="range" id="slSize" min="120" max="700" step="10" value="360"></div>
+          <div class="field"><label for="slRays">Light rays</label><output id="slRaysOut"></output><input type="range" id="slRays" min="0" max="48" step="2" value="16"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="slLed">LED tea light Ø</label><output id="slLedOut"></output><input type="range" id="slLed" min="15" max="45" step="0.5" value="38"></div>
+          <div class="field"><label for="slLight">Light height</label><output id="slLightOut"></output><input type="range" id="slLight" min="10" max="45" step="0.5" value="28"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="slSmooth">Smooth outline</label><output id="slSmoothOut"></output><input type="range" id="slSmooth" min="0" max="12" step="1" value="3"></div>
+          <div class="field"><label for="slWall">Wall</label><output id="slWallOut"></output><input type="range" id="slWall" min="1.2" max="3" step="0.1" value="1.6"></div>
+        </div>
+        <span class="note">The lamp is a ring with a shaped rim that sits around an LED tea light. Light height is how high the glowing tip of the LED is above the table. Works on a table, or held flat against a wall. Any upload works; only its outline becomes the shadow. Best in a dark room; print with 0.1–0.12 mm layers for a sharp shadow.</span>
       </div>
       <div class="sub" id="blockOpts" hidden>
         <div class="row2">
@@ -569,7 +590,7 @@ const $ = id => document.getElementById(id);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const S = {
-  product:'mug', divider:0, layers:[], cobrand:false, sep:'×', cbOrder:'ours', cbBalance:0, pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
+  product:'mug', divider:0, layers:[], slSize:360, slRays:16, slLed:38, slLight:28, slSmooth:3, slWall:1.6, slCx:-1, slCy:-1, slWallMode:false, cobrand:false, sep:'×', cbOrder:'ours', cbBalance:0, pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
   mode:'raised', logoW:52, angle:0, ly:44, both:false,
   depth:1.6, thr:0.5, invert:false, heightSrc:'layered', reliefColor:'full', smooth:2, hiDetail:false, logoColor:'#1d2c7a', removeBg:true, stickerW:0, nColors:5, text:'', textFont:"800|'Baloo 2'", textPos:'below', textSize:27, textColor:'#12939a'
 };
@@ -591,7 +612,7 @@ const camera = new THREE.PerspectiveCamera(32, 1, 1, 4000);
 const controls = new THREE.OrbitControls(camera, canvas);
 controls.enableDamping = true; controls.minDistance = 120; controls.maxDistance = 700;
 controls.autoRotate = !reduced; controls.autoRotateSpeed = 1.2;
-function resetView(){ camera.position.set(60, 70, 300); controls.target.set(0, 0, 0); controls.update(); }
+function resetView(){ if (typeof S !== 'undefined' && S.product === 'shadow'){ const r = slData ? Math.min(slData.Rmax, 600) : 200; camera.position.set(0, r * 1.9 + 60, r * 1.5 + 60); controls.target.set(0, 0, 0); controls.update(); return; } camera.position.set(60, 70, 300); controls.target.set(0, 0, 0); controls.update(); }
 resetView();
 $('spin').checked = controls.autoRotate;
 
@@ -799,6 +820,98 @@ function frontInfo(){
   if (S.product === 'steps'){ const W = S.D * S.stBays; return {x0: -W/2, x1: W/2, zf: S.stDepth/2, lo: S.base + 3, hi: S.H * S.stLow/100 - 4, rc: 2}; }
   if (S.product === 'phone'){ const P = phoneProfile(); return {x0: -S.D/2, x1: S.D/2, zf: P.zF, lo: 3, hi: S.phLip - 3, rc: 3}; }
   const W = S.D, f = cadFootH(); return {x0: -W/2, x1: W/2, zf: S.cadDepth/2, lo: f + 3, hi: f + S.H * S.cadFront/100 - 3, rc: 6};
+}
+// ---------- shadow lamp ----------
+// The LED tip sits at height e above the table. A ring of outer radius ro around it has a rim height h(phi).
+// A ray from the LED that just grazes the rim lands on the table at R = ro * e / (e - h), so everything
+// closer than R is in shadow. For a picture whose outline is R(phi) from the lamp: h = e * (1 - ro / R).
+let slMaskCache = null, slData = null;
+function slMask(){
+  const src = logoBase || logoProc; if (!src) return null;
+  if (slMaskCache && slMaskCache.src === src) return slMaskCache;
+  const k = Math.min(1, 420 / Math.max(src.width, src.height)), w = Math.max(2, Math.round(src.width * k)), h = Math.max(2, Math.round(src.height * k));
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.drawImage(src, 0, 0, w, h);
+  const d = g.getImageData(0, 0, w, h).data, m = new Uint8Array(w * h); let sx = 0, sy = 0, n = 0;
+  for (let q = 0; q < m.length; q++) if (d[q*4+3] > 110){ m[q] = 1; sx += q % w; sy += (q / w) | 0; n++; }
+  slMaskCache = {src, w, h, m, cx: n ? sx / n / w : 0.5, cy: n ? sy / n / h : 0.5};
+  return slMaskCache;
+}
+function slCompute(){
+  const M = slMask(); if (!M) return null;
+  if (S.slCx < 0){ S.slCx = M.cx; S.slCy = M.cy; }
+  const N = 720, Rpx = new Float32Array(N), cx = S.slCx * M.w, cy = S.slCy * M.h, maxD = Math.hypot(M.w, M.h);
+  for (let i = 0; i < N; i++){
+    const a = i / N * Math.PI * 2, dx = Math.cos(a), dy = Math.sin(a); let last = 0;
+    for (let t = 0; t < maxD; t += 0.5){ const x = Math.round(cx + dx * t), y = Math.round(cy + dy * t); if (x < 0 || y < 0 || x >= M.w || y >= M.h) break; if (M.m[y * M.w + x]) last = t; }
+    Rpx[i] = last;
+  }
+  const scale = S.slSize / Math.max(M.w, M.h);
+  const e = S.slLight + 1.2, ro = S.slLed / 2 + 0.5 + S.slWall, hMin = 2.5, hMax = e - 1.2;
+  const Rmin = ro * e / (e - hMin), Rmax = ro * e / (e - hMax);
+  let R = Array.from(Rpx, v => Math.min(Rmax, Math.max(Rmin, v * scale)));
+  const k = S.slSmooth;
+  if (k > 0){ const o = new Float32Array(N); for (let i = 0; i < N; i++){ let s2 = 0; for (let j = -k; j <= k; j++) s2 += R[(i + j + N) % N]; o[i] = s2 / (2*k + 1); } R = Array.from(o); }
+  const hs = new Float32Array(N);
+  for (let i = 0; i < N; i++) hs[i] = Math.min(hMax, Math.max(hMin, e * (1 - ro / R[i])));
+  if (S.slRays > 0){                                    // narrow notches in the rim let rays of light cut through the shadow
+    const w = 1.1 / 360 * N;
+    for (let r = 0; r < S.slRays; r++){ const c0 = (r + 0.5) / S.slRays * N; for (let i = Math.floor(c0 - w); i <= Math.ceil(c0 + w); i++){ const j = (i + N) % N; if (Math.abs(i - c0) <= w) hs[j] = hMin; } }
+  }
+  slData = {N, hs, e, ro, ri: ro - S.slWall, hMin, Rshadow: Array.from(hs, h => ro * e / (e - h)), Rmax: Math.max(...R)};
+  return slData;
+}
+function shadowGeometries(){
+  const D = slCompute(); if (!D) return [];
+  const {N, hs, ro, ri} = D, fl = 1.2, pos = [], idx = [];
+  for (let i = 0; i < N; i++){
+    const a = i / N * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a), h = hs[i];
+    pos.push(c*ro, 0, sn*ro,  c*ro, h, sn*ro,  c*ri, h, sn*ri,  c*ri, 0, sn*ri);
+  }
+  for (let i = 0; i < N; i++){
+    const a = i * 4, b = ((i + 1) % N) * 4;
+    for (let f = 0; f < 4; f++){ const p0 = a + f, p1 = a + (f + 1) % 4, q0 = b + f, q1 = b + (f + 1) % 4; idx.push(p0, q0, p1, p1, q0, q1); }
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
+  fixWinding(g); g.computeVertexNormals();
+  const floor = new THREE.CylinderGeometry(ri + 0.3, ri + 0.3, fl, 96); floor.translate(0, fl/2, 0);
+  return [['Shadow ring', g], ['Floor', floor]];
+}
+let slPlane = null, slGlow = null;
+function updateShadowPreview(){
+  const on = S.product === 'shadow' && slData;
+  if (!slPlane){
+    slPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({transparent: true, depthWrite: false}));
+    slPlane.rotation.x = -Math.PI / 2; slPlane.renderOrder = -1; pivot.add(slPlane);
+    slGlow = new THREE.Mesh(new THREE.SphereGeometry(4, 24, 16), new THREE.MeshBasicMaterial({color: 0xffd27a})); pivot.add(slGlow);
+  }
+  slPlane.visible = slGlow.visible = !!on; shadow.visible = !on;
+  if (!on) return;
+  const D = slData, ext = Math.min(D.Rmax * 1.25, 900), px = 512, c = document.createElement('canvas'); c.width = c.height = px;
+  const g = c.getContext('2d'), img = g.createImageData(px, px), d = img.data;
+  for (let y = 0; y < px; y++) for (let x = 0; x < px; x++){
+    const wx = (x / (px - 1) * 2 - 1) * ext, wz = (y / (px - 1) * 2 - 1) * ext, r = Math.hypot(wx, wz);
+    let a = Math.atan2(wz, wx); if (a < 0) a += Math.PI * 2;
+    const R = D.Rshadow[Math.floor(a / (Math.PI * 2) * D.N) % D.N], q = (y * px + x) * 4;
+    const fade = Math.max(0, Math.min(1, (ext - r) / (ext * 0.25)));
+    if (r < R){ d[q] = 22; d[q+1] = 20; d[q+2] = 18; d[q+3] = Math.round(235 * fade); }
+    else { const I = Math.min(1, (D.e * D.e * 9) / (r * r * 0.02 + D.e * D.e)); d[q] = 255; d[q+1] = Math.round(200 + 30 * I); d[q+2] = Math.round(110 + 40 * I); d[q+3] = Math.round(255 * (0.25 + 0.75 * I) * fade); }
+  }
+  g.putImageData(img, 0, 0);
+  if (slPlane.material.map) slPlane.material.map.dispose();
+  slPlane.material.map = new THREE.CanvasTexture(c); slPlane.material.map.encoding = THREE.sRGBEncoding; slPlane.material.needsUpdate = true;
+  slPlane.scale.set(ext * 2, ext * 2, 1); slPlane.position.set(0, 0.05, 0);
+  slGlow.position.set(0, D.e, 0);
+}
+function drawShadowPicker(){
+  const cv = $('slPick'); if (!cv || S.product !== 'shadow') return; const M = slMask(); const g = cv.getContext('2d');
+  g.clearRect(0, 0, cv.width, cv.height); if (!M) return;
+  const k = Math.min((cv.width - 20) / M.w, (cv.height - 20) / M.h), ox = (cv.width - M.w * k) / 2, oy = (cv.height - M.h * k) / 2;
+  const img = g.createImageData(M.w, M.h); for (let q = 0; q < M.m.length; q++){ if (M.m[q]){ img.data[q*4] = 40; img.data[q*4+1] = 38; img.data[q*4+2] = 34; img.data[q*4+3] = 255; } }
+  const t = document.createElement('canvas'); t.width = M.w; t.height = M.h; t.getContext('2d').putImageData(img, 0, 0);
+  g.imageSmoothingEnabled = true; g.drawImage(t, ox, oy, M.w * k, M.h * k);
+  const px = ox + S.slCx * M.w * k, py = oy + S.slCy * M.h * k;
+  g.fillStyle = '#ffb627'; g.strokeStyle = '#fff'; g.lineWidth = 3; g.beginPath(); g.arc(px, py, 8, 0, Math.PI * 2); g.fill(); g.stroke();
+  cv._map = {ox, oy, k, w: M.w, h: M.h};
 }
 // ---------- pen block ----------
 function blockHoles(){
@@ -1298,7 +1411,7 @@ function processLogo(){
   if (S.stickerW > 0 && !S.dropWhite) c = addSticker(c, S.stickerW);
   const stEl = $('stickerW'); stEl.disabled = !!S.dropWhite; stEl.closest('.field').style.opacity = S.dropWhite ? '0.45' : '';
   $('stickerWOut').textContent = S.dropWhite ? 'Off · white left out' : (S.stickerW ? S.stickerW + '%' : 'Off');
-  logoBase = c; logoProc = c;
+  logoBase = c; logoProc = c; S.slCx = -1; S.slCy = -1;
   logoInk = computeInk(c); logoInk._for = c; labelCache = null;
   const t = $('thumb'); t.innerHTML = ''; const tc = document.createElement('canvas');
   const sc = Math.min(128/c.width, 96/c.height); tc.width = Math.max(1, c.width*sc); tc.height = Math.max(1, c.height*sc);
@@ -1635,7 +1748,8 @@ function build(){
   disposeMug();
   bodyMat.color.set(S.color); logoMat.color.set(S.logoColor);
   bodyMat.roughness = isFlat() ? 0.68 : 0.32; bodyMat.clearcoat = isFlat() ? 0.05 : 0.7; bodyMat.envMapIntensity = isFlat() ? 0.42 : 0.8;
-  if (S.product === 'block') blockGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
+  if (S.product === 'shadow') shadowGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
+  else if (S.product === 'block') blockGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
   else if (S.product === 'monitor') monitorGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
   else if (S.product === 'tubes') tubesGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
   else if (S.product === 'card') cardGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
@@ -1650,16 +1764,17 @@ function build(){
   if (S.product === 'pen' && S.divider) dividerGeometry().forEach((g, i) => { const d = new THREE.Mesh(g, bodyMat); d.name = 'Divider ' + (i + 1); mug.add(d); });
   layerL = null; if (logoBase) logoProc = logoBase;
   const activeLayers = S.layers.filter(t => t.text.trim());
-  if (logoBase && activeLayers.length){ composeLayers(activeLayers); }
+  if (logoBase && activeLayers.length && S.product !== 'shadow'){ composeLayers(activeLayers); }
   else if (logoBase && logoInk && logoInk._for !== logoBase){ logoInk = computeInk(logoBase); logoInk._for = logoBase; labelCache = null; }
-  if (logoProc){
+  if (logoProc && S.product !== 'shadow'){
     const L = logoLayout();
     if (S.mode === 'print') mug.add(decalMesh(L));
     else angles().forEach(a => mug.add(reliefMesh(L, a)));
     $('lwOut').textContent = L.w.toFixed(0) + ' × ' + L.h.toFixed(0) + ' mm';
   }
-  pivot.position.y = -S.H/2;
-  const s = S.product === 'block' ? S.D * 1.3 : S.product === 'monitor' ? S.D * 1.2 : S.product === 'tubes' ? (tubesPlinth().x1 - tubesPlinth().x0) * 1.3 : S.product === 'card' ? S.D * 1.3 : S.product === 'hexcup' ? S.D * 1.8 : S.product === 'steps' ? Math.max(S.D * S.stBays, S.stDepth) * 1.4 : S.product === 'phone' ? Math.max(S.D, S.H) * 1.5 : S.product === 'hex' ? (hexPlinth().x1 - hexPlinth().x0) * 1.4 : S.product === 'caddy' ? Math.max(S.D, S.cadDepth) * 1.6 : S.product === 'duo' ? Math.max(S.D, S.duoLen) * 1.5 : S.D * 1.7; shadow.scale.set(s, s, 1); shadow.position.set(S.handle && S.product === 'mug' ? 8 : 0, 0.05, 0);
+  pivot.position.y = S.product === 'shadow' ? -(slData ? slData.e : 20) / 2 : -S.H/2;
+  updateShadowPreview(); drawShadowPicker();
+  const s = S.product === 'shadow' ? 0.001 : S.product === 'block' ? S.D * 1.3 : S.product === 'monitor' ? S.D * 1.2 : S.product === 'tubes' ? (tubesPlinth().x1 - tubesPlinth().x0) * 1.3 : S.product === 'card' ? S.D * 1.3 : S.product === 'hexcup' ? S.D * 1.8 : S.product === 'steps' ? Math.max(S.D * S.stBays, S.stDepth) * 1.4 : S.product === 'phone' ? Math.max(S.D, S.H) * 1.5 : S.product === 'hex' ? (hexPlinth().x1 - hexPlinth().x0) * 1.4 : S.product === 'caddy' ? Math.max(S.D, S.cadDepth) * 1.6 : S.product === 'duo' ? Math.max(S.D, S.duoLen) * 1.5 : S.D * 1.7; shadow.scale.set(s, s, 1); shadow.position.set(S.handle && S.product === 'mug' ? 8 : 0, 0.05, 0);
   updateReadout();
   if (typeof showFilaments === 'function') try { showFilaments(); } catch (e) {}
   if (typeof schedulePreview === 'function' && typeof previewGroup !== 'undefined') schedulePreview();
@@ -1698,7 +1813,7 @@ function updateReadout(){
     `<span class="tag"><i>H</i><b>${sz.y.toFixed(0)}</b></span>` +
     `<span class="tag"><i>W</i><b>${sz.x.toFixed(0)}</b></span>` +
     `<span class="tag"><i>D</i><b>${sz.z.toFixed(0)} mm</b></span>` +
-    (S.product === 'block' ? `<span class="tag"><i>Holes</i><b>${blockHoles().length}</b></span>` : S.product === 'monitor' ? `<span class="tag"><i>Holds</i><b>pens in the screen</b></span>` : S.product === 'tubes' ? `<span class="tag"><i>Tubes</i><b>${tubeCells().length}</b></span>` : S.product === 'card' ? `<span class="tag"><i>Holds</i><b>cards + pens</b></span>` : S.product === 'hexcup' ? `<span class="tag"><i>Fits</i><b>≈ ${Math.max(4, Math.floor(Math.pow((S.D - 2*S.wall)/2, 2) * 0.42 / 21))} pens</b></span>` : S.product === 'steps' ? `<span class="tag"><i>Bays</i><b>${S.stBays}</b></span>` : S.product === 'phone' ? `<span class="tag"><i>Fits</i><b>phones up to ${S.phSlot} mm</b></span>` : S.product === 'hex' ? `<span class="tag"><i>Fits</i><b>≈ ${hexCells().length * Math.max(2, Math.floor(Math.pow((S.D - 2*S.wall) / 9.5, 2) * 0.8))} pens</b></span>` : S.product === 'caddy' ? `<span class="tag"><i>Holds</i><b>phone + pens</b></span>` : S.product === 'duo' ? `<span class="tag"><i>Holds</i><b>cup + tray</b></span>` : S.product === 'pen'
+    (S.product === 'shadow' ? `<span class="tag"><i>Shadow</i><b>≈ ${slData ? Math.round(slData.Rmax * 2 / 10) : '–'} cm</b></span>` : S.product === 'block' ? `<span class="tag"><i>Holes</i><b>${blockHoles().length}</b></span>` : S.product === 'monitor' ? `<span class="tag"><i>Holds</i><b>pens in the screen</b></span>` : S.product === 'tubes' ? `<span class="tag"><i>Tubes</i><b>${tubeCells().length}</b></span>` : S.product === 'card' ? `<span class="tag"><i>Holds</i><b>cards + pens</b></span>` : S.product === 'hexcup' ? `<span class="tag"><i>Fits</i><b>≈ ${Math.max(4, Math.floor(Math.pow((S.D - 2*S.wall)/2, 2) * 0.42 / 21))} pens</b></span>` : S.product === 'steps' ? `<span class="tag"><i>Bays</i><b>${S.stBays}</b></span>` : S.product === 'phone' ? `<span class="tag"><i>Fits</i><b>phones up to ${S.phSlot} mm</b></span>` : S.product === 'hex' ? `<span class="tag"><i>Fits</i><b>≈ ${hexCells().length * Math.max(2, Math.floor(Math.pow((S.D - 2*S.wall) / 9.5, 2) * 0.8))} pens</b></span>` : S.product === 'caddy' ? `<span class="tag"><i>Holds</i><b>phone + pens</b></span>` : S.product === 'duo' ? `<span class="tag"><i>Holds</i><b>cup + tray</b></span>` : S.product === 'pen'
       ? `<span class="tag"><i>Fits</i><b>≈ ${penCount()} pens</b></span>`
       : `<span class="tag"><i>Holds</i><b>≈ ${Math.round(capacityMl() / 5) * 5} ml</b></span>`);
 }
@@ -1744,6 +1859,11 @@ const PRESETS = {
     ['latte', 'Tall latte', '~450 ml', {mh:118, md:84, mt:4, mw:4, mb:6, handle:true}],
     ['espresso', 'Espresso', '~150 ml', {mh:70, md:64, mt:3, mw:3.5, mb:6, handle:true}],
     ['tumbler', 'Tumbler', 'no handle', {mh:125, md:80, mt:12, mw:4, mb:6, handle:false}]
+  ],
+  shadow: [
+    ['slTable', 'Shadow lamp', 'table, warm rays', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#2f4cb3', slSize:360, slRays:16, slLed:38, slLight:28, slSmooth:3, texture:'smooth'}],
+    ['slBig', 'Big shadow', 'room-size', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#d8463b', slSize:600, slRays:24, slLed:38, slLight:30, slSmooth:4, texture:'smooth'}],
+    ['slMini', 'Mini LED', '21 mm LED', {mh:80, md:80, mw:1.4, mb:2, handle:false, color:'#2b6b3f', slSize:260, slRays:12, slLed:21, slLight:14, slSmooth:3, texture:'smooth'}]
   ],
   block: [
     ['pbClassic', 'Pen block', 'staggered holes', {mh:60, md:120, mw:3, mb:4, handle:false, color:'#2b2d33', pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, logoW:100, ly:50, texture:'smooth'}],
@@ -1819,7 +1939,7 @@ function applyPreset(key, p){
   $('handle').checked = p.handle; S.handle = p.handle;
   if (p.divider !== undefined){ S.divider = p.divider; $('divider').value = String(p.divider); }
   setTexture(p.texture || (S.product === 'duo' ? 'ribbed' : 'smooth'), true);
-  [['pbHole','pbHole'],['pbDepth','pbDepth'],['mnDepth','mnDepth'],['mnNeck','mnNeck'],['tbBase','tbBase'],['tbStep','tbStep'],['cpCup','cpCup'],['cpFront','cpFront'],['cpSlot','cpSlot'],['stDepth','stDepth'],['stLow','stLow'],['phAngle','phAngle'],['phSlot','phSlot'],['phLip','phLip'],['hexBase','hexBase'],['hexStep','hexStep'],['cadDepth','cadDepth'],['cadFront','cadFront'],['cadSlot','cadSlot'],['duoLen','duoLen'],['duoH2','duoH2'],['texCols','texCols'],['texDepth','texDepth'],['lw','logoW'],['ly','ly']].forEach(([id, k]) => { if (p[k] !== undefined){ $(id).value = p[k]; $(id).dispatchEvent(new Event('input')); } });
+  [['slSize','slSize'],['slRays','slRays'],['slLed','slLed'],['slLight','slLight'],['slSmooth','slSmooth'],['slWall','slWall'],['pbHole','pbHole'],['pbDepth','pbDepth'],['mnDepth','mnDepth'],['mnNeck','mnNeck'],['tbBase','tbBase'],['tbStep','tbStep'],['cpCup','cpCup'],['cpFront','cpFront'],['cpSlot','cpSlot'],['stDepth','stDepth'],['stLow','stLow'],['phAngle','phAngle'],['phSlot','phSlot'],['phLip','phLip'],['hexBase','hexBase'],['hexStep','hexStep'],['cadDepth','cadDepth'],['cadFront','cadFront'],['cadSlot','cadSlot'],['duoLen','duoLen'],['duoH2','duoH2'],['texCols','texCols'],['texDepth','texDepth'],['lw','logoW'],['ly','ly']].forEach(([id, k]) => { if (p[k] !== undefined){ $(id).value = p[k]; $(id).dispatchEvent(new Event('input')); } });
   if (p.depth){ $('depth').value = p.depth; $('depth').dispatchEvent(new Event('input')); }
   if (p.text !== undefined){ S.text = p.text; $('logoText').value = p.text; }
   if (p.textColor){ S.textColor = p.textColor; $('textColor').value = p.textColor; }
@@ -1891,6 +2011,10 @@ function setProduct0(prod){
   $('prodTubes').setAttribute('aria-pressed', String(prod === 'tubes')); $('tubesOpts').hidden = prod !== 'tubes';
   $('prodCard').setAttribute('aria-pressed', String(prod === 'card')); $('cardOpts').hidden = prod !== 'card';
   $('prodBlock').setAttribute('aria-pressed', String(prod === 'block')); $('blockOpts').hidden = prod !== 'block';
+  const sl = prod === 'shadow';
+  $('prodShadow').setAttribute('aria-pressed', String(sl)); $('shadowOpts').hidden = !sl;
+  ['grpMade', 'grpSize', 'grpExtra', 'grpDims', 'texOpts'].forEach(id => { const el = $(id); if (el) el.hidden = sl; });
+  if (sl){ $('handleRow').hidden = true; }
   $('prodMonitor').setAttribute('aria-pressed', String(prod === 'monitor')); $('monitorOpts').hidden = prod !== 'monitor';
   $('mh').min = (prod === 'block' || prod === 'monitor') ? 40 : 70; $('mw').closest('.field').hidden = prod === 'block';
   const flatP = FLAT_PRODUCTS.includes(prod);
@@ -1916,6 +2040,15 @@ $('prodSteps').addEventListener('click', () => { if (S.product !== 'steps') setP
 $('prodTubes').addEventListener('click', () => { if (S.product !== 'tubes') setProduct('tubes'); });
 $('prodCard').addEventListener('click', () => { if (S.product !== 'card') setProduct('card'); });
 $('prodBlock').addEventListener('click', () => { if (S.product !== 'block') setProduct('block'); });
+$('prodShadow').addEventListener('click', () => { if (S.product !== 'shadow'){ setProduct('shadow'); setTimeout(resetView, 50); } });
+$('slCentre').addEventListener('click', () => { const M = slMask(); if (M){ S.slCx = M.cx; S.slCy = M.cy; rebuild(); } });
+const slPickAt = ev => {
+  const cv = $('slPick'), m = cv._map; if (!m) return; const r = cv.getBoundingClientRect();
+  const x = (ev.clientX - r.left) * cv.width / r.width, y = (ev.clientY - r.top) * cv.height / r.height;
+  S.slCx = Math.min(1, Math.max(0, (x - m.ox) / (m.w * m.k))); S.slCy = Math.min(1, Math.max(0, (y - m.oy) / (m.h * m.k))); rebuild();
+};
+$('slPick').addEventListener('pointerdown', ev => { slPickAt(ev); $('slPick').setPointerCapture(ev.pointerId); });
+$('slPick').addEventListener('pointermove', ev => { if (ev.buttons) slPickAt(ev); });
 $('prodMonitor').addEventListener('click', () => { if (S.product !== 'monitor') setProduct('monitor'); });
 $('pbRows').addEventListener('change', e => { S.pbRows = +e.target.value; rebuild(); });
 $('pbStagger').addEventListener('change', e => { S.pbStagger = e.target.checked; rebuild(); });
@@ -1979,6 +2112,8 @@ bindRange('cuffH', 'cuffH', v => v + ' mm');
 bindRange('duoLen', 'duoLen', v => v + ' mm');
 $('slant').addEventListener('input', e => { S.slant = parseFloat(e.target.value) / 100; $('slantOut').textContent = S.slant ? e.target.value + '%' : 'Flat'; rebuild(); });
 $('slantOut').textContent = 'Flat';
+bindRange('slSize', 'slSize', v => Math.round(v / 10) + ' cm'); bindRange('slRays', 'slRays', v => v ? v + '' : 'None'); bindRange('slLed', 'slLed', v => v + ' mm');
+bindRange('slLight', 'slLight', v => v + ' mm'); bindRange('slSmooth', 'slSmooth', v => v ? v + '' : 'Off'); bindRange('slWall', 'slWall', v => v.toFixed(1) + ' mm');
 bindRange('pbHole', 'pbHole', v => v + ' mm'); bindRange('pbDepth', 'pbDepth', v => v + ' mm'); bindRange('mnDepth', 'mnDepth', v => v + ' mm'); bindRange('mnNeck', 'mnNeck', v => v + ' mm');
 bindRange('tbBase', 'tbBase', v => v + ' mm'); bindRange('tbStep', 'tbStep', v => v ? v + ' mm' : 'All the same');
 bindRange('cpCup', 'cpCup', v => v + ' mm'); bindRange('cpFront', 'cpFront', v => v + ' mm'); bindRange('cpSlot', 'cpSlot', v => v + ' mm');
@@ -2387,6 +2522,7 @@ function applyPreview(){
   const solids = mug.children.filter(o => !o.userData.decal);
   const noLogoGeo = S.mode !== 'raised' && logoProc;
   mug.visible = previewMode === 'studio';
+  if (slPlane){ slPlane.visible = slGlow.visible = previewMode === 'studio' && S.product === 'shadow' && !!slData; }
   shadow.visible = true;
   if (previewMode === 'studio'){
     const n = triCount(mug.children.map(o => o.geometry));
