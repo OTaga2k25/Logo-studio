@@ -821,6 +821,8 @@ function frontInfo(){
   if (S.product === 'phone'){ const P = phoneProfile(); return {x0: -S.D/2, x1: S.D/2, zf: P.zF, lo: 3, hi: S.phLip - 3, rc: 3}; }
   const W = S.D, f = cadFootH(); return {x0: -W/2, x1: W/2, zf: S.cadDepth/2, lo: f + 3, hi: f + S.H * S.cadFront/100 - 3, rc: 6};
 }
+const PRODUCT_WORDS = {mug:'mug', pen:'pen-holder', duo:'duo-organiser', caddy:'desk-caddy', hex:'honeycomb-stand', phone:'phone-stand', hexcup:'hexagon-cup', steps:'step-organiser', tubes:'tube-cluster', card:'card-pen-holder', block:'pen-block', monitor:'monitor-holder', shadow:'shadow-lamp'};
+const productWord = () => PRODUCT_WORDS[S.product] || 'mug';
 // ---------- shadow lamp ----------
 // The LED tip sits at height e above the table. A ring of outer radius ro around it has a rim height h(phi).
 // A ray from the LED that just grazes the rim lands on the table at R = ro * e / (e - h), so everything
@@ -886,7 +888,7 @@ function updateShadowPreview(){
   }
   slPlane.visible = slGlow.visible = !!on; shadow.visible = !on;
   if (!on) return;
-  const D = slData, ext = Math.min(D.Rmax * 1.25, 900), px = 512, c = document.createElement('canvas'); c.width = c.height = px;
+  const D = slData, ext = Math.min(D.Rmax * 1.25, 900), px = 768, c = document.createElement('canvas'); c.width = c.height = px;
   const g = c.getContext('2d'), img = g.createImageData(px, px), d = img.data;
   for (let y = 0; y < px; y++) for (let x = 0; x < px; x++){
     const wx = (x / (px - 1) * 2 - 1) * ext, wz = (y / (px - 1) * 2 - 1) * ext, r = Math.hypot(wx, wz);
@@ -2460,7 +2462,7 @@ function stlBinary(geos, name){
   return new Uint8Array(buf);
 }
 function stlColourSet(){
-  const pal = logoPalette(), files = {}, word = S.product === 'pen' ? 'pen-holder' : 'mug', base = slug() + '-' + word;
+  const pal = logoPalette(), files = {}, word = productWord(), base = slug() + '-' + word;
   const bodyGeos = mug.children.filter(o => !o.userData.decal && !/Logo/.test(o.name)).map(o => o.geometry);
   const lines = ['Logo Mug Studio · STL colour set for ' + base, '', 'Import ALL files together as ONE object with multiple parts:',
     '  PrusaSlicer / Bambu / Orca: select all files, drag in, answer "Yes" to "load as a single object with multiple parts".',
@@ -2597,7 +2599,7 @@ $('dl3mf').addEventListener('click', async () => {
   await new Promise(r => setTimeout(r, 30));
   try {
     const {bytes, pal} = build3mf();
-    await deliver(slug() + (S.product === 'pen' ? '-pen-holder.' : '-mug.') + '3mf', bytes, 'model/3mf');
+    await deliver(slug() + ('-' + productWord() + '.') + '3mf', bytes, 'model/3mf');
     if (S.mode === 'print' && logoProc) status(statusEl.textContent + ' The logo is a flat decal, so only the mug is in the file. Switch to Raised to include it.');
     else status(statusEl.textContent + ' Load ' + pal.length + ' filaments in the order shown.');
   } catch (e) { status('3MF export failed: ' + (e && e.message ? e.message : e)); }
@@ -2612,7 +2614,7 @@ $('dlPng').addEventListener('click', async () => {
     const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
     renderer.setPixelRatio(pr); renderer.setSize(r.width, r.height, false);
     if (!blob) throw new Error('no image');
-    await deliver(slug() + (S.product === 'pen' ? '-pen-holder.' : '-mug.') + 'png', new Uint8Array(await blob.arrayBuffer()), 'image/png');
+    await deliver(slug() + ('-' + productWord() + '.') + 'png', new Uint8Array(await blob.arrayBuffer()), 'image/png');
   } catch (e) { status('Could not save the image: ' + (e && e.message ? e.message : e)); }
   busy(false);
 });
@@ -2623,7 +2625,7 @@ $('dlGlb').addEventListener('click', async () => {
     const root = exportRoot(true, 0.001, true); // glTF uses metres
     const buf = await new THREE.GLTFExporter().parseAsync(root, {binary: true, onlyVisible: true});
     root.traverse(o => { if (o.isMesh) o.material.dispose(); });
-    await deliver(slug() + (S.product === 'pen' ? '-pen-holder.' : '-mug.') + 'glb', new Uint8Array(buf), 'model/gltf-binary');
+    await deliver(slug() + ('-' + productWord() + '.') + 'glb', new Uint8Array(buf), 'model/gltf-binary');
   } catch (e) { status('GLB export failed: ' + (e && e.message ? e.message : e)); }
   busy(false);
 });
@@ -2634,7 +2636,7 @@ $('dlStl').addEventListener('click', async () => {
   else status('Building STL…');
   try {
     const geos = mug.children.filter(o => !o.userData.decal).map(o => o.geometry);
-    await deliver(slug() + (S.product === 'pen' ? '-pen-holder.' : '-mug.') + 'stl', stlBinary(geos, 'single colour'), 'model/stl');
+    await deliver(slug() + ('-' + productWord() + '.') + 'stl', stlBinary(geos, 'single colour'), 'model/stl');
     if (S.mode === 'print' && logoProc) status(statusEl.textContent + ' (no logo: switch to Raised to include it)');
   } catch (e) { status('STL export failed: ' + (e && e.message ? e.message : e)); }
   busy(false);
