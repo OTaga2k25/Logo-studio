@@ -854,6 +854,85 @@ function frontInfo(){
 }
 const PRODUCT_WORDS = {mug:'mug', pen:'pen-holder', duo:'duo-organiser', caddy:'desk-caddy', hex:'honeycomb-stand', phone:'phone-stand', hexcup:'hexagon-cup', steps:'step-organiser', tubes:'tube-cluster', card:'card-pen-holder', block:'pen-block', monitor:'monitor-holder', shadow:'shadow-lamp', proj:'projector-lamp'};
 const productWord = () => PRODUCT_WORDS[S.product] || 'mug';
+// ---------- smooth cut-out shells (shadow + projector lamps) ----------
+// A lamp wall is described by a value at every grid node (around x up): 1 = solid, 0 = open, in between near
+// an edge. Marching squares turns that into smooth cut edges instead of square steps.
+function bilinMask(M, fx, fy){
+  // 0..1 coverage of the picture at a fractional pixel position (pixel centres at +0.5)
+  fx -= 0.5; fy -= 0.5; const x0 = Math.floor(fx), y0 = Math.floor(fy), tx = fx - x0, ty = fy - y0;
+  const at = (x, y) => (x < 0 || y < 0 || x >= M.w || y >= M.h) ? 0 : M.m[y * M.w + x];
+  return (at(x0, y0) * (1 - tx) + at(x0 + 1, y0) * tx) * (1 - ty) + (at(x0, y0 + 1) * (1 - tx) + at(x0 + 1, y0 + 1) * tx) * ty;
+}
+function softMask(M, rad){
+  // the picture as smooth 0..1 coverage (box blur, 2 passes) so edges land between grid points
+  rad = Math.max(0, Math.round(rad)); M._soft = M._soft || {}; if (M._soft[rad]) return M._soft[rad];
+  const {w, h} = M; let a = Float32Array.from(M.m), b = new Float32Array(w * h);
+  for (let pass = 0; pass < (rad ? 2 : 0); pass++){
+    for (let y = 0; y < h; y++){ let acc = 0; const o = y * w; for (let x = -rad; x <= rad; x++) acc += a[o + Math.min(w - 1, Math.max(0, x))];
+      for (let x = 0; x < w; x++){ b[o + x] = acc / (2 * rad + 1); acc += a[o + Math.min(w - 1, x + rad + 1)] - a[o + Math.max(0, x - rad)]; } }
+    for (let x = 0; x < w; x++){ let acc = 0; for (let y = -rad; y <= rad; y++) acc += b[Math.min(h - 1, Math.max(0, y)) * w + x];
+      for (let y = 0; y < h; y++){ a[y * w + x] = acc / (2 * rad + 1); acc += b[Math.min(h - 1, y + rad + 1) * w + x] - b[Math.max(0, y - rad) * w + x]; } }
+  }
+  return (M._soft[rad] = {w, h, m: a});
+}
+function fieldFix(F, Na, NN, bw, minCells){
+  // printability clean-up on the solid/open pattern, then write the changes back into the smooth field
+  const B = new Uint8Array(F.length); for (let q = 0; q < F.length; q++) B[q] = F[q] >= 0.5 ? 1 : 0;
+  const before = B.slice(), bars = gridFix(B, Na, NN, bw, minCells);
+  for (let q = 0; q < F.length; q++) if (B[q] !== before[q]) F[q] = B[q] ? 1 : 0;
+  return bars;
+}
+function fieldAt(D, u, y){
+  // smooth field value at fractional column u (0..Na) and height y
+  const {F, Na, ys} = D, NN = ys.length; if (y <= ys[0]) y = ys[0]; if (y >= ys[NN - 1]) y = ys[NN - 1] - 1e-6;
+  let lo = 0, hi = NN - 1; while (hi - lo > 1){ const m = (lo + hi) >> 1; if (ys[m] <= y) lo = m; else hi = m; }
+  const ty = (y - ys[lo]) / (ys[lo + 1] - ys[lo]), i0 = ((Math.floor(u) % Na) + Na) % Na, i1 = (i0 + 1) % Na, tu = u - Math.floor(u);
+  const v = (i, j) => F[i * NN + j];
+  return (v(i0, lo) * (1 - tu) + v(i1, lo) * tu) * (1 - ty) + (v(i0, lo + 1) * (1 - tu) + v(i1, lo + 1) * tu) * ty;
+}
+function smoothShell(F, Na, ys, rAt, thick, place){
+  // place(theta, r, y) -> [x, y, z]
+  const NN = ys.length, Nh = NN - 1, Ntot = Na * NN, pos = [], idx = [], vmap = new Map(), T = 0.5;
+  const val = (i, j) => F[(i % Na) * NN + j];
+  const vert = (key, u, y) => {
+    let v = vmap.get(key); if (v) return v;
+    const th = u / Na * Math.PI * 2, r = rAt(y), o = pos.length / 3;
+    pos.push(...place(th, r, y), ...place(th, Math.max(0.3, r - thick), y)); v = [o, o + 1, u, y]; vmap.set(key, v); return v;
+  };
+  const corner = (i, j) => vert((i % Na) * NN + j, i, ys[j]);
+  const hEdge = (i, j) => { const a = val(i, j), b = val(i + 1, j), t = (T - a) / (b - a); return vert(Ntot + (i % Na) * NN + j, i + t, ys[j]); };
+  const vEdge = (i, j) => { const a = val(i, j), b = val(i, j + 1), t = (T - a) / (b - a); return vert(2 * Ntot + (i % Na) * NN + j, i, ys[j] + t * (ys[j + 1] - ys[j])); };
+  const P = n => [pos[n*3], pos[n*3+1], pos[n*3+2]];
+  const tri = (a, b, c, h) => { const A = P(a), Bv = P(b), C = P(c), u1 = [Bv[0]-A[0], Bv[1]-A[1], Bv[2]-A[2]], u2 = [C[0]-A[0], C[1]-A[1], C[2]-A[2]];
+    const n = [u1[1]*u2[2]-u1[2]*u2[1], u1[2]*u2[0]-u1[0]*u2[2], u1[0]*u2[1]-u1[1]*u2[0]]; if (n[0]*h[0] + n[1]*h[1] + n[2]*h[2] >= 0) idx.push(a, b, c); else idx.push(a, c, b); };
+  const onEdges = [[0, 3], [0, 1], [1, 2], [2, 3]];
+  for (let i = 0; i < Na; i++) for (let j = 0; j < Nh; j++){
+    const vals = [val(i, j), val(i + 1, j), val(i + 1, j + 1), val(i, j + 1)], ins = vals.map(v => v >= T);
+    if (!ins[0] && !ins[1] && !ins[2] && !ins[3]) continue;
+    const cs = [() => corner(i, j), () => corner(i + 1, j), () => corner(i + 1, j + 1), () => corner(i, j + 1)];
+    const es = [() => hEdge(i, j), () => vEdge(i + 1, j), () => hEdge(i, j + 1), () => vEdge(i, j)];
+    const pts = [];
+    for (let k = 0; k < 4; k++){
+      if (ins[k]) pts.push({v: cs[k](), on: onEdges[k]});
+      if (ins[k] !== ins[(k + 1) % 4]) pts.push({v: es[k](), on: [k], e: true});
+    }
+    const th = (i + 0.5) / Na * Math.PI * 2, ym = (ys[j] + ys[j + 1]) / 2, c0 = place(th, 1, ym), out = [c0[0], 0, c0[2]], inn = [-c0[0], 0, -c0[2]];
+    for (let k = 1; k + 1 < pts.length; k++){ tri(pts[0].v[0], pts[k].v[0], pts[k + 1].v[0], out); tri(pts[0].v[1], pts[k].v[1], pts[k + 1].v[1], inn); }
+    // walls along cut edges, and along the bottom / top of the shell
+    for (let k = 0; k < pts.length; k++){
+      const p = pts[k], q = pts[(k + 1) % pts.length]; let wall = false;
+      if (p.e && q.e && p.on[0] !== q.on[0]) wall = true;
+      else { const sh = p.on.filter(x => q.on.includes(x)); if ((sh.includes(0) && j === 0) || (sh.includes(2) && j === Nh - 1)) wall = true; }
+      if (!wall) continue;
+      const du = (q.v[2] - p.v[2]) / Na * Math.PI * 2 * rAt((p.v[3] + q.v[3]) / 2), dy = q.v[3] - p.v[3];
+      const a0 = place(th, 1, 0), a1 = place(th + 1e-3, 1, 0), tl = Math.hypot(a1[0]-a0[0], a1[2]-a0[2]) || 1, tg = [(a1[0]-a0[0]) / tl, 0, (a1[2]-a0[2]) / tl];
+      const h = [tg[0] * dy, -du, tg[2] * dy];
+      tri(p.v[0], q.v[0], q.v[1], h); tri(p.v[0], q.v[1], p.v[1], h);
+    }
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
+  const flat = g.toNonIndexed(); flat.computeVertexNormals(); return flat;
+}
 // ---------- shadow lamp ----------
 // The LED tip sits at height e above the table. A ring of outer radius ro around it has a rim height h(phi).
 // A ray from the LED that just grazes the rim lands on the table at R = ro * e / (e - h), so everything
@@ -910,53 +989,32 @@ function slCompute(){
   if (S.slCx < 0){ S.slCx = M.cx; S.slCy = M.cy; }
   const e = S.slLight + 1.2, ro = Math.max(S.slRing / 2, S.slLed / 2 + 1 + S.slWall), ri = ro - S.slWall, rm = (ro + ri) / 2, hMin = 1.8, hMax = e - 1.2;
   const scale = S.slSize / Math.max(M.w, M.h), cx = S.slCx * M.w, cy = S.slCy * M.h;
-  const inLogo = (R, a) => { const x = Math.floor(cx + Math.cos(a) * R / scale), y = Math.floor(cy + Math.sin(a) * R / scale); return x >= 0 && y >= 0 && x < M.w && y < M.h && M.m[y * M.w + x] === 1; };
+  const SM = softMask(M, 1), cover = (R, a) => bilinMask(SM, cx + Math.cos(a) * R / scale, cy + Math.sin(a) * R / scale);
   // farthest logo pixel from the lamp sets the top of the wall
   let Rfar = 0; for (let q = 0; q < M.m.length; q++) if (M.m[q]) Rfar = Math.max(Rfar, Math.hypot(q % M.w + 0.5 - cx, ((q / M.w) | 0) + 0.5 - cy));
   Rfar = Rfar * scale + 2;
   const yAt = R => e * (1 - rm / R), Rat = y => rm * e / (e - y);
   const yTop = Math.min(hMax, yAt(Math.max(Rfar, Rat(hMin) + 1)));
-  // rows: even steps on the table (about 0.5% of the picture), never thinner than 0.12 mm on the lamp
-  const ys = [0, hMin], dR = Math.max(1, S.slSize / 180);
-  for (let R = Rat(hMin) + dR; ; R += dR){ const y = yAt(R); if (y >= yTop){ if (yTop - ys[ys.length - 1] > 0.06) ys.push(yTop); else ys[ys.length - 1] = yTop; break; } if (y - ys[ys.length - 1] >= 0.08) ys.push(y); }
-  const Nh = ys.length - 1, Na = Math.max(360, Math.round(2 * Math.PI * ro / 0.25)), sol = new Uint8Array(Na * Nh);
+  // node heights: even steps on the table, never closer than 0.05 mm on the lamp
+  const ys = [0, hMin], dR = Math.max(0.8, S.slSize / 260);
+  for (let R = Rat(hMin) + dR; ; R += dR){ const y = yAt(R); if (y >= yTop){ if (yTop - ys[ys.length - 1] > 0.03) ys.push(yTop); else ys[ys.length - 1] = yTop; break; } if (y - ys[ys.length - 1] >= 0.05) ys.push(y); }
+  const NN = ys.length, Na = Math.max(360, Math.round(2 * Math.PI * ro / 0.3)), F = new Float32Array(Na * NN);
   for (let i = 0; i < Na; i++){
-    const a = (i + 0.5) / Na * Math.PI * 2;
-    for (let j = 0; j < Nh; j++){
-      if (j === 0){ sol[i * Nh] = 1; continue; }
-      const y = (ys[j] + ys[j + 1]) / 2; sol[i * Nh + j] = inLogo(Rat(y), a) ? 1 : 0;
-    }
+    const a = i / Na * Math.PI * 2;
+    for (let j = 0; j < NN; j++) F[i * NN + j] = j <= 1 ? 1 : cover(Rat(ys[j]), a);
   }
   if (S.slRays > 0){                                   // optional slits: rays of light through the shadow
-    const w = Math.max(1, Math.round(0.7 / (2 * Math.PI * ro / Na)));
-    for (let r = 0; r < S.slRays; r++){ const c0 = Math.round((r + 0.5) / S.slRays * Na); for (let i = c0 - w; i <= c0 + w; i++){ const k = ((i % Na) + Na) % Na; for (let j = 1; j < Nh; j++) sol[k * Nh + j] = 0; } }
+    const cw = 2 * Math.PI * ro / Na, w = 0.45;
+    for (let i = 0; i < Na; i++){ const a = i / Na * S.slRays, d = Math.abs(a - Math.floor(a) - 0.5) * Na / S.slRays * cw; if (d < w * 1.5){ const k = Math.max(0, Math.min(1, (d - w) / (w) + 0.5)); for (let j = 2; j < NN; j++) F[i * NN + j] = Math.min(F[i * NN + j], k); } }
   }
-  const bars = gridFix(sol, Na, Nh, Math.max(2, Math.round(0.9 / (2 * Math.PI * ro / Na))));
-  slData = {Na, Nh, ys, sol, e, ro, ri, rm, hMin, yTop, Rfar, Rat, bars};
+  const bars = fieldFix(F, Na, NN, Math.max(3, Math.round(1.0 / (2 * Math.PI * ro / Na))), 10);
+  slData = {Na, NN, ys, F, e, ro, ri, rm, hMin, yTop, Rfar, Rat, bars};
   return slData;
 }
 function shadowGeometries(){
   const D = slCompute(); if (!D) return [];
-  const {Na, Nh, ys, sol, ro, ri} = D, pos = [], idx = [];
-  const O = (i, j) => ((i % Na) * (Nh + 1) + j) * 2, I = (i, j) => O(i, j) + 1;
-  for (let i = 0; i < Na; i++){ const a = i / Na * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a); for (let j = 0; j <= Nh; j++) pos.push(c * ro, ys[j], sn * ro, c * ri, ys[j], sn * ri); }
-  const V = n => new THREE.Vector3(pos[n*3], pos[n*3+1], pos[n*3+2]);
-  const quad = (a, b, c, d, hint) => { const n = V(b).sub(V(a)).cross(V(c).sub(V(a))); if (n.dot(hint) >= 0) idx.push(a, b, c, a, c, d); else idx.push(a, c, b, a, d, c); };
-  const S_ = (i, j) => (j < 0 || j >= Nh) ? 0 : sol[((i % Na + Na) % Na) * Nh + j];
-  for (let i = 0; i < Na; i++){
-    const a = (i + 0.5) / Na * Math.PI * 2, rad = new THREE.Vector3(Math.cos(a), 0, Math.sin(a)), tan = new THREE.Vector3(-Math.sin(a), 0, Math.cos(a));
-    for (let j = 0; j < Nh; j++){
-      if (!S_(i, j)) continue;
-      quad(O(i,j), O(i+1,j), O(i+1,j+1), O(i,j+1), rad);
-      quad(I(i,j), I(i+1,j), I(i+1,j+1), I(i,j+1), rad.clone().negate());
-      if (!S_(i-1, j)) quad(O(i,j), O(i,j+1), I(i,j+1), I(i,j), tan.clone().negate());
-      if (!S_(i+1, j)) quad(O(i+1,j), O(i+1,j+1), I(i+1,j+1), I(i+1,j), tan);
-      if (!S_(i, j-1)) quad(O(i,j), O(i+1,j), I(i+1,j), I(i,j), new THREE.Vector3(0, -1, 0));
-      if (!S_(i, j+1)) quad(O(i,j+1), O(i+1,j+1), I(i+1,j+1), I(i,j+1), new THREE.Vector3(0, 1, 0));
-    }
-  }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
-  const fl = 1.2, floor = new THREE.CylinderGeometry(ri + 0.3, ri + 0.3, fl, 96); floor.translate(0, fl/2, 0);
+  const g = smoothShell(D.F, D.Na, D.ys, () => D.ro, S.slWall, (th, r, y) => [Math.cos(th) * r, y, Math.sin(th) * r]);
+  const fl = 1.2, floor = new THREE.CylinderGeometry(D.ri + 0.3, D.ri + 0.3, fl, 128); floor.translate(0, fl/2, 0);
   return [['Shadow lamp', g], ['Floor', floor]];
 }
 function slLitAt(wx, wz){
@@ -964,8 +1022,7 @@ function slLitAt(wx, wz){
   const D = slData, r = Math.hypot(wx, wz); if (r <= D.ro) return false;
   const y = D.e * (1 - D.rm / r); if (y >= D.yTop) return true; if (y < D.hMin) return false;
   let a = Math.atan2(wz, wx); if (a < 0) a += Math.PI * 2;
-  const i = Math.floor(a / (Math.PI * 2) * D.Na) % D.Na; let lo = 0, hi = D.Nh; while (hi - lo > 1){ const m = (lo + hi) >> 1; if (D.ys[m] <= y) lo = m; else hi = m; }
-  return D.sol[i * D.Nh + lo] === 0;
+  return fieldAt(D, a / (Math.PI * 2) * D.Na, y) < 0.5;
 }
 let slPlane = null, slGlow = null;
 function updateShadowPreview(){
@@ -977,7 +1034,7 @@ function updateShadowPreview(){
   }
   slPlane.visible = slGlow.visible = !!on; shadow.visible = !on;
   if (!on) return;
-  const D = slData, ext = Math.min(D.Rfar * 1.3, 900), px = 900, c = document.createElement('canvas'); c.width = c.height = px;
+  const D = slData, ext = Math.min(D.Rfar * 1.3, 900), px = 1200, c = document.createElement('canvas'); c.width = c.height = px;
   const g = c.getContext('2d'), img = g.createImageData(px, px), d = img.data;
   for (let y = 0; y < px; y++) for (let x = 0; x < px; x++){
     const wx = (x / (px - 1) * 2 - 1) * ext, wz = (y / (px - 1) * 2 - 1) * ext, r = Math.hypot(wx, wz), q = (y * px + x) * 4;
@@ -1026,63 +1083,43 @@ function prShapeAt(wx, wy, Pc){
 }
 function prCompute(){
   const Pc = prPicture(); if (!Pc) return null;
-  const pf = prProfile(), e = S.prLight + 1, cell = 0.3, Na = Math.max(120, Math.round(2 * Math.PI * pf.rb / cell)), Nh = Math.max(30, Math.round(pf.H / cell));
-  const sol = new Uint8Array(Na * Nh), bars = S.prBars, light = S.prMode === 'light';
+  const pf = prProfile(), e = S.prLight + 1, cell = 0.35, Na = Math.max(120, Math.round(2 * Math.PI * pf.rb / cell)), Nh = Math.max(30, Math.round(pf.H / cell));
+  const NN = Nh + 1, ys = Array.from({length: NN}, (_, j) => j / Nh * pf.H), F = new Float32Array(Na * NN), light = S.prMode === 'light', M0 = slMask();
+  const M = softMask(M0, cell * S.prDist / pf.rb * (M0.w / Pc.W) * 0.5);   // blur about half a grid step as seen on the wall
   for (let i = 0; i < Na; i++){
-    const th = (i + 0.5) / Na * Math.PI * 2, sn = Math.sin(th), cs = Math.cos(th);
-    for (let j = 0; j < Nh; j++){
-      const y = (j + 0.5) / Nh * pf.H, r = pf.r(y); let solid = 1;
+    const th = i / Na * Math.PI * 2, sn = Math.sin(th), cs = Math.cos(th);
+    for (let j = 0; j < NN; j++){
+      const y = ys[j]; let v = 1;
       if (y > 3 && y < pf.H - 2.5 && cs > 0.08){
-        const rm = r - S.prWall / 2, t = S.prDist / (rm * cs), wx = rm * sn * t, wy = e + (y - e) * t, k = prShapeAt(wx, wy, Pc);
-        const open = light ? k === 1 : k === 0;
-        if (open){
-          solid = 0;
-          if (bars){ const per = Math.PI * 2 / bars, d = Math.abs(((th % per) + per) % per - per / 2), wb = 0.9 / r; if (Math.abs(d - per / 2) < wb / 2 || d < 0) solid = 1; }
+        const rm = pf.r(y) - S.prWall / 2, t = S.prDist / (rm * cs), wx = rm * sn * t, wy = e + (y - e) * t;
+        const u = 0.5 - wx / Pc.W, w = (Pc.yc + Pc.Hh / 2 - wy) / Pc.Hh;
+        if (u >= -0.02 && u <= 1.02 && w >= -0.02 && w <= 1.02){
+          const pic = bilinMask(M, u * M.w, w * M.h);            // 1 = picture
+          v = light ? 1 - pic : pic;
+          if (u < 0 || u > 1 || w < 0 || w > 1) v = 1;
         }
+        if (S.prBars){ const per = Math.PI * 2 / S.prBars, d = Math.abs(((th % per) + per) % per - per / 2), wb = 0.9 / pf.r(y); if (per / 2 - d < wb / 2) v = 1; }
       }
-      sol[i * Nh + j] = solid;
+      F[i * NN + j] = v;
     }
   }
-  const bw = Math.max(2, Math.round(0.9 / (2 * Math.PI * pf.rb / Na)));
-  const autoBars = gridFix(sol, Na, Nh, bw, 25);
-  prData = {Na, Nh, sol, pf, e, Pc, autoBars};
+  const autoBars = fieldFix(F, Na, NN, Math.max(3, Math.round(1.0 / (2 * Math.PI * pf.rb / Na))), 20);
+  prData = {Na, Nh, NN, ys, F, pf, e, Pc, autoBars};
   return prData;
 }
 function projectorGeometries(){
   const D = prCompute(); if (!D) return [];
-  const {Na, Nh, sol, pf} = D, t = S.prWall, pos = [], idx = [];
-  const O = (i, j) => ((i % Na) * (Nh + 1) + j) * 2, I = (i, j) => O(i, j) + 1;
-  for (let i = 0; i < Na; i++){
-    const th = i / Na * Math.PI * 2, sn = Math.sin(th), cs = Math.cos(th);
-    for (let j = 0; j <= Nh; j++){ const y = j / Nh * pf.H, r = pf.r(y), ri = Math.max(0.5, r - t); pos.push(r * sn, y, r * cs, ri * sn, y, ri * cs); }
-  }
-  const V = n => new THREE.Vector3(pos[n*3], pos[n*3+1], pos[n*3+2]);
-  const quad = (a, b, c, d, hint) => { const n = V(b).sub(V(a)).cross(V(c).sub(V(a))); if (n.dot(hint) >= 0) idx.push(a, b, c, a, c, d); else idx.push(a, c, b, a, d, c); };
-  const S_ = (i, j) => (j < 0 || j >= Nh) ? 0 : sol[((i % Na + Na) % Na) * Nh + j];
-  for (let i = 0; i < Na; i++){
-    const th = (i + 0.5) / Na * Math.PI * 2, rad = new THREE.Vector3(Math.sin(th), 0, Math.cos(th)), tan = new THREE.Vector3(Math.cos(th), 0, -Math.sin(th));
-    for (let j = 0; j < Nh; j++){
-      if (!S_(i, j)) continue;
-      quad(O(i,j), O(i+1,j), O(i+1,j+1), O(i,j+1), rad);
-      quad(I(i,j), I(i+1,j), I(i+1,j+1), I(i,j+1), rad.clone().negate());
-      if (!S_(i-1, j)) quad(O(i,j), O(i,j+1), I(i,j+1), I(i,j), tan.clone().negate());
-      if (!S_(i+1, j)) quad(O(i+1,j), O(i+1,j+1), I(i+1,j+1), I(i+1,j), tan);
-      if (!S_(i, j-1)) quad(O(i,j), O(i+1,j), I(i+1,j), I(i,j), new THREE.Vector3(0, -1, 0));
-      if (!S_(i, j+1)) quad(O(i,j+1), O(i+1,j+1), I(i+1,j+1), I(i,j+1), new THREE.Vector3(0, 1, 0));
-    }
-  }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
-  const rt = pf.r(pf.H), cap = new THREE.CylinderGeometry(rt, rt, t, 96); cap.translate(0, pf.H - t / 2, 0);
+  const g = smoothShell(D.F, D.Na, D.ys, y => D.pf.r(y), S.prWall, (th, r, y) => [Math.sin(th) * r, y, Math.cos(th) * r]);
+  const t = S.prWall, rt = D.pf.r(D.pf.H), cap = new THREE.CylinderGeometry(rt - 0.05, rt - 0.05, t, 128); cap.translate(0, D.pf.H - t / 2, 0);
   return [['Projector shell', g], ['Top', cap]];
 }
 function prSolidAtRay(dx, dy, dz){
-  // walk out from the LED until the ray reaches the shell; is the shell solid there?
-  const D = prData, pf = D.pf; let lo = 0, hi = pf.rb * 4;
-  for (let k = 0; k < 22; k++){ const m = (lo + hi) / 2, x = dx * m, y = D.e + dy * m, z = dz * m; if (Math.hypot(x, z) < pf.r(Math.min(pf.H, Math.max(0, y)))) lo = m; else hi = m; }
+  // walk out from the LED until the ray reaches the middle of the shell wall; is the wall solid there?
+  const D = prData, pf = D.pf, rmAt = y => pf.r(Math.min(pf.H, Math.max(0, y))) - S.prWall / 2; let lo = 0, hi = pf.rb * 4;
+  for (let k = 0; k < 24; k++){ const m = (lo + hi) / 2, y = D.e + dy * m; if (Math.hypot(dx * m, dz * m) < rmAt(y)) lo = m; else hi = m; }
   const y = D.e + dy * hi; if (y <= 0 || y >= pf.H - S.prWall) return true;
   let th = Math.atan2(dx, dz); if (th < 0) th += Math.PI * 2;
-  const i = Math.floor(th / (Math.PI * 2) * D.Na) % D.Na, j = Math.min(D.Nh - 1, Math.floor(y / pf.H * D.Nh));
-  return D.sol[i * D.Nh + j] === 1;
+  return fieldAt(D, th / (Math.PI * 2) * D.Na, y) >= 0.5;
 }
 function updateProjectorPreview(){
   const on = S.product === 'proj' && prData;
@@ -1092,7 +1129,7 @@ function updateProjectorPreview(){
     prGlow = new THREE.Mesh(new THREE.SphereGeometry(3, 20, 14), new THREE.MeshBasicMaterial({color: 0xffd27a})); pivot.add(prGlow);
   }
   prWallMesh.visible = prGlow.visible = !!on; if (!on) return;
-  const D = prData, Pc = D.Pc, wW = Math.max(Pc.W, Pc.Hh) * 1.5, wH = wW, cy = Pc.yc, px = 384;
+  const D = prData, Pc = D.Pc, wW = Math.max(Pc.W, Pc.Hh) * 1.5, wH = wW, cy = Pc.yc, px = 720;
   const c = document.createElement('canvas'); c.width = c.height = px; const g = c.getContext('2d'), img = g.createImageData(px, px), d = img.data;
   for (let y = 0; y < px; y++) for (let x = 0; x < px; x++){
     const wx = (0.5 - x / (px - 1)) * wW, wy = cy + (0.5 - y / (px - 1)) * wH, q = (y * px + x) * 4;
