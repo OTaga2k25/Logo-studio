@@ -432,17 +432,20 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
         </div>
         <div class="row2">
           <div class="field"><label for="prLift">Picture height</label><output id="prLiftOut"></output><input type="range" id="prLift" min="-100" max="400" step="5" value="120"></div>
-          <div class="field"><label for="prBars">Support bars</label><output id="prBarsOut"></output><input type="range" id="prBars" min="0" max="48" step="1" value="20"></div>
+          <div class="field"><label for="prBars">Extra bars</label><output id="prBarsOut"></output><input type="range" id="prBars" min="0" max="48" step="1" value="0"></div>
         </div>
         <div class="row2">
+          <div class="field"><label for="prWidth">Lamp width</label><output id="prWidthOut"></output><input type="range" id="prWidth" min="30" max="120" step="1" value="64"></div>
           <div class="field"><label for="prH">Lamp height</label><output id="prHOut"></output><input type="range" id="prH" min="30" max="90" step="1" value="52"></div>
-          <div class="field"><label for="prLed">LED tea light Ø</label><output id="prLedOut"></output><input type="range" id="prLed" min="15" max="45" step="0.5" value="38"></div>
         </div>
         <div class="row2">
+          <div class="field"><label for="prLed">LED tea light Ø</label><output id="prLedOut"></output><input type="range" id="prLed" min="15" max="45" step="0.5" value="38"></div>
           <div class="field"><label for="prLight">Light height</label><output id="prLightOut"></output><input type="range" id="prLight" min="8" max="40" step="0.5" value="24"></div>
+        </div>
+        <div class="row2">
           <div class="field"><label for="prWall">Wall</label><output id="prWallOut"></output><input type="range" id="prWall" min="0.8" max="2.4" step="0.1" value="1.2"></div>
         </div>
-        <span class="note">The lamp goes over an LED tea light. Light shines out through the cut-outs and draws your picture on the wall in front. Support bars hold floating parts (like a pumpkin's eyes) in place. Coloured and dark parts of the picture count as the picture; white counts as background. Print in a dark colour for a crisp projection.</span>
+        <span class="note">The lamp goes over an LED tea light. Light shines out through the cut-outs and draws your picture on the wall in front. Floating parts (like the middle of an O) are joined with thin bars automatically. A wider lamp gives a sharper picture. Coloured and dark parts of the picture count as the picture; white counts as background. Print in a dark colour for a crisp projection.</span>
       </div>
       <div class="sub" id="shadowOpts" hidden>
         <div>
@@ -617,7 +620,7 @@ const $ = id => document.getElementById(id);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const S = {
-  product:'mug', divider:0, layers:[], prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:20, prH:52, prLed:38, prLight:24, prWall:1.2, slSize:360, slRays:0, slRing:84, slLed:38, slLight:28, slSmooth:3, slWall:1.6, slCx:-1, slCy:-1, slWallMode:false, cobrand:false, sep:'×', cbOrder:'ours', cbBalance:0, pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
+  product:'mug', divider:0, layers:[], prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:0, prWidth:64, prH:52, prLed:38, prLight:24, prWall:1.2, slSize:360, slRays:0, slRing:84, slLed:38, slLight:28, slSmooth:3, slWall:1.6, slCx:-1, slCy:-1, slWallMode:false, cobrand:false, sep:'×', cbOrder:'ours', cbBalance:0, pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
   mode:'raised', logoW:52, angle:0, ly:44, both:false,
   depth:1.6, thr:0.5, invert:false, heightSrc:'layered', reliefColor:'full', smooth:2, hiDetail:false, logoColor:'#1d2c7a', removeBg:true, stickerW:0, nColors:5, text:'', textFont:"800|'Baloo 2'", textPos:'below', textSize:27, textColor:'#12939a'
 };
@@ -873,6 +876,35 @@ function slMask(){
 // The LED tip is at height e. A ray through the wall (mid radius rm) at height y lands on the table at
 // R = rm * e / (e - y). Each wall cell is solid when that table point is inside the logo (shadow) and
 // open when it is outside (light), so the table shows the whole logo, holes and letters included.
+function gridFix(sol, Na, Nh, bw, minCells){
+  // Remove specks (bits too small to print) and join floating islands to the base ring with thin bars.
+  for (let pass = 0; pass < 2; pass++){
+    for (let i = 0; i < Na; i++) for (let j = 1; j < Nh; j++){
+      const v = sol[i * Nh + j], L = sol[((i - 1 + Na) % Na) * Nh + j], Rr = sol[((i + 1) % Na) * Nh + j];
+      if (v && !L && !Rr) sol[i * Nh + j] = 0; else if (!v && L && Rr) sol[i * Nh + j] = 1;
+    }
+  }
+  const seen = new Uint8Array(Na * Nh), nb = (c, f) => { const i = (c / Nh) | 0, j = c % Nh; f(((i + 1) % Na) * Nh + j); f(((i - 1 + Na) % Na) * Nh + j); if (j + 1 < Nh) f(c + 1); if (j > 0) f(c - 1); };
+  const flood = st => { while (st.length){ nb(st.pop(), q => { if (sol[q] && !seen[q]){ seen[q] = 1; st.push(q); } }); } };
+  const st0 = []; for (let i = 0; i < Na; i++) if (sol[i * Nh]){ seen[i * Nh] = 1; st0.push(i * Nh); } flood(st0);
+  let bars = 0;
+  for (let q0 = 0; q0 < sol.length; q0++){
+    if (!sol[q0] || seen[q0]) continue;
+    const isl = [q0]; seen[q0] = 2;
+    for (let k = 0; k < isl.length; k++) nb(isl[k], q => { if (sol[q] && !seen[q]){ seen[q] = 2; isl.push(q); } });
+    if (isl.length < (minCells || 12)){ isl.forEach(q => { sol[q] = 0; seen[q] = 0; }); continue; }
+    // a bar straight down from the middle of the island's lowest edge
+    const cols = new Map(); isl.forEach(c => { const i = (c / Nh) | 0, j = c % Nh; cols.set(i, Math.min(cols.has(i) ? cols.get(i) : 1e9, j)); });
+    const keys = [...cols.keys()].sort((x, y) => x - y); let ic = keys[(keys.length / 2) | 0];
+    if (keys[keys.length - 1] - keys[0] > Na / 2){ const sh = keys.map(k => (k + Na / 2) % Na).sort((x, y) => x - y); ic = (sh[(sh.length / 2) | 0] + Na / 2) % Na; }
+    const j0 = cols.get(ic), st = [];
+    for (let d = -(bw >> 1); d < bw - (bw >> 1); d++){ const i = ((ic + d) % Na + Na) % Na;
+      for (let j = Math.min(Nh - 1, j0); j >= 0; j--){ const q = i * Nh + j; if (seen[q] === 1) break; sol[q] = 1; seen[q] = 1; st.push(q); } }
+    isl.forEach(q => { seen[q] = 1; st.push(q); }); flood(st);
+    bars++;
+  }
+  return bars;
+}
 function slCompute(){
   const M = slMask(); if (!M) return null;
   if (S.slCx < 0){ S.slCx = M.cx; S.slCy = M.cy; }
@@ -899,31 +931,7 @@ function slCompute(){
     const w = Math.max(1, Math.round(0.7 / (2 * Math.PI * ro / Na)));
     for (let r = 0; r < S.slRays; r++){ const c0 = Math.round((r + 0.5) / S.slRays * Na); for (let i = c0 - w; i <= c0 + w; i++){ const k = ((i % Na) + Na) % Na; for (let j = 1; j < Nh; j++) sol[k * Nh + j] = 0; } }
   }
-  // remove specks (single-cell bits that can't print) and connect floating islands to the base with thin bars
-  const bw = Math.max(2, Math.round(0.9 / (2 * Math.PI * ro / Na)));
-  for (let pass = 0; pass < 2; pass++){
-    for (let i = 0; i < Na; i++) for (let j = 1; j < Nh; j++){
-      const v = sol[i * Nh + j], L = sol[((i - 1 + Na) % Na) * Nh + j], Rr = sol[((i + 1) % Na) * Nh + j];
-      if (v && !L && !Rr) sol[i * Nh + j] = 0; else if (!v && L && Rr) sol[i * Nh + j] = 1;
-    }
-  }
-  let bars = 0;
-  for (let guard = 0; guard < 400; guard++){
-    const seen = new Uint8Array(Na * Nh), st = [];
-    for (let i = 0; i < Na; i++){ seen[i * Nh] = 1; st.push(i * Nh); }
-    while (st.length){ const c = st.pop(), i = (c / Nh) | 0, j = c % Nh;
-      [[(i + 1) % Na, j], [(i - 1 + Na) % Na, j], [i, j + 1], [i, j - 1]].forEach(([a2, b2]) => { if (b2 < 0 || b2 >= Nh) return; const q = a2 * Nh + b2; if (sol[q] && !seen[q]){ seen[q] = 1; st.push(q); } }); }
-    let found = -1; for (let q = 0; q < sol.length && found < 0; q++) if (sol[q] && !seen[q]) found = q;
-    if (found < 0) break;
-    // find the island's extent, put a bar under its middle
-    const isl = [found], mark = new Uint8Array(Na * Nh); mark[found] = 1; let lo = Infinity;
-    const cols = new Map();
-    for (let k = 0; k < isl.length; k++){ const c = isl[k], i = (c / Nh) | 0, j = c % Nh; lo = Math.min(lo, j); cols.set(i, Math.min(cols.has(i) ? cols.get(i) : 1e9, j));
-      [[(i + 1) % Na, j], [(i - 1 + Na) % Na, j], [i, j + 1], [i, j - 1]].forEach(([a2, b2]) => { if (b2 < 0 || b2 >= Nh) return; const q = a2 * Nh + b2; if (sol[q] && !mark[q]){ mark[q] = 1; isl.push(q); } }); }
-    const keys = [...cols.keys()].sort((x, y) => x - y), ic = keys[(keys.length / 2) | 0];
-    for (let d = -bw / 2 | 0; d < Math.ceil(bw / 2); d++){ const i = ((ic + d) % Na + Na) % Na; for (let j = cols.get(ic); j >= 1; j--){ if (seen[i * Nh + j]) break; sol[i * Nh + j] = 1; } }
-    bars++;
-  }
+  const bars = gridFix(sol, Na, Nh, Math.max(2, Math.round(0.9 / (2 * Math.PI * ro / Na))));
   slData = {Na, Nh, ys, sol, e, ro, ri, rm, hMin, yTop, Rfar, Rat, bars};
   return slData;
 }
@@ -999,14 +1007,14 @@ function drawShadowPicker(){
 // shell is cut open when the ray from P through S lands on the wall inside the picture.
 let prData = null, prWallMesh = null, prGlow = null;
 function prProfile(){
-  const rb = S.prLed / 2 + 1.2 + S.prWall, H = S.prH;
+  const rb = Math.max(S.prWidth / 2, S.prLed / 2 + 1.2 + S.prWall), H = S.prH;
   if (S.prShape === 'cyl') return {rb, H, r: y => rb};
   if (S.prShape === 'dome') return {rb, H, r: y => rb * (0.42 + 0.58 * Math.sqrt(Math.max(0, 1 - Math.pow(y / H, 2) * 0.92)))};
   return {rb, H, r: y => rb + (rb * 0.5 - rb) * (y / H)};
 }
 function prPicture(){
-  const I = logoInk; if (!I) return null;
-  const W = S.prSize, Hh = W * I.h / I.w;
+  const M = slMask(); if (!M) return null;
+  const I = {w: M.w, h: M.h, m: M.m}, W = S.prSize, Hh = W * I.h / I.w;
   return {I, W, Hh, yc: S.prLight + 1 + S.prLift};
 }
 function prShapeAt(wx, wy, Pc){
@@ -1014,7 +1022,7 @@ function prShapeAt(wx, wy, Pc){
   const u = 0.5 - wx / Pc.W, v = (Pc.yc + Pc.Hh / 2 - wy) / Pc.Hh;
   if (u < 0 || u > 1 || v < 0 || v > 1) return -1;
   const I = Pc.I, x = Math.min(I.w - 1, Math.floor(u * I.w)), y = Math.min(I.h - 1, Math.floor(v * I.h));
-  return I.data[y * I.w + x] > 0.5 ? 1 : 0;
+  return I.m[y * I.w + x];
 }
 function prCompute(){
   const Pc = prPicture(); if (!Pc) return null;
@@ -1024,8 +1032,8 @@ function prCompute(){
     const th = (i + 0.5) / Na * Math.PI * 2, sn = Math.sin(th), cs = Math.cos(th);
     for (let j = 0; j < Nh; j++){
       const y = (j + 0.5) / Nh * pf.H, r = pf.r(y); let solid = 1;
-      if (y > 3 && y < pf.H - 3 && cs > 0.08){
-        const t = S.prDist / (r * cs), wx = r * sn * t, wy = e + (y - e) * t, k = prShapeAt(wx, wy, Pc);
+      if (y > 3 && y < pf.H - 2.5 && cs > 0.08){
+        const rm = r - S.prWall / 2, t = S.prDist / (rm * cs), wx = rm * sn * t, wy = e + (y - e) * t, k = prShapeAt(wx, wy, Pc);
         const open = light ? k === 1 : k === 0;
         if (open){
           solid = 0;
@@ -1035,7 +1043,9 @@ function prCompute(){
       sol[i * Nh + j] = solid;
     }
   }
-  prData = {Na, Nh, sol, pf, e, Pc};
+  const bw = Math.max(2, Math.round(0.9 / (2 * Math.PI * pf.rb / Na)));
+  const autoBars = gridFix(sol, Na, Nh, bw, 25);
+  prData = {Na, Nh, sol, pf, e, Pc, autoBars};
   return prData;
 }
 function projectorGeometries(){
@@ -2048,14 +2058,15 @@ const PRESETS = {
     ['tumbler', 'Tumbler', 'no handle', {mh:125, md:80, mt:12, mw:4, mb:6, handle:false}]
   ],
   proj: [
-    ['prCone', 'Projector cone', 'picture glows', {mh:80, md:80, mw:1.2, mb:2, handle:false, color:'#2f4cb3', prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:20, prH:52, prLed:38, prLight:24, prWall:1.2, texture:'smooth'}],
-    ['prDome', 'Projector dome', 'rounded', {mh:80, md:80, mw:1.2, mb:2, handle:false, color:'#e2672b', prShape:'dome', prMode:'light', prDist:350, prSize:420, prLift:140, prBars:24, prH:50, prLed:38, prLight:24, prWall:1.2, texture:'smooth'}],
-    ['prShadow', 'Shadow picture', 'dark picture, lit wall', {mh:80, md:80, mw:1.2, mb:2, handle:false, color:'#2b2d33', prShape:'cyl', prMode:'shadow', prDist:300, prSize:320, prLift:110, prBars:16, prH:50, prLed:38, prLight:24, prWall:1.2, texture:'smooth'}]
+    ['prCone', 'Projector cone', 'picture glows', {mh:80, md:80, mw:1.2, mb:2, handle:false, color:'#2f4cb3', prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:0, prWidth:64, prH:52, prLed:38, prLight:24, prWall:1.2, texture:'smooth'}],
+    ['prDome', 'Projector dome', 'rounded', {mh:80, md:80, mw:1.2, mb:2, handle:false, color:'#e2672b', prShape:'dome', prMode:'light', prDist:350, prSize:420, prLift:140, prBars:0, prWidth:70, prH:50, prLed:38, prLight:24, prWall:1.2, texture:'smooth'}],
+    ['prShadow', 'Shadow picture', 'dark picture, lit wall', {mh:80, md:80, mw:1.2, mb:2, handle:false, color:'#2b2d33', prShape:'cyl', prMode:'shadow', prDist:300, prSize:320, prLift:110, prBars:0, prWidth:60, prH:50, prLed:38, prLight:24, prWall:1.2, texture:'smooth'}]
   ],
   shadow: [
     ['slTable', 'Shadow lamp', 'logo on the table', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#2f4cb3', slSize:360, slRays:0, slRing:84, slLed:38, slLight:28, slSmooth:3, texture:'smooth'}],
     ['slBig', 'Big shadow', 'room-size', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#d8463b', slSize:600, slRays:0, slRing:120, slLed:38, slLight:30, slSmooth:4, texture:'smooth'}],
-    ['slMini', 'Mini LED', '21 mm LED', {mh:80, md:80, mw:1.4, mb:2, handle:false, color:'#2b6b3f', slSize:260, slRays:0, slRing:56, slLed:21, slLight:14, slSmooth:3, texture:'smooth'}]
+    ['slSmall', 'Small lamp', '5 cm · quick print', {mh:80, md:80, mw:1.4, mb:2, handle:false, color:'#2b2d33', slSize:250, slRays:0, slRing:50, slLed:38, slLight:28, slSmooth:3, slWall:1.4, texture:'smooth'}],
+    ['slMini', 'Mini LED', '3.5 cm · 21 mm LED', {mh:80, md:80, mw:1.4, mb:2, handle:false, color:'#2b6b3f', slSize:180, slRays:0, slRing:34, slLed:21, slLight:14, slSmooth:3, slWall:1.2, texture:'smooth'}]
   ],
   block: [
     ['pbClassic', 'Pen block', 'staggered holes', {mh:60, md:120, mw:3, mb:4, handle:false, color:'#2b2d33', pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, logoW:100, ly:50, texture:'smooth'}],
@@ -2131,7 +2142,7 @@ function applyPreset(key, p){
   $('handle').checked = p.handle; S.handle = p.handle;
   if (p.divider !== undefined){ S.divider = p.divider; $('divider').value = String(p.divider); }
   setTexture(p.texture || (S.product === 'duo' ? 'ribbed' : 'smooth'), true);
-  [['prDist','prDist'],['prSize','prSize'],['prLift','prLift'],['prBars','prBars'],['prH','prH'],['prLed','prLed'],['prLight','prLight'],['prWall','prWall'],['slSize','slSize'],['slRing','slRing'],['slRays','slRays'],['slLed','slLed'],['slLight','slLight'],['slSmooth','slSmooth'],['slWall','slWall'],['pbHole','pbHole'],['pbDepth','pbDepth'],['mnDepth','mnDepth'],['mnNeck','mnNeck'],['tbBase','tbBase'],['tbStep','tbStep'],['cpCup','cpCup'],['cpFront','cpFront'],['cpSlot','cpSlot'],['stDepth','stDepth'],['stLow','stLow'],['phAngle','phAngle'],['phSlot','phSlot'],['phLip','phLip'],['hexBase','hexBase'],['hexStep','hexStep'],['cadDepth','cadDepth'],['cadFront','cadFront'],['cadSlot','cadSlot'],['duoLen','duoLen'],['duoH2','duoH2'],['texCols','texCols'],['texDepth','texDepth'],['lw','logoW'],['ly','ly']].forEach(([id, k]) => { if (p[k] !== undefined){ $(id).value = p[k]; $(id).dispatchEvent(new Event('input')); } });
+  [['prDist','prDist'],['prSize','prSize'],['prLift','prLift'],['prBars','prBars'],['prWidth','prWidth'],['prH','prH'],['prLed','prLed'],['prLight','prLight'],['prWall','prWall'],['slSize','slSize'],['slRing','slRing'],['slRays','slRays'],['slLed','slLed'],['slLight','slLight'],['slSmooth','slSmooth'],['slWall','slWall'],['pbHole','pbHole'],['pbDepth','pbDepth'],['mnDepth','mnDepth'],['mnNeck','mnNeck'],['tbBase','tbBase'],['tbStep','tbStep'],['cpCup','cpCup'],['cpFront','cpFront'],['cpSlot','cpSlot'],['stDepth','stDepth'],['stLow','stLow'],['phAngle','phAngle'],['phSlot','phSlot'],['phLip','phLip'],['hexBase','hexBase'],['hexStep','hexStep'],['cadDepth','cadDepth'],['cadFront','cadFront'],['cadSlot','cadSlot'],['duoLen','duoLen'],['duoH2','duoH2'],['texCols','texCols'],['texDepth','texDepth'],['lw','logoW'],['ly','ly']].forEach(([id, k]) => { if (p[k] !== undefined){ $(id).value = p[k]; $(id).dispatchEvent(new Event('input')); } });
   if (p.depth){ $('depth').value = p.depth; $('depth').dispatchEvent(new Event('input')); }
   if (p.text !== undefined){ S.text = p.text; $('logoText').value = p.text; }
   if (p.textColor){ S.textColor = p.textColor; $('textColor').value = p.textColor; }
@@ -2311,7 +2322,7 @@ bindRange('duoLen', 'duoLen', v => v + ' mm');
 $('slant').addEventListener('input', e => { S.slant = parseFloat(e.target.value) / 100; $('slantOut').textContent = S.slant ? e.target.value + '%' : 'Flat'; rebuild(); });
 $('slantOut').textContent = 'Flat';
 bindRange('prDist', 'prDist', v => Math.round(v / 10) + ' cm'); bindRange('prSize', 'prSize', v => Math.round(v / 10) + ' cm'); bindRange('prLift', 'prLift', v => (v >= 0 ? '+' : '') + Math.round(v / 10) + ' cm');
-bindRange('prBars', 'prBars', v => v ? v + '' : 'None'); bindRange('prH', 'prH', v => v + ' mm'); bindRange('prLed', 'prLed', v => v + ' mm'); bindRange('prLight', 'prLight', v => v + ' mm'); bindRange('prWall', 'prWall', v => v.toFixed(1) + ' mm');
+bindRange('prWidth', 'prWidth', v => v + ' mm'); bindRange('prBars', 'prBars', v => v ? v + '' : 'None'); bindRange('prH', 'prH', v => v + ' mm'); bindRange('prLed', 'prLed', v => v + ' mm'); bindRange('prLight', 'prLight', v => v + ' mm'); bindRange('prWall', 'prWall', v => v.toFixed(1) + ' mm');
 bindRange('slSize', 'slSize', v => Math.round(v / 10) + ' cm'); bindRange('slRays', 'slRays', v => v ? v + '' : 'None'); bindRange('slLed', 'slLed', v => v + ' mm');
 bindRange('slLight', 'slLight', v => v + ' mm'); bindRange('slSmooth', 'slSmooth', v => v ? v + '' : 'Off'); bindRange('slWall', 'slWall', v => v.toFixed(1) + ' mm'); bindRange('slRing', 'slRing', v => v + ' mm');
 bindRange('pbHole', 'pbHole', v => v + ' mm'); bindRange('pbDepth', 'pbDepth', v => v + ' mm'); bindRange('mnDepth', 'mnDepth', v => v + ' mm'); bindRange('mnNeck', 'mnNeck', v => v + ' mm');
