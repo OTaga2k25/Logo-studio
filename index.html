@@ -452,17 +452,18 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
         </div>
         <div class="row2">
           <div class="field"><label for="slSize">Shadow size</label><output id="slSizeOut"></output><input type="range" id="slSize" min="120" max="700" step="10" value="360"></div>
-          <div class="field"><label for="slRays">Light rays</label><output id="slRaysOut"></output><input type="range" id="slRays" min="0" max="48" step="2" value="16"></div>
+          <div class="field"><label for="slRays">Light rays</label><output id="slRaysOut"></output><input type="range" id="slRays" min="0" max="48" step="2" value="0"></div>
         </div>
         <div class="row2">
           <div class="field"><label for="slLed">LED tea light Ø</label><output id="slLedOut"></output><input type="range" id="slLed" min="15" max="45" step="0.5" value="38"></div>
           <div class="field"><label for="slLight">Light height</label><output id="slLightOut"></output><input type="range" id="slLight" min="10" max="45" step="0.5" value="28"></div>
         </div>
         <div class="row2">
-          <div class="field"><label for="slSmooth">Smooth outline</label><output id="slSmoothOut"></output><input type="range" id="slSmooth" min="0" max="12" step="1" value="3"></div>
+          <div class="field"><label for="slRing">Lamp width</label><output id="slRingOut"></output><input type="range" id="slRing" min="30" max="140" step="1" value="84"></div>
+          <div class="field" hidden><label for="slSmooth">Smooth outline</label><output id="slSmoothOut"></output><input type="range" id="slSmooth" min="0" max="12" step="1" value="3"></div>
           <div class="field"><label for="slWall">Wall</label><output id="slWallOut"></output><input type="range" id="slWall" min="1.2" max="3" step="0.1" value="1.6"></div>
         </div>
-        <span class="note">The lamp is a ring with a shaped rim that sits around an LED tea light. Light height is how high the glowing tip of the LED is above the table. Works on a table, or held flat against a wall. Any upload works; only its outline becomes the shadow. Best in a dark room; print with 0.1–0.12 mm layers for a sharp shadow.</span>
+        <span class="note">The lamp is a ring with windows that sits around an LED tea light. The solid parts cast your logo as a shadow on the table; light through the windows draws the gaps between letters and shapes. Thin bars hold any floating parts. Light height is how high the glowing tip of the LED is above the table, so measure yours. A wider lamp gives a sharper picture. Use a dark room, print in a dark colour, with 0.08–0.12 mm layers.</span>
       </div>
       <div class="sub" id="blockOpts" hidden>
         <div class="row2">
@@ -616,7 +617,7 @@ const $ = id => document.getElementById(id);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const S = {
-  product:'mug', divider:0, layers:[], prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:20, prH:52, prLed:38, prLight:24, prWall:1.2, slSize:360, slRays:16, slLed:38, slLight:28, slSmooth:3, slWall:1.6, slCx:-1, slCy:-1, slWallMode:false, cobrand:false, sep:'×', cbOrder:'ours', cbBalance:0, pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
+  product:'mug', divider:0, layers:[], prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:20, prH:52, prLed:38, prLight:24, prWall:1.2, slSize:360, slRays:0, slRing:84, slLed:38, slLight:28, slSmooth:3, slWall:1.6, slCx:-1, slCy:-1, slWallMode:false, cobrand:false, sep:'×', cbOrder:'ours', cbBalance:0, pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
   mode:'raised', logoW:52, angle:0, ly:44, both:false,
   depth:1.6, thr:0.5, invert:false, heightSrc:'layered', reliefColor:'full', smooth:2, hiDetail:false, logoColor:'#1d2c7a', removeBg:true, stickerW:0, nColors:5, text:'', textFont:"800|'Baloo 2'", textPos:'below', textSize:27, textColor:'#12939a'
 };
@@ -639,7 +640,7 @@ const controls = new THREE.OrbitControls(camera, canvas);
 controls.enableDamping = true; controls.minDistance = 120; controls.maxDistance = 700;
 controls.autoRotate = !reduced; controls.autoRotateSpeed = 1.2;
 function resetView(){ if (typeof S !== 'undefined' && S.product === 'proj'){ const d = S.prDist, h = S.prLight + S.prLift; camera.position.set(-d * 0.55 - 120, h + d * 0.35 + 80, -d * 0.75 - 160); controls.target.set(0, h * 0.6, d * 0.55); controls.update(); return; }
-  if (typeof S !== 'undefined' && S.product === 'shadow'){ const r = slData ? Math.min(slData.Rmax, 600) : 200; camera.position.set(0, r * 1.9 + 60, r * 1.5 + 60); controls.target.set(0, 0, 0); controls.update(); return; } camera.position.set(60, 70, 300); controls.target.set(0, 0, 0); controls.update(); }
+  if (typeof S !== 'undefined' && S.product === 'shadow'){ const r = slData ? Math.min(slData.Rfar, 600) : 200; camera.position.set(0, r * 1.9 + 60, r * 1.5 + 60); controls.target.set(0, 0, 0); controls.update(); return; } camera.position.set(60, 70, 300); controls.target.set(0, 0, 0); controls.update(); }
 resetView();
 $('spin').checked = controls.autoRotate;
 
@@ -856,54 +857,107 @@ const productWord = () => PRODUCT_WORDS[S.product] || 'mug';
 // closer than R is in shadow. For a picture whose outline is R(phi) from the lamp: h = e * (1 - ro / R).
 let slMaskCache = null, slData = null;
 function slMask(){
+  // the shape = opaque pixels that are dark or coloured; white and transparent pixels let light through
   const src = logoBase || logoProc; if (!src) return null;
   if (slMaskCache && slMaskCache.src === src) return slMaskCache;
-  const k = Math.min(1, 420 / Math.max(src.width, src.height)), w = Math.max(2, Math.round(src.width * k)), h = Math.max(2, Math.round(src.height * k));
+  const k = Math.min(1, 640 / Math.max(src.width, src.height)), w = Math.max(2, Math.round(src.width * k)), h = Math.max(2, Math.round(src.height * k));
   const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.drawImage(src, 0, 0, w, h);
   const d = g.getImageData(0, 0, w, h).data, m = new Uint8Array(w * h); let sx = 0, sy = 0, n = 0;
-  for (let q = 0; q < m.length; q++) if (d[q*4+3] > 110){ m[q] = 1; sx += q % w; sy += (q / w) | 0; n++; }
+  for (let q = 0; q < m.length; q++){
+    const r = d[q*4], gg = d[q*4+1], bb = d[q*4+2], mx = Math.max(r, gg, bb), mn = Math.min(r, gg, bb), luma = 0.299 * r + 0.587 * gg + 0.114 * bb;
+    if (d[q*4+3] > 110 && (luma < 185 || (mx - mn) > 70)){ m[q] = 1; sx += q % w; sy += (q / w) | 0; n++; }
+  }
   slMaskCache = {src, w, h, m, cx: n ? sx / n / w : 0.5, cy: n ? sy / n / h : 0.5};
   return slMaskCache;
 }
+// The LED tip is at height e. A ray through the wall (mid radius rm) at height y lands on the table at
+// R = rm * e / (e - y). Each wall cell is solid when that table point is inside the logo (shadow) and
+// open when it is outside (light), so the table shows the whole logo, holes and letters included.
 function slCompute(){
   const M = slMask(); if (!M) return null;
   if (S.slCx < 0){ S.slCx = M.cx; S.slCy = M.cy; }
-  const N = 720, Rpx = new Float32Array(N), cx = S.slCx * M.w, cy = S.slCy * M.h, maxD = Math.hypot(M.w, M.h);
-  for (let i = 0; i < N; i++){
-    const a = i / N * Math.PI * 2, dx = Math.cos(a), dy = Math.sin(a); let last = 0;
-    for (let t = 0; t < maxD; t += 0.5){ const x = Math.round(cx + dx * t), y = Math.round(cy + dy * t); if (x < 0 || y < 0 || x >= M.w || y >= M.h) break; if (M.m[y * M.w + x]) last = t; }
-    Rpx[i] = last;
+  const e = S.slLight + 1.2, ro = Math.max(S.slRing / 2, S.slLed / 2 + 1 + S.slWall), ri = ro - S.slWall, rm = (ro + ri) / 2, hMin = 1.8, hMax = e - 1.2;
+  const scale = S.slSize / Math.max(M.w, M.h), cx = S.slCx * M.w, cy = S.slCy * M.h;
+  const inLogo = (R, a) => { const x = Math.floor(cx + Math.cos(a) * R / scale), y = Math.floor(cy + Math.sin(a) * R / scale); return x >= 0 && y >= 0 && x < M.w && y < M.h && M.m[y * M.w + x] === 1; };
+  // farthest logo pixel from the lamp sets the top of the wall
+  let Rfar = 0; for (let q = 0; q < M.m.length; q++) if (M.m[q]) Rfar = Math.max(Rfar, Math.hypot(q % M.w + 0.5 - cx, ((q / M.w) | 0) + 0.5 - cy));
+  Rfar = Rfar * scale + 2;
+  const yAt = R => e * (1 - rm / R), Rat = y => rm * e / (e - y);
+  const yTop = Math.min(hMax, yAt(Math.max(Rfar, Rat(hMin) + 1)));
+  // rows: even steps on the table (about 0.5% of the picture), never thinner than 0.12 mm on the lamp
+  const ys = [0, hMin], dR = Math.max(1, S.slSize / 180);
+  for (let R = Rat(hMin) + dR; ; R += dR){ const y = yAt(R); if (y >= yTop){ if (yTop - ys[ys.length - 1] > 0.06) ys.push(yTop); else ys[ys.length - 1] = yTop; break; } if (y - ys[ys.length - 1] >= 0.08) ys.push(y); }
+  const Nh = ys.length - 1, Na = Math.max(360, Math.round(2 * Math.PI * ro / 0.25)), sol = new Uint8Array(Na * Nh);
+  for (let i = 0; i < Na; i++){
+    const a = (i + 0.5) / Na * Math.PI * 2;
+    for (let j = 0; j < Nh; j++){
+      if (j === 0){ sol[i * Nh] = 1; continue; }
+      const y = (ys[j] + ys[j + 1]) / 2; sol[i * Nh + j] = inLogo(Rat(y), a) ? 1 : 0;
+    }
   }
-  const scale = S.slSize / Math.max(M.w, M.h);
-  const e = S.slLight + 1.2, ro = S.slLed / 2 + 0.5 + S.slWall, hMin = 2.5, hMax = e - 1.2;
-  const Rmin = ro * e / (e - hMin), Rmax = ro * e / (e - hMax);
-  let R = Array.from(Rpx, v => Math.min(Rmax, Math.max(Rmin, v * scale)));
-  const k = S.slSmooth;
-  if (k > 0){ const o = new Float32Array(N); for (let i = 0; i < N; i++){ let s2 = 0; for (let j = -k; j <= k; j++) s2 += R[(i + j + N) % N]; o[i] = s2 / (2*k + 1); } R = Array.from(o); }
-  const hs = new Float32Array(N);
-  for (let i = 0; i < N; i++) hs[i] = Math.min(hMax, Math.max(hMin, e * (1 - ro / R[i])));
-  if (S.slRays > 0){                                    // narrow notches in the rim let rays of light cut through the shadow
-    const w = 1.1 / 360 * N;
-    for (let r = 0; r < S.slRays; r++){ const c0 = (r + 0.5) / S.slRays * N; for (let i = Math.floor(c0 - w); i <= Math.ceil(c0 + w); i++){ const j = (i + N) % N; if (Math.abs(i - c0) <= w) hs[j] = hMin; } }
+  if (S.slRays > 0){                                   // optional slits: rays of light through the shadow
+    const w = Math.max(1, Math.round(0.7 / (2 * Math.PI * ro / Na)));
+    for (let r = 0; r < S.slRays; r++){ const c0 = Math.round((r + 0.5) / S.slRays * Na); for (let i = c0 - w; i <= c0 + w; i++){ const k = ((i % Na) + Na) % Na; for (let j = 1; j < Nh; j++) sol[k * Nh + j] = 0; } }
   }
-  slData = {N, hs, e, ro, ri: ro - S.slWall, hMin, Rshadow: Array.from(hs, h => ro * e / (e - h)), Rmax: Math.max(...R)};
+  // remove specks (single-cell bits that can't print) and connect floating islands to the base with thin bars
+  const bw = Math.max(2, Math.round(0.9 / (2 * Math.PI * ro / Na)));
+  for (let pass = 0; pass < 2; pass++){
+    for (let i = 0; i < Na; i++) for (let j = 1; j < Nh; j++){
+      const v = sol[i * Nh + j], L = sol[((i - 1 + Na) % Na) * Nh + j], Rr = sol[((i + 1) % Na) * Nh + j];
+      if (v && !L && !Rr) sol[i * Nh + j] = 0; else if (!v && L && Rr) sol[i * Nh + j] = 1;
+    }
+  }
+  let bars = 0;
+  for (let guard = 0; guard < 400; guard++){
+    const seen = new Uint8Array(Na * Nh), st = [];
+    for (let i = 0; i < Na; i++){ seen[i * Nh] = 1; st.push(i * Nh); }
+    while (st.length){ const c = st.pop(), i = (c / Nh) | 0, j = c % Nh;
+      [[(i + 1) % Na, j], [(i - 1 + Na) % Na, j], [i, j + 1], [i, j - 1]].forEach(([a2, b2]) => { if (b2 < 0 || b2 >= Nh) return; const q = a2 * Nh + b2; if (sol[q] && !seen[q]){ seen[q] = 1; st.push(q); } }); }
+    let found = -1; for (let q = 0; q < sol.length && found < 0; q++) if (sol[q] && !seen[q]) found = q;
+    if (found < 0) break;
+    // find the island's extent, put a bar under its middle
+    const isl = [found], mark = new Uint8Array(Na * Nh); mark[found] = 1; let lo = Infinity;
+    const cols = new Map();
+    for (let k = 0; k < isl.length; k++){ const c = isl[k], i = (c / Nh) | 0, j = c % Nh; lo = Math.min(lo, j); cols.set(i, Math.min(cols.has(i) ? cols.get(i) : 1e9, j));
+      [[(i + 1) % Na, j], [(i - 1 + Na) % Na, j], [i, j + 1], [i, j - 1]].forEach(([a2, b2]) => { if (b2 < 0 || b2 >= Nh) return; const q = a2 * Nh + b2; if (sol[q] && !mark[q]){ mark[q] = 1; isl.push(q); } }); }
+    const keys = [...cols.keys()].sort((x, y) => x - y), ic = keys[(keys.length / 2) | 0];
+    for (let d = -bw / 2 | 0; d < Math.ceil(bw / 2); d++){ const i = ((ic + d) % Na + Na) % Na; for (let j = cols.get(ic); j >= 1; j--){ if (seen[i * Nh + j]) break; sol[i * Nh + j] = 1; } }
+    bars++;
+  }
+  slData = {Na, Nh, ys, sol, e, ro, ri, rm, hMin, yTop, Rfar, Rat, bars};
   return slData;
 }
 function shadowGeometries(){
   const D = slCompute(); if (!D) return [];
-  const {N, hs, ro, ri} = D, fl = 1.2, pos = [], idx = [];
-  for (let i = 0; i < N; i++){
-    const a = i / N * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a), h = hs[i];
-    pos.push(c*ro, 0, sn*ro,  c*ro, h, sn*ro,  c*ri, h, sn*ri,  c*ri, 0, sn*ri);
+  const {Na, Nh, ys, sol, ro, ri} = D, pos = [], idx = [];
+  const O = (i, j) => ((i % Na) * (Nh + 1) + j) * 2, I = (i, j) => O(i, j) + 1;
+  for (let i = 0; i < Na; i++){ const a = i / Na * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a); for (let j = 0; j <= Nh; j++) pos.push(c * ro, ys[j], sn * ro, c * ri, ys[j], sn * ri); }
+  const V = n => new THREE.Vector3(pos[n*3], pos[n*3+1], pos[n*3+2]);
+  const quad = (a, b, c, d, hint) => { const n = V(b).sub(V(a)).cross(V(c).sub(V(a))); if (n.dot(hint) >= 0) idx.push(a, b, c, a, c, d); else idx.push(a, c, b, a, d, c); };
+  const S_ = (i, j) => (j < 0 || j >= Nh) ? 0 : sol[((i % Na + Na) % Na) * Nh + j];
+  for (let i = 0; i < Na; i++){
+    const a = (i + 0.5) / Na * Math.PI * 2, rad = new THREE.Vector3(Math.cos(a), 0, Math.sin(a)), tan = new THREE.Vector3(-Math.sin(a), 0, Math.cos(a));
+    for (let j = 0; j < Nh; j++){
+      if (!S_(i, j)) continue;
+      quad(O(i,j), O(i+1,j), O(i+1,j+1), O(i,j+1), rad);
+      quad(I(i,j), I(i+1,j), I(i+1,j+1), I(i,j+1), rad.clone().negate());
+      if (!S_(i-1, j)) quad(O(i,j), O(i,j+1), I(i,j+1), I(i,j), tan.clone().negate());
+      if (!S_(i+1, j)) quad(O(i+1,j), O(i+1,j+1), I(i+1,j+1), I(i+1,j), tan);
+      if (!S_(i, j-1)) quad(O(i,j), O(i+1,j), I(i+1,j), I(i,j), new THREE.Vector3(0, -1, 0));
+      if (!S_(i, j+1)) quad(O(i,j+1), O(i+1,j+1), I(i+1,j+1), I(i,j+1), new THREE.Vector3(0, 1, 0));
+    }
   }
-  for (let i = 0; i < N; i++){
-    const a = i * 4, b = ((i + 1) % N) * 4;
-    for (let f = 0; f < 4; f++){ const p0 = a + f, p1 = a + (f + 1) % 4, q0 = b + f, q1 = b + (f + 1) % 4; idx.push(p0, q0, p1, p1, q0, q1); }
-  }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
-  fixWinding(g); g.computeVertexNormals();
-  const floor = new THREE.CylinderGeometry(ri + 0.3, ri + 0.3, fl, 96); floor.translate(0, fl/2, 0);
-  return [['Shadow ring', g], ['Floor', floor]];
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+  const fl = 1.2, floor = new THREE.CylinderGeometry(ri + 0.3, ri + 0.3, fl, 96); floor.translate(0, fl/2, 0);
+  return [['Shadow lamp', g], ['Floor', floor]];
+}
+function slLitAt(wx, wz){
+  // trace the ray from the LED to this table point through the wall
+  const D = slData, r = Math.hypot(wx, wz); if (r <= D.ro) return false;
+  const y = D.e * (1 - D.rm / r); if (y >= D.yTop) return true; if (y < D.hMin) return false;
+  let a = Math.atan2(wz, wx); if (a < 0) a += Math.PI * 2;
+  const i = Math.floor(a / (Math.PI * 2) * D.Na) % D.Na; let lo = 0, hi = D.Nh; while (hi - lo > 1){ const m = (lo + hi) >> 1; if (D.ys[m] <= y) lo = m; else hi = m; }
+  return D.sol[i * D.Nh + lo] === 0;
 }
 let slPlane = null, slGlow = null;
 function updateShadowPreview(){
@@ -915,14 +969,12 @@ function updateShadowPreview(){
   }
   slPlane.visible = slGlow.visible = !!on; shadow.visible = !on;
   if (!on) return;
-  const D = slData, ext = Math.min(D.Rmax * 1.25, 900), px = 768, c = document.createElement('canvas'); c.width = c.height = px;
+  const D = slData, ext = Math.min(D.Rfar * 1.3, 900), px = 900, c = document.createElement('canvas'); c.width = c.height = px;
   const g = c.getContext('2d'), img = g.createImageData(px, px), d = img.data;
   for (let y = 0; y < px; y++) for (let x = 0; x < px; x++){
-    const wx = (x / (px - 1) * 2 - 1) * ext, wz = (y / (px - 1) * 2 - 1) * ext, r = Math.hypot(wx, wz);
-    let a = Math.atan2(wz, wx); if (a < 0) a += Math.PI * 2;
-    const R = D.Rshadow[Math.floor(a / (Math.PI * 2) * D.N) % D.N], q = (y * px + x) * 4;
-    const fade = Math.max(0, Math.min(1, (ext - r) / (ext * 0.25)));
-    if (r < R){ d[q] = 22; d[q+1] = 20; d[q+2] = 18; d[q+3] = Math.round(235 * fade); }
+    const wx = (x / (px - 1) * 2 - 1) * ext, wz = (y / (px - 1) * 2 - 1) * ext, r = Math.hypot(wx, wz), q = (y * px + x) * 4;
+    const fade = Math.max(0, Math.min(1, (ext - r) / (ext * 0.2)));
+    if (!slLitAt(wx, wz)){ d[q] = 22; d[q+1] = 20; d[q+2] = 18; d[q+3] = Math.round(235 * fade); }
     else { const I = Math.min(1, (D.e * D.e * 9) / (r * r * 0.02 + D.e * D.e)); d[q] = 255; d[q+1] = Math.round(200 + 30 * I); d[q+2] = Math.round(110 + 40 * I); d[q+3] = Math.round(255 * (0.25 + 0.75 * I) * fade); }
   }
   g.putImageData(img, 0, 0);
@@ -1948,7 +2000,7 @@ function updateReadout(){
     `<span class="tag"><i>H</i><b>${sz.y.toFixed(0)}</b></span>` +
     `<span class="tag"><i>W</i><b>${sz.x.toFixed(0)}</b></span>` +
     `<span class="tag"><i>D</i><b>${sz.z.toFixed(0)} mm</b></span>` +
-    (S.product === 'proj' ? `<span class="tag"><i>Projects</i><b>${Math.round(S.prSize / 10)} cm at ${Math.round(S.prDist / 10)} cm</b></span>` : S.product === 'shadow' ? `<span class="tag"><i>Shadow</i><b>≈ ${slData ? Math.round(slData.Rmax * 2 / 10) : '–'} cm</b></span>` : S.product === 'block' ? `<span class="tag"><i>Holes</i><b>${blockHoles().length}</b></span>` : S.product === 'monitor' ? `<span class="tag"><i>Holds</i><b>pens in the screen</b></span>` : S.product === 'tubes' ? `<span class="tag"><i>Tubes</i><b>${tubeCells().length}</b></span>` : S.product === 'card' ? `<span class="tag"><i>Holds</i><b>cards + pens</b></span>` : S.product === 'hexcup' ? `<span class="tag"><i>Fits</i><b>≈ ${Math.max(4, Math.floor(Math.pow((S.D - 2*S.wall)/2, 2) * 0.42 / 21))} pens</b></span>` : S.product === 'steps' ? `<span class="tag"><i>Bays</i><b>${S.stBays}</b></span>` : S.product === 'phone' ? `<span class="tag"><i>Fits</i><b>phones up to ${S.phSlot} mm</b></span>` : S.product === 'hex' ? `<span class="tag"><i>Fits</i><b>≈ ${hexCells().length * Math.max(2, Math.floor(Math.pow((S.D - 2*S.wall) / 9.5, 2) * 0.8))} pens</b></span>` : S.product === 'caddy' ? `<span class="tag"><i>Holds</i><b>phone + pens</b></span>` : S.product === 'duo' ? `<span class="tag"><i>Holds</i><b>cup + tray</b></span>` : S.product === 'pen'
+    (S.product === 'proj' ? `<span class="tag"><i>Projects</i><b>${Math.round(S.prSize / 10)} cm at ${Math.round(S.prDist / 10)} cm</b></span>` : S.product === 'shadow' ? `<span class="tag"><i>Shadow</i><b>≈ ${slData ? Math.round(slData.Rfar * 2 / 10) : '–'} cm</b></span>` : S.product === 'block' ? `<span class="tag"><i>Holes</i><b>${blockHoles().length}</b></span>` : S.product === 'monitor' ? `<span class="tag"><i>Holds</i><b>pens in the screen</b></span>` : S.product === 'tubes' ? `<span class="tag"><i>Tubes</i><b>${tubeCells().length}</b></span>` : S.product === 'card' ? `<span class="tag"><i>Holds</i><b>cards + pens</b></span>` : S.product === 'hexcup' ? `<span class="tag"><i>Fits</i><b>≈ ${Math.max(4, Math.floor(Math.pow((S.D - 2*S.wall)/2, 2) * 0.42 / 21))} pens</b></span>` : S.product === 'steps' ? `<span class="tag"><i>Bays</i><b>${S.stBays}</b></span>` : S.product === 'phone' ? `<span class="tag"><i>Fits</i><b>phones up to ${S.phSlot} mm</b></span>` : S.product === 'hex' ? `<span class="tag"><i>Fits</i><b>≈ ${hexCells().length * Math.max(2, Math.floor(Math.pow((S.D - 2*S.wall) / 9.5, 2) * 0.8))} pens</b></span>` : S.product === 'caddy' ? `<span class="tag"><i>Holds</i><b>phone + pens</b></span>` : S.product === 'duo' ? `<span class="tag"><i>Holds</i><b>cup + tray</b></span>` : S.product === 'pen'
       ? `<span class="tag"><i>Fits</i><b>≈ ${penCount()} pens</b></span>`
       : `<span class="tag"><i>Holds</i><b>≈ ${Math.round(capacityMl() / 5) * 5} ml</b></span>`);
 }
@@ -2001,9 +2053,9 @@ const PRESETS = {
     ['prShadow', 'Shadow picture', 'dark picture, lit wall', {mh:80, md:80, mw:1.2, mb:2, handle:false, color:'#2b2d33', prShape:'cyl', prMode:'shadow', prDist:300, prSize:320, prLift:110, prBars:16, prH:50, prLed:38, prLight:24, prWall:1.2, texture:'smooth'}]
   ],
   shadow: [
-    ['slTable', 'Shadow lamp', 'table, warm rays', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#2f4cb3', slSize:360, slRays:16, slLed:38, slLight:28, slSmooth:3, texture:'smooth'}],
-    ['slBig', 'Big shadow', 'room-size', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#d8463b', slSize:600, slRays:24, slLed:38, slLight:30, slSmooth:4, texture:'smooth'}],
-    ['slMini', 'Mini LED', '21 mm LED', {mh:80, md:80, mw:1.4, mb:2, handle:false, color:'#2b6b3f', slSize:260, slRays:12, slLed:21, slLight:14, slSmooth:3, texture:'smooth'}]
+    ['slTable', 'Shadow lamp', 'logo on the table', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#2f4cb3', slSize:360, slRays:0, slRing:84, slLed:38, slLight:28, slSmooth:3, texture:'smooth'}],
+    ['slBig', 'Big shadow', 'room-size', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#d8463b', slSize:600, slRays:0, slRing:120, slLed:38, slLight:30, slSmooth:4, texture:'smooth'}],
+    ['slMini', 'Mini LED', '21 mm LED', {mh:80, md:80, mw:1.4, mb:2, handle:false, color:'#2b6b3f', slSize:260, slRays:0, slRing:56, slLed:21, slLight:14, slSmooth:3, texture:'smooth'}]
   ],
   block: [
     ['pbClassic', 'Pen block', 'staggered holes', {mh:60, md:120, mw:3, mb:4, handle:false, color:'#2b2d33', pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, logoW:100, ly:50, texture:'smooth'}],
@@ -2079,7 +2131,7 @@ function applyPreset(key, p){
   $('handle').checked = p.handle; S.handle = p.handle;
   if (p.divider !== undefined){ S.divider = p.divider; $('divider').value = String(p.divider); }
   setTexture(p.texture || (S.product === 'duo' ? 'ribbed' : 'smooth'), true);
-  [['prDist','prDist'],['prSize','prSize'],['prLift','prLift'],['prBars','prBars'],['prH','prH'],['prLed','prLed'],['prLight','prLight'],['prWall','prWall'],['slSize','slSize'],['slRays','slRays'],['slLed','slLed'],['slLight','slLight'],['slSmooth','slSmooth'],['slWall','slWall'],['pbHole','pbHole'],['pbDepth','pbDepth'],['mnDepth','mnDepth'],['mnNeck','mnNeck'],['tbBase','tbBase'],['tbStep','tbStep'],['cpCup','cpCup'],['cpFront','cpFront'],['cpSlot','cpSlot'],['stDepth','stDepth'],['stLow','stLow'],['phAngle','phAngle'],['phSlot','phSlot'],['phLip','phLip'],['hexBase','hexBase'],['hexStep','hexStep'],['cadDepth','cadDepth'],['cadFront','cadFront'],['cadSlot','cadSlot'],['duoLen','duoLen'],['duoH2','duoH2'],['texCols','texCols'],['texDepth','texDepth'],['lw','logoW'],['ly','ly']].forEach(([id, k]) => { if (p[k] !== undefined){ $(id).value = p[k]; $(id).dispatchEvent(new Event('input')); } });
+  [['prDist','prDist'],['prSize','prSize'],['prLift','prLift'],['prBars','prBars'],['prH','prH'],['prLed','prLed'],['prLight','prLight'],['prWall','prWall'],['slSize','slSize'],['slRing','slRing'],['slRays','slRays'],['slLed','slLed'],['slLight','slLight'],['slSmooth','slSmooth'],['slWall','slWall'],['pbHole','pbHole'],['pbDepth','pbDepth'],['mnDepth','mnDepth'],['mnNeck','mnNeck'],['tbBase','tbBase'],['tbStep','tbStep'],['cpCup','cpCup'],['cpFront','cpFront'],['cpSlot','cpSlot'],['stDepth','stDepth'],['stLow','stLow'],['phAngle','phAngle'],['phSlot','phSlot'],['phLip','phLip'],['hexBase','hexBase'],['hexStep','hexStep'],['cadDepth','cadDepth'],['cadFront','cadFront'],['cadSlot','cadSlot'],['duoLen','duoLen'],['duoH2','duoH2'],['texCols','texCols'],['texDepth','texDepth'],['lw','logoW'],['ly','ly']].forEach(([id, k]) => { if (p[k] !== undefined){ $(id).value = p[k]; $(id).dispatchEvent(new Event('input')); } });
   if (p.depth){ $('depth').value = p.depth; $('depth').dispatchEvent(new Event('input')); }
   if (p.text !== undefined){ S.text = p.text; $('logoText').value = p.text; }
   if (p.textColor){ S.textColor = p.textColor; $('textColor').value = p.textColor; }
@@ -2261,7 +2313,7 @@ $('slantOut').textContent = 'Flat';
 bindRange('prDist', 'prDist', v => Math.round(v / 10) + ' cm'); bindRange('prSize', 'prSize', v => Math.round(v / 10) + ' cm'); bindRange('prLift', 'prLift', v => (v >= 0 ? '+' : '') + Math.round(v / 10) + ' cm');
 bindRange('prBars', 'prBars', v => v ? v + '' : 'None'); bindRange('prH', 'prH', v => v + ' mm'); bindRange('prLed', 'prLed', v => v + ' mm'); bindRange('prLight', 'prLight', v => v + ' mm'); bindRange('prWall', 'prWall', v => v.toFixed(1) + ' mm');
 bindRange('slSize', 'slSize', v => Math.round(v / 10) + ' cm'); bindRange('slRays', 'slRays', v => v ? v + '' : 'None'); bindRange('slLed', 'slLed', v => v + ' mm');
-bindRange('slLight', 'slLight', v => v + ' mm'); bindRange('slSmooth', 'slSmooth', v => v ? v + '' : 'Off'); bindRange('slWall', 'slWall', v => v.toFixed(1) + ' mm');
+bindRange('slLight', 'slLight', v => v + ' mm'); bindRange('slSmooth', 'slSmooth', v => v ? v + '' : 'Off'); bindRange('slWall', 'slWall', v => v.toFixed(1) + ' mm'); bindRange('slRing', 'slRing', v => v + ' mm');
 bindRange('pbHole', 'pbHole', v => v + ' mm'); bindRange('pbDepth', 'pbDepth', v => v + ' mm'); bindRange('mnDepth', 'mnDepth', v => v + ' mm'); bindRange('mnNeck', 'mnNeck', v => v + ' mm');
 bindRange('tbBase', 'tbBase', v => v + ' mm'); bindRange('tbStep', 'tbStep', v => v ? v + ' mm' : 'All the same');
 bindRange('cpCup', 'cpCup', v => v + ' mm'); bindRange('cpFront', 'cpFront', v => v + ' mm'); bindRange('cpSlot', 'cpSlot', v => v + ' mm');
