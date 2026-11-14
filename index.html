@@ -382,6 +382,7 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
           <button id="prodMonitor" aria-pressed="false">Monitor holder<small>Pens go in the screen</small></button>
           <button id="prodShadow" aria-pressed="false">Shadow lamp<small>Your logo as a shadow</small></button>
           <button id="prodProj" aria-pressed="false">Projector lamp<small>Projects your picture on a wall</small></button>
+          <button id="prodBulb" aria-pressed="false">Lamp base<small>Holds a bulb socket</small></button>
         </div>
         <div class="presets" id="presets" role="group" aria-label="Shape"></div>
       </div>
@@ -564,6 +565,23 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
         </div>
         <span class="note">Fluted ribs use Texture depth and Columns. The front panel stays flat for the logo.</span>
       </div>
+      <div class="sub" id="bulbOpts" hidden>
+        <div><label for="bhSocket" class="lbl">Socket you will fit</label>
+          <select class="text" id="bhSocket">
+            <option value="e27">E27 socket with outer ring · 40.5 mm hole</option>
+            <option value="e14">E14 socket with outer ring · 29 mm hole</option>
+            <option value="m10">Any socket on an M10 threaded tube · 10.5 mm hole</option>
+          </select></div>
+        <div class="row2">
+          <div class="field"><label for="bhHole">Socket hole Ø</label><output id="bhHoleOut"></output><input type="range" id="bhHole" min="8" max="45" step="0.5" value="40.5"></div>
+          <div class="field"><label for="bhCollar">Raised collar</label><output id="bhCollarOut"></output><input type="range" id="bhCollar" min="0" max="15" step="1" value="4"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="bhPlate">Top plate</label><output id="bhPlateOut"></output><input type="range" id="bhPlate" min="2" max="5" step="0.5" value="3"></div>
+          <div class="field"><label for="bhCord">Cord slot</label><output id="bhCordOut"></output><input type="range" id="bhCord" min="5" max="12" step="0.5" value="8"></div>
+        </div>
+        <span class="note">Buy a ready-made, certified lamp socket and cord (with inline switch); the base only holds them. The socket's ring screws down onto the top plate (or an M10 tube goes through with a nut each side), and the cord leaves through the slot at the back. Measure your socket and set the hole to fit. Print in PETG or ASA and use LED bulbs only. Have anything wired to mains checked by someone qualified.</span>
+      </div>
       <div class="sub" id="penOpts" hidden>
         <div><label for="divider" class="lbl">Inside dividers</label>
           <select class="text" id="divider">
@@ -620,7 +638,7 @@ const $ = id => document.getElementById(id);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const S = {
-  product:'mug', divider:0, layers:[], prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:0, prWidth:64, prH:52, prLed:38, prLight:24, prWall:1.2, slSize:360, slRays:0, slRing:84, slLed:38, slLight:28, slSmooth:3, slWall:1.6, slCx:-1, slCy:-1, slWallMode:false, cobrand:false, sep:'×', cbOrder:'ours', cbBalance:0, pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
+  product:'mug', divider:0, layers:[], bhSocket:'e27', bhHole:40.5, bhCollar:4, bhPlate:3, bhCord:8, prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:0, prWidth:64, prH:52, prLed:38, prLight:24, prWall:1.2, slSize:360, slRays:0, slRing:84, slLed:38, slLight:28, slSmooth:3, slWall:1.6, slCx:-1, slCy:-1, slWallMode:false, cobrand:false, sep:'×', cbOrder:'ours', cbBalance:0, pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
   mode:'raised', logoW:52, angle:0, ly:44, both:false,
   depth:1.6, thr:0.5, invert:false, heightSrc:'layered', reliefColor:'full', smooth:2, hiDetail:false, logoColor:'#1d2c7a', removeBg:true, stickerW:0, nColors:5, text:'', textFont:"800|'Baloo 2'", textPos:'below', textSize:27, textColor:'#12939a'
 };
@@ -761,6 +779,33 @@ function bodyGeometry(){
   return g;
 }
 
+// ---------- lamp base (bulb socket holder) ----------
+// A hollow tapered body with the logo on its side, a top plate that the socket clamps to, and a cord slot at the back.
+function bulbGeometries(){
+  const H = S.H, w = S.wall, tex = texAmp() > 0, Na = tex ? Math.max(360, Math.round(S.texCols) * 14) : 360;
+  const cord = S.bhCord, hw = cord / 2, yc = cord + 2 - hw, slotTop = cord + 2;
+  // rows: fine where something changes with height (cord slot, texture fades, quilting), coarse elsewhere
+  const mid = S.texture === 'quilted' && tex ? 0.5 : S.texture === 'twist' && tex ? 1.0 : 2.0;
+  const ys = []; { let y = 0; while (y < H){ ys.push(y); y += (y < Math.max(slotTop, 6) + 2 || y > H - 4) ? 0.4 : mid; } ys.push(H); }
+  const NN = ys.length, F = new Float32Array(Na * NN);
+  for (let i = 0; i < Na; i++){
+    const th = i / Na * Math.PI * 2;
+    for (let j = 0; j < NN; j++){
+      const y = ys[j], r = R(y), da = (th - Math.PI) * r, cell = 2 * Math.PI * r / Na;
+      const d = y <= yc ? Math.abs(da) - hw : Math.hypot(da, y - yc) - hw;     // distance outside the cord slot
+      F[i * NN + j] = Math.max(0, Math.min(1, 0.5 + d / (cell * 1.5)));
+    }
+  }
+  const out = (y, th) => R(y) + (tex ? surfaceBump(y, th) : 0), inn = y => R(y) - w;
+  const body = smoothShell(F, Na, ys, out, w, (th, r, y) => [Math.sin(th) * r, y, Math.cos(th) * r], (y) => inn(y));
+  // top plate + collar around the socket hole
+  const rh = S.bhHole / 2, rp = R(H) - w + 0.6, tp = S.bhPlate, col = S.bhCollar, rc = rh + 3, V = (x, y) => new THREE.Vector2(x, y);
+  const prof = [V(rh, H - tp), V(rp, H - tp), V(rp, H)];
+  if (col > 0) prof.push(V(rc, H), V(rc, H + col), V(rh, H + col)); else prof.push(V(rh, H));
+  prof.push(V(rh, H - tp));
+  const plate = new THREE.LatheGeometry(prof, 160); plate.computeVertexNormals();
+  return [['Lamp base', body], ['Top plate', plate]];
+}
 // ---------- duo organiser (tall cup + tray, flat front) ----------
 function ribP(frac){ const d = Math.abs((frac - Math.floor(frac)) - 0.5); return ss((0.25 - d) / 0.035 + 0.5); }
 function duoLayout(){
@@ -852,7 +897,7 @@ function frontInfo(){
   if (S.product === 'phone'){ const P = phoneProfile(); return {x0: -S.D/2, x1: S.D/2, zf: P.zF, lo: 3, hi: S.phLip - 3, rc: 3}; }
   const W = S.D, f = cadFootH(); return {x0: -W/2, x1: W/2, zf: S.cadDepth/2, lo: f + 3, hi: f + S.H * S.cadFront/100 - 3, rc: 6};
 }
-const PRODUCT_WORDS = {mug:'mug', pen:'pen-holder', duo:'duo-organiser', caddy:'desk-caddy', hex:'honeycomb-stand', phone:'phone-stand', hexcup:'hexagon-cup', steps:'step-organiser', tubes:'tube-cluster', card:'card-pen-holder', block:'pen-block', monitor:'monitor-holder', shadow:'shadow-lamp', proj:'projector-lamp'};
+const PRODUCT_WORDS = {mug:'mug', pen:'pen-holder', duo:'duo-organiser', caddy:'desk-caddy', hex:'honeycomb-stand', phone:'phone-stand', hexcup:'hexagon-cup', steps:'step-organiser', tubes:'tube-cluster', card:'card-pen-holder', block:'pen-block', monitor:'monitor-holder', shadow:'shadow-lamp', proj:'projector-lamp', bulb:'lamp-base'};
 const productWord = () => PRODUCT_WORDS[S.product] || 'mug';
 // ---------- smooth cut-out shells (shadow + projector lamps) ----------
 // A lamp wall is described by a value at every grid node (around x up): 1 = solid, 0 = open, in between near
@@ -890,14 +935,14 @@ function fieldAt(D, u, y){
   const v = (i, j) => F[i * NN + j];
   return (v(i0, lo) * (1 - tu) + v(i1, lo) * tu) * (1 - ty) + (v(i0, lo + 1) * (1 - tu) + v(i1, lo + 1) * tu) * ty;
 }
-function smoothShell(F, Na, ys, rAt, thick, place){
+function smoothShell(F, Na, ys, rAt, thick, place, rInAt){
   // place(theta, r, y) -> [x, y, z]
   const NN = ys.length, Nh = NN - 1, Ntot = Na * NN, pos = [], idx = [], vmap = new Map(), T = 0.5;
   const val = (i, j) => F[(i % Na) * NN + j];
   const vert = (key, u, y) => {
     let v = vmap.get(key); if (v) return v;
-    const th = u / Na * Math.PI * 2, r = rAt(y), o = pos.length / 3;
-    pos.push(...place(th, r, y), ...place(th, Math.max(0.3, r - thick), y)); v = [o, o + 1, u, y]; vmap.set(key, v); return v;
+    const th = u / Na * Math.PI * 2, r = rAt(y, th), o = pos.length / 3;
+    pos.push(...place(th, r, y), ...place(th, rInAt ? rInAt(y, th) : Math.max(0.3, r - thick), y)); v = [o, o + 1, u, y]; vmap.set(key, v); return v;
   };
   const corner = (i, j) => vert((i % Na) * NN + j, i, ys[j]);
   const hEdge = (i, j) => { const a = val(i, j), b = val(i + 1, j), t = (T - a) / (b - a); return vert(Ntot + (i % Na) * NN + j, i + t, ys[j]); };
@@ -924,7 +969,7 @@ function smoothShell(F, Na, ys, rAt, thick, place){
       if (p.e && q.e && p.on[0] !== q.on[0]) wall = true;
       else { const sh = p.on.filter(x => q.on.includes(x)); if ((sh.includes(0) && j === 0) || (sh.includes(2) && j === Nh - 1)) wall = true; }
       if (!wall) continue;
-      const du = (q.v[2] - p.v[2]) / Na * Math.PI * 2 * rAt((p.v[3] + q.v[3]) / 2), dy = q.v[3] - p.v[3];
+      const du = (q.v[2] - p.v[2]) / Na * Math.PI * 2 * rAt((p.v[3] + q.v[3]) / 2, th), dy = q.v[3] - p.v[3];
       const a0 = place(th, 1, 0), a1 = place(th + 1e-3, 1, 0), tl = Math.hypot(a1[0]-a0[0], a1[2]-a0[2]) || 1, tg = [(a1[0]-a0[0]) / tl, 0, (a1[2]-a0[2]) / tl];
       const h = [tg[0] * dy, -du, tg[2] * dy];
       tri(p.v[0], q.v[0], q.v[1], h); tri(p.v[0], q.v[1], p.v[1], h);
@@ -1992,6 +2037,7 @@ function build(){
   else if (S.product === 'phone') phoneGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
   else if (S.product === 'hex') hexGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
   else if (S.product === 'caddy') caddyGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
+  else if (S.product === 'bulb') bulbGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
   else if (S.product === 'duo') duoGeometries().forEach(([name, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = name; mug.add(m); });
   else { const body = new THREE.Mesh(bodyGeometry(), bodyMat); body.name = 'Mug body'; mug.add(body); }
   if (S.handle && S.product === 'mug'){ const h = new THREE.Mesh(handleGeometry(), bodyMat); h.name = 'Handle'; mug.add(h); }
@@ -2047,7 +2093,7 @@ function updateReadout(){
     `<span class="tag"><i>H</i><b>${sz.y.toFixed(0)}</b></span>` +
     `<span class="tag"><i>W</i><b>${sz.x.toFixed(0)}</b></span>` +
     `<span class="tag"><i>D</i><b>${sz.z.toFixed(0)} mm</b></span>` +
-    (S.product === 'proj' ? `<span class="tag"><i>Projects</i><b>${Math.round(S.prSize / 10)} cm at ${Math.round(S.prDist / 10)} cm</b></span>` : S.product === 'shadow' ? `<span class="tag"><i>Shadow</i><b>≈ ${slData ? Math.round(slData.Rfar * 2 / 10) : '–'} cm</b></span>` : S.product === 'block' ? `<span class="tag"><i>Holes</i><b>${blockHoles().length}</b></span>` : S.product === 'monitor' ? `<span class="tag"><i>Holds</i><b>pens in the screen</b></span>` : S.product === 'tubes' ? `<span class="tag"><i>Tubes</i><b>${tubeCells().length}</b></span>` : S.product === 'card' ? `<span class="tag"><i>Holds</i><b>cards + pens</b></span>` : S.product === 'hexcup' ? `<span class="tag"><i>Fits</i><b>≈ ${Math.max(4, Math.floor(Math.pow((S.D - 2*S.wall)/2, 2) * 0.42 / 21))} pens</b></span>` : S.product === 'steps' ? `<span class="tag"><i>Bays</i><b>${S.stBays}</b></span>` : S.product === 'phone' ? `<span class="tag"><i>Fits</i><b>phones up to ${S.phSlot} mm</b></span>` : S.product === 'hex' ? `<span class="tag"><i>Fits</i><b>≈ ${hexCells().length * Math.max(2, Math.floor(Math.pow((S.D - 2*S.wall) / 9.5, 2) * 0.8))} pens</b></span>` : S.product === 'caddy' ? `<span class="tag"><i>Holds</i><b>phone + pens</b></span>` : S.product === 'duo' ? `<span class="tag"><i>Holds</i><b>cup + tray</b></span>` : S.product === 'pen'
+    (S.product === 'bulb' ? `<span class="tag"><i>Socket hole</i><b>Ø ${S.bhHole} mm</b></span>` : S.product === 'proj' ? `<span class="tag"><i>Projects</i><b>${Math.round(S.prSize / 10)} cm at ${Math.round(S.prDist / 10)} cm</b></span>` : S.product === 'shadow' ? `<span class="tag"><i>Shadow</i><b>≈ ${slData ? Math.round(slData.Rfar * 2 / 10) : '–'} cm</b></span>` : S.product === 'block' ? `<span class="tag"><i>Holes</i><b>${blockHoles().length}</b></span>` : S.product === 'monitor' ? `<span class="tag"><i>Holds</i><b>pens in the screen</b></span>` : S.product === 'tubes' ? `<span class="tag"><i>Tubes</i><b>${tubeCells().length}</b></span>` : S.product === 'card' ? `<span class="tag"><i>Holds</i><b>cards + pens</b></span>` : S.product === 'hexcup' ? `<span class="tag"><i>Fits</i><b>≈ ${Math.max(4, Math.floor(Math.pow((S.D - 2*S.wall)/2, 2) * 0.42 / 21))} pens</b></span>` : S.product === 'steps' ? `<span class="tag"><i>Bays</i><b>${S.stBays}</b></span>` : S.product === 'phone' ? `<span class="tag"><i>Fits</i><b>phones up to ${S.phSlot} mm</b></span>` : S.product === 'hex' ? `<span class="tag"><i>Fits</i><b>≈ ${hexCells().length * Math.max(2, Math.floor(Math.pow((S.D - 2*S.wall) / 9.5, 2) * 0.8))} pens</b></span>` : S.product === 'caddy' ? `<span class="tag"><i>Holds</i><b>phone + pens</b></span>` : S.product === 'duo' ? `<span class="tag"><i>Holds</i><b>cup + tray</b></span>` : S.product === 'pen'
       ? `<span class="tag"><i>Fits</i><b>≈ ${penCount()} pens</b></span>`
       : `<span class="tag"><i>Holds</i><b>≈ ${Math.round(capacityMl() / 5) * 5} ml</b></span>`);
 }
@@ -2093,6 +2139,11 @@ const PRESETS = {
     ['latte', 'Tall latte', '~450 ml', {mh:118, md:84, mt:4, mw:4, mb:6, handle:true}],
     ['espresso', 'Espresso', '~150 ml', {mh:70, md:64, mt:3, mw:3.5, mb:6, handle:true}],
     ['tumbler', 'Tumbler', 'no handle', {mh:125, md:80, mt:12, mw:4, mb:6, handle:false}]
+  ],
+  bulb: [
+    ['bhClassic', 'Classic', 'E27 · tapered', {mh:110, md:76, mt:-30, mw:3, mb:3, handle:false, divider:0, slant:0, texture:'smooth', color:'#f2f0ec', bhSocket:'e27', ly:42}],
+    ['bhRib', 'Ribbed', 'E27 · fluted', {mh:120, md:80, mt:-24, mw:3, mb:3, handle:false, divider:0, slant:0, texture:'ribbed', texCols:28, texDepth:1.4, color:'#2b2d33', bhSocket:'e27', ly:45}],
+    ['bhMini', 'Mini', 'E14 · small', {mh:85, md:62, mt:-20, mw:2.5, mb:3, handle:false, divider:0, slant:0, texture:'smooth', color:'#2f4cb3', bhSocket:'e14', ly:40}]
   ],
   proj: [
     ['prCone', 'Projector cone', 'picture glows', {mh:80, md:80, mw:1.2, mb:2, handle:false, color:'#2f4cb3', prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:0, prWidth:64, prH:52, prLed:38, prLight:24, prWall:1.2, texture:'smooth'}],
@@ -2194,6 +2245,7 @@ function applyPreset(key, p){
   S.cuff = !!p.cuff; $('cuff').checked = S.cuff; if (p.cuffH){ S.cuffH = p.cuffH; $('cuffH').value = p.cuffH; $('cuffHOut').textContent = p.cuffH + ' mm'; } $('cuffField').hidden = !S.cuff;
   if (p.twist !== undefined){ S.twist = p.twist; $('twist').value = p.twist; $('twist').dispatchEvent(new Event('input')); }
   S.slant = p.slant || 0; $('slant').value = Math.round(S.slant * 100); $('slantOut').textContent = S.slant ? Math.round(S.slant * 100) + '%' : 'Flat';
+  if (p.bhSocket) setSocket(p.bhSocket);
   if (p.prShape){ S.prShape = p.prShape; $('prShape').value = p.prShape; }
   if (p.prMode){ S.prMode = p.prMode; $('prMode').value = p.prMode; }
   if (p.pbRows){ S.pbRows = p.pbRows; $('pbRows').value = String(p.pbRows); }
@@ -2241,6 +2293,7 @@ function setProduct0(prod){
   $('prodDuo').setAttribute('aria-pressed', String(prod === 'duo'));
   $('handleRow').hidden = prod !== 'mug';
   $('penOpts').hidden = prod !== 'pen';
+  $('prodBulb').setAttribute('aria-pressed', String(prod === 'bulb')); $('bulbOpts').hidden = prod !== 'bulb';
   $('duoOpts').hidden = prod !== 'duo';
   $('prodCaddy').setAttribute('aria-pressed', String(prod === 'caddy'));
   $('caddyOpts').hidden = prod !== 'caddy';
@@ -2262,11 +2315,12 @@ function setProduct0(prod){
   $('mh').min = (prod === 'block' || prod === 'monitor') ? 40 : 70; $('mw').closest('.field').hidden = prod === 'block';
   const flatP = FLAT_PRODUCTS.includes(prod);
   ['txSmooth','txQuilt','txRib'].forEach(id => $(id).closest('.seg').hidden = flatP);
-  $('cuffRow').hidden = flatP; if (flatP){ S.cuff = false; $('cuffField').hidden = true; }
+  $('cuffRow').hidden = flatP || prod === 'bulb'; if (flatP || prod === 'bulb'){ S.cuff = false; $('cuffField').hidden = true; }
+  $('mt').min = prod === 'bulb' ? -40 : -16;
   $('both').closest('label').hidden = flatP;
   $('mt').closest('.field').hidden = flatP;
   $('md').closest('.field').querySelector('label').textContent = (prod === 'caddy' || prod === 'phone' || prod === 'card' || prod === 'block' || prod === 'monitor') ? 'Width' : prod === 'tubes' ? 'Tube diameter' : prod === 'hex' ? 'Cell width' : prod === 'hexcup' ? 'Across flats' : prod === 'steps' ? 'Bay width' : 'Diameter';
-  $('md').min = prod === 'hex' ? 20 : prod === 'tubes' ? 25 : prod === 'card' ? 130 : (prod === 'block' || prod === 'monitor') ? 80 : prod === 'steps' ? 28 : prod === 'phone' ? 50 : prod === 'hexcup' ? 50 : 60; $('md').max = prod === 'hex' ? 45 : prod === 'tubes' ? 70 : (prod === 'card' || prod === 'block' || prod === 'monitor') ? 220 : prod === 'steps' ? 70 : (prod === 'caddy' ? 160 : prod === 'phone' ? 160 : 110);
+  $('md').min = prod === 'hex' ? 20 : prod === 'tubes' ? 25 : prod === 'card' ? 130 : (prod === 'block' || prod === 'monitor') ? 80 : prod === 'steps' ? 28 : prod === 'phone' ? 50 : prod === 'hexcup' ? 50 : prod === 'bulb' ? 50 : 60; $('md').max = prod === 'bulb' ? 130 : prod === 'hex' ? 45 : prod === 'tubes' ? 70 : (prod === 'card' || prod === 'block' || prod === 'monitor') ? 220 : prod === 'steps' ? 70 : (prod === 'caddy' ? 160 : prod === 'phone' ? 160 : 110);
   $('mh').max = prod === 'phone' ? 160 : 130; $('mw').max = prod === 'phone' ? 8 : 8;
   const first = PRESETS[prod][0];
   renderPresets(first[0]);
@@ -2283,6 +2337,10 @@ $('prodSteps').addEventListener('click', () => { if (S.product !== 'steps') setP
 $('prodTubes').addEventListener('click', () => { if (S.product !== 'tubes') setProduct('tubes'); });
 $('prodCard').addEventListener('click', () => { if (S.product !== 'card') setProduct('card'); });
 $('prodBlock').addEventListener('click', () => { if (S.product !== 'block') setProduct('block'); });
+$('prodBulb').addEventListener('click', () => { if (S.product !== 'bulb') setProduct('bulb'); });
+const BULB_HOLES = {e27: 40.5, e14: 29, m10: 10.5}, BULB_COLLAR = {e27: 4, e14: 3, m10: 0};
+function setSocket(v){ S.bhSocket = v; $('bhSocket').value = v; [['bhHole', BULB_HOLES[v]], ['bhCollar', BULB_COLLAR[v]]].forEach(([id, val]) => { $(id).value = val; $(id).dispatchEvent(new Event('input')); }); }
+$('bhSocket').addEventListener('change', e => setSocket(e.target.value));
 $('prodProj').addEventListener('click', () => { if (S.product !== 'proj'){ setProduct('proj'); setTimeout(resetView, 50); } });
 $('prShape').addEventListener('change', e => { S.prShape = e.target.value; rebuild(); });
 $('prMode').addEventListener('change', e => { S.prMode = e.target.value; rebuild(); });
@@ -2359,7 +2417,7 @@ bindRange('duoLen', 'duoLen', v => v + ' mm');
 $('slant').addEventListener('input', e => { S.slant = parseFloat(e.target.value) / 100; $('slantOut').textContent = S.slant ? e.target.value + '%' : 'Flat'; rebuild(); });
 $('slantOut').textContent = 'Flat';
 bindRange('prDist', 'prDist', v => Math.round(v / 10) + ' cm'); bindRange('prSize', 'prSize', v => Math.round(v / 10) + ' cm'); bindRange('prLift', 'prLift', v => (v >= 0 ? '+' : '') + Math.round(v / 10) + ' cm');
-bindRange('prWidth', 'prWidth', v => v + ' mm'); bindRange('prBars', 'prBars', v => v ? v + '' : 'None'); bindRange('prH', 'prH', v => v + ' mm'); bindRange('prLed', 'prLed', v => v + ' mm'); bindRange('prLight', 'prLight', v => v + ' mm'); bindRange('prWall', 'prWall', v => v.toFixed(1) + ' mm');
+bindRange('prWidth', 'prWidth', v => v + ' mm'); bindRange('bhHole', 'bhHole', v => v + ' mm'); bindRange('bhCollar', 'bhCollar', v => v ? v + ' mm' : 'None'); bindRange('bhPlate', 'bhPlate', v => v + ' mm'); bindRange('bhCord', 'bhCord', v => v + ' mm'); bindRange('prBars', 'prBars', v => v ? v + '' : 'None'); bindRange('prH', 'prH', v => v + ' mm'); bindRange('prLed', 'prLed', v => v + ' mm'); bindRange('prLight', 'prLight', v => v + ' mm'); bindRange('prWall', 'prWall', v => v.toFixed(1) + ' mm');
 bindRange('slSize', 'slSize', v => Math.round(v / 10) + ' cm'); bindRange('slRays', 'slRays', v => v ? v + '' : 'None'); bindRange('slLed', 'slLed', v => v + ' mm');
 bindRange('slLight', 'slLight', v => v + ' mm'); bindRange('slSmooth', 'slSmooth', v => v ? v + '' : 'Off'); bindRange('slWall', 'slWall', v => v.toFixed(1) + ' mm'); bindRange('slRing', 'slRing', v => v + ' mm');
 bindRange('pbHole', 'pbHole', v => v + ' mm'); bindRange('pbDepth', 'pbDepth', v => v + ' mm'); bindRange('mnDepth', 'mnDepth', v => v + ' mm'); bindRange('mnNeck', 'mnNeck', v => v + ' mm');
