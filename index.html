@@ -864,22 +864,37 @@ function lightBaseGeometry(){
   return fixLathe(new THREE.LatheGeometry(pts, 192));
 }
 // dome top (stock): sits on the ring like a lid and holds the socket / LED above the light
-const DOME = {wd: 2, sk: 4, cl: 0.3, tp: 3};
+const DOME = {tp: 3, CH: 10, bore: 1.6, skirtWall: 2.4, pitch: 4};
+// screw joint between ring and dome (relative to the ring's outer radius ro)
+function domeThread(ro){
+  return {
+    ext: [[ro - 0.3, -1.8], [ro + 1.2, -0.3], [ro + 1.2, 0.3], [ro - 0.3, 1.8]], extBase: ro - 0.3, extY: 2.2, extTurns: 1.4,   // on the ring collar
+    int: [[ro + DOME.bore + 0.3, -1.75], [ro + DOME.bore, -1.75], [ro + 0.4, -0.55], [ro + 0.4, 0.55], [ro + DOME.bore, 1.75], [ro + DOME.bore + 0.3, 1.75]], intBase: ro + DOME.bore + 0.3, intTurns: 1.0
+  };
+}
 const DOME_LAMPS = {e14: {hole: 29, drop: 55}, e27: {hole: 40.5, drop: 85}, led: {hole: 13, drop: 30}};
 function domeInfo(ro){
-  const led = S.slLamp === 'led', rh = led ? 6.5 : DOME_LAMPS[S.slLamp].hole / 2, rRo = ro + DOME.cl + DOME.wd, rflat = led ? rh + 8 : rh + 6;
+  const led = S.slLamp === 'led', rh = led ? 6.5 : DOME_LAMPS[S.slLamp].hole / 2, rRo = ro + DOME.bore + DOME.skirtWall, rflat = led ? rh + 8 : rh + 6;
   return {led, rh, rRo, rflat, DH: Math.max(18, rRo - rflat + 2)};
 }
 function domeGeometry(){
   const D = slData; if (!D || !D.dome) return null;
-  const T = D.DT, ro = D.ro, ri = D.ri, tp = DOME.tp, V = (x, y) => new THREE.Vector2(x, y), rRi = ro + DOME.cl;
-  const pts = [V(rRi, -DOME.sk), V(T.rRo, -DOME.sk), V(T.rRo, 0), V(T.rflat, T.DH)];
+  const T = D.DT, ro = D.ro, ri = D.ri, tp = DOME.tp, V = (x, y) => new THREE.Vector2(x, y), bore = ro + DOME.bore, sk = DOME.CH;
+  const pts = [V(bore, -sk), V(T.rRo, -sk), V(T.rRo, 0), V(T.rflat, T.DH)];
   if (T.led){
-    const Ls = Math.max(4, S.slDrop - tp - 1), yb = T.DH - tp - Ls;
+    const Ls = Math.max(4, D.drop - tp - 1), yb = T.DH - tp - Ls;
     pts.push(V(T.rh - 2.5, T.DH), V(T.rh - 2.5, yb + 1.5), V(T.rh, yb + 1.5), V(T.rh, yb), V(T.rh + 2, yb), V(T.rh + 2, T.DH - tp));   // stem: LED sits in the cup at the bottom, wire up through the top
   } else pts.push(V(T.rh, T.DH), V(T.rh, T.DH - tp));
-  pts.push(V(T.rflat - 1, T.DH - tp), V(ri - 0.5, 0), V(rRi, 0), V(rRi, -DOME.sk));
-  return fixLathe(new THREE.LatheGeometry(pts, 192));
+  pts.push(V(T.rflat - 1, T.DH - tp), V(ri - 1.6, 0), V(bore, 0), V(bore, -sk));
+  const shell = fixLathe(new THREE.LatheGeometry(pts, 192));
+  // internal thread, in phase with the ring's thread (half a pitch above it)
+  const K = domeThread(ro), y = -sk + K.extY + DOME.pitch / 2;
+  const th = threadGeometry(K.intBase, K.int, DOME.pitch, y, K.intTurns);
+  return mergeGeos([shell, th]);
+}
+function mergeGeos(list){
+  const pos = []; list.forEach(g => { const n = g.index ? g.toNonIndexed() : g; pos.push(...n.attributes.position.array); });
+  const out = new THREE.BufferGeometry(); out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); out.computeVertexNormals(); return out;
 }
 function setMount(v){
   S.slMount = v; $('slMount').value = v; const d = v === 'dome';
@@ -1169,7 +1184,10 @@ function slCompute(){
   for (let R = Rat(hMin) + dR; ; R += dR){ const y = yAt(R); if (y >= yTop){ if (yTop - ys[ys.length - 1] > 0.03) ys.push(yTop); else ys[ys.length - 1] = yTop; break; } if (y - ys[ys.length - 1] >= 0.05) ys.push(y); }
   const jTop = ys.length - 1;                         // last row that maps onto the table picture
   // dome top: the ring carries on up past the light (walls above the light cast nothing on the table)
-  const DT = dome ? domeInfo(ro) : null, Hr = dome ? Math.max(e + 1, e + S.slDrop - DT.DH) : 0;
+  const DT = dome ? domeInfo(ro) : null;
+  // the collar + dome skirt must sit above the light, or they would cast a shadow: LED stems grow to suit, bulbs need enough drop
+  const needDrop = dome ? DT.DH + DOME.CH + 1 : 0, drop = dome ? (DT.led ? Math.max(S.slDrop, needDrop) : S.slDrop) : 0;
+  const Hr = dome ? Math.max(e + DOME.CH + 1, e + drop - DT.DH) : 0, dropShort = dome && !DT.led && S.slDrop < needDrop;
   if (dome){ if (e - 0.25 > yTop + 0.05) ys.push(e - 0.25); ys.push(e + 0.25); if (Hr > e + 0.3) ys.push(Hr); }
   const NN = ys.length, Na = Math.max(360, Math.round(2 * Math.PI * ro / 0.3)), F = new Float32Array(Na * NN);
   for (let i = 0; i < Na; i++){
@@ -1190,14 +1208,19 @@ function slCompute(){
     for (let i = 0; i < Na; i++){ const a = i / Na * S.slRays, d = Math.abs(a - Math.floor(a) - 0.5) * Na / S.slRays * cw; if (d < w * 1.5){ const k = Math.max(0, Math.min(1, (d - w) / (w) + 0.5)); for (let j = 2; j <= jTop; j++) F[i * NN + j] = Math.min(F[i * NN + j], k); } }
   }
   const bars = fieldFix(F, Na, NN, Math.max(3, Math.round(1.0 / (2 * Math.PI * ro / Na))), 10);
-  slData = {Na, NN, ys, F, e, ro, ri, rm, hMin, yTop, Rfar, Rat, bars, dome, y0, Hr, DT};
+  slData = {Na, NN, ys, F, e, ro, ri, rm, hMin, yTop, Rfar, Rat, bars, dome, y0, Hr, DT, drop, needDrop, dropShort};
   return slData;
 }
 function shadowGeometries(){
   const D = slCompute(); if (!D) return [];
   // the ring is modelled standing on the light base; its own bottom is y = 0
   const g = smoothShell(D.F, D.Na, D.ys, () => D.ro, S.slWall, (th, r, y) => [Math.cos(th) * r, y - D.y0, Math.sin(th) * r]);
-  return [['Shadow ring', g]];
+  if (!D.dome) return [['Shadow ring', g]];
+  // threaded collar at the top of the ring for the dome to screw onto
+  const K = domeThread(D.ro), V = (x, y) => new THREE.Vector2(x, y), y1 = D.Hr - DOME.CH;
+  const collar = fixLathe(new THREE.LatheGeometry([V(D.ri - 1.2, y1 + 1.2), V(D.ri - 0.2, y1), V(D.ro - 0.1, y1), V(D.ro - 0.1, D.Hr), V(D.ri - 1.2, D.Hr), V(D.ri - 1.2, y1 + 1.2)], 192));
+  const thread = threadGeometry(K.extBase, K.ext, DOME.pitch, y1 + K.extY, K.extTurns);
+  return [['Shadow ring', g], ['Thread collar', collar], ['Ring thread', thread]];
 }
 function slLitAt(wx, wz){
   // trace the ray from the LED to this table point through the wall
@@ -2231,7 +2254,7 @@ function updateReadout(){
     `<span class="tag"><i>H</i><b>${sz.y.toFixed(0)}</b></span>` +
     `<span class="tag"><i>W</i><b>${sz.x.toFixed(0)}</b></span>` +
     `<span class="tag"><i>D</i><b>${sz.z.toFixed(0)} mm</b></span>` +
-    (S.product === 'bulb' ? `<span class="tag"><i>Socket hole</i><b>Ø ${S.bhHole} mm</b></span>` : S.product === 'proj' ? `<span class="tag"><i>Projects</i><b>${Math.round(S.prSize / 10)} cm at ${Math.round(S.prDist / 10)} cm</b></span>` : S.product === 'shadow' ? `<span class="tag"><i>Shadow</i><b>≈ ${slData ? Math.round(slData.Rfar * 2 / 10) : '–'} cm</b></span>` + (slData && slData.dome ? `<span class="tag"><i>Ring</i><b>${Math.round(slData.Hr)} mm tall</b></span>` : '') : S.product === 'block' ? `<span class="tag"><i>Holes</i><b>${blockHoles().length}</b></span>` : S.product === 'monitor' ? `<span class="tag"><i>Holds</i><b>pens in the screen</b></span>` : S.product === 'tubes' ? `<span class="tag"><i>Tubes</i><b>${tubeCells().length}</b></span>` : S.product === 'card' ? `<span class="tag"><i>Holds</i><b>cards + pens</b></span>` : S.product === 'hexcup' ? `<span class="tag"><i>Fits</i><b>≈ ${Math.max(4, Math.floor(Math.pow((S.D - 2*S.wall)/2, 2) * 0.42 / 21))} pens</b></span>` : S.product === 'steps' ? `<span class="tag"><i>Bays</i><b>${S.stBays}</b></span>` : S.product === 'phone' ? `<span class="tag"><i>Fits</i><b>phones up to ${S.phSlot} mm</b></span>` : S.product === 'hex' ? `<span class="tag"><i>Fits</i><b>≈ ${hexCells().length * Math.max(2, Math.floor(Math.pow((S.D - 2*S.wall) / 9.5, 2) * 0.8))} pens</b></span>` : S.product === 'caddy' ? `<span class="tag"><i>Holds</i><b>phone + pens</b></span>` : S.product === 'duo' ? `<span class="tag"><i>Holds</i><b>cup + tray</b></span>` : S.product === 'pen'
+    (S.product === 'bulb' ? `<span class="tag"><i>Socket hole</i><b>Ø ${S.bhHole} mm</b></span>` : S.product === 'proj' ? `<span class="tag"><i>Projects</i><b>${Math.round(S.prSize / 10)} cm at ${Math.round(S.prDist / 10)} cm</b></span>` : S.product === 'shadow' ? `<span class="tag"><i>Shadow</i><b>≈ ${slData ? Math.round(slData.Rfar * 2 / 10) : '–'} cm</b></span>` + (slData && slData.dome ? `<span class="tag"><i>Ring</i><b>${Math.round(slData.Hr)} mm tall</b></span>` + (slData.dropShort ? `<span class="tag warn"><i>Bulb drop</i><b>needs ≥ ${Math.ceil(slData.needDrop)} mm</b></span>` : '') : '') : S.product === 'block' ? `<span class="tag"><i>Holes</i><b>${blockHoles().length}</b></span>` : S.product === 'monitor' ? `<span class="tag"><i>Holds</i><b>pens in the screen</b></span>` : S.product === 'tubes' ? `<span class="tag"><i>Tubes</i><b>${tubeCells().length}</b></span>` : S.product === 'card' ? `<span class="tag"><i>Holds</i><b>cards + pens</b></span>` : S.product === 'hexcup' ? `<span class="tag"><i>Fits</i><b>≈ ${Math.max(4, Math.floor(Math.pow((S.D - 2*S.wall)/2, 2) * 0.42 / 21))} pens</b></span>` : S.product === 'steps' ? `<span class="tag"><i>Bays</i><b>${S.stBays}</b></span>` : S.product === 'phone' ? `<span class="tag"><i>Fits</i><b>phones up to ${S.phSlot} mm</b></span>` : S.product === 'hex' ? `<span class="tag"><i>Fits</i><b>≈ ${hexCells().length * Math.max(2, Math.floor(Math.pow((S.D - 2*S.wall) / 9.5, 2) * 0.8))} pens</b></span>` : S.product === 'caddy' ? `<span class="tag"><i>Holds</i><b>phone + pens</b></span>` : S.product === 'duo' ? `<span class="tag"><i>Holds</i><b>cup + tray</b></span>` : S.product === 'pen'
       ? `<span class="tag"><i>Fits</i><b>≈ ${penCount()} pens</b></span>`
       : `<span class="tag"><i>Holds</i><b>≈ ${Math.round(capacityMl() / 5) * 5} ml</b></span>`);
 }
@@ -3103,7 +3126,7 @@ function placed(geos, flip, lift){
 }
 $('dlDomeTop').addEventListener('click', async () => {
   busy(true); status('Building the dome top…');
-  try { const g = domeGeometry(); const [f] = placed([g], true); const k = S.slLamp === 'led' ? 'led-stem' + S.slDrop : S.slLamp;
+  try { const g = domeGeometry(); const [f] = placed([g], true); const k = S.slLamp === 'led' ? 'led-stem' + Math.round(slData.drop) : S.slLamp;
     await deliver('dome-top-STOCK-' + k + '-' + LAMP_BASES[S.lampBase].ring + 'mm.stl', stlBinary([f], 'dome top (stock)'), 'model/stl'); g.dispose(); f.dispose(); }
   catch (e) { status('Dome export failed: ' + (e && e.message ? e.message : e)); }
   busy(false);
