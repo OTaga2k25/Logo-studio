@@ -577,10 +577,11 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
           <div class="field"><label for="bhCollar">Raised collar</label><output id="bhCollarOut"></output><input type="range" id="bhCollar" min="0" max="15" step="1" value="4"></div>
         </div>
         <div class="row2">
-          <div class="field"><label for="bhPlate">Top plate</label><output id="bhPlateOut"></output><input type="range" id="bhPlate" min="2" max="5" step="0.5" value="3"></div>
           <div class="field"><label for="bhCord">Cord slot</label><output id="bhCordOut"></output><input type="range" id="bhCord" min="5" max="12" step="0.5" value="8"></div>
         </div>
-        <span class="note">Buy a ready-made, certified lamp socket and cord (with inline switch); the base only holds them. The socket's ring screws down onto the top plate (or an M10 tube goes through with a nut each side), and the cord leaves through the slot at the back. Measure your socket and set the hole to fit. Print in PETG or ASA and use LED bulbs only. Have anything wired to mains checked by someone qualified.</span>
+        <label class="check"><input type="checkbox" id="bhExplode"> <span>Show the three parts apart</span></label>
+        <span class="note"><b>Three parts.</b> The <b>body</b> carries the client's logo, so print it for each order. The <b>top cap</b> (holds the socket) and the <b>locking ring</b> are the same for every body, so print a batch and keep them in stock. To assemble, wire the socket into the cap, sit the cap on the body's neck, then screw the ring down over it. The cap never turns, so the cord never twists. Download all three from Export → Lamp base parts.</span>
+        <span class="note">Use a ready-made, certified lamp socket and cord with an inline switch. Measure your socket and set the hole to fit. Print in PETG or ASA and use LED bulbs only. Have anything wired to mains checked by someone qualified.</span>
       </div>
       <div class="sub" id="penOpts" hidden>
         <div><label for="divider" class="lbl">Inside dividers</label>
@@ -616,6 +617,11 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
         <button class="btn ghost" id="dlStlSet">Download STL colour set (.zip)<small>One STL per filament colour · load all together, pick a filament for each part · works in Cura too</small></button>
         <button class="btn ghost" id="dlStl">Download STL · single colour<small>One solid mesh in mm · any slicer</small></button>
       </div>
+      <div class="grp" id="bulbExport" hidden>
+        <h3>Lamp base parts</h3>
+        <button class="btn primary" id="dlBulbKit">Download parts kit (.zip)<small>Body (custom, with logo) + top cap + locking ring · each laid flat, ready to print</small></button>
+        <span class="note">The single STL / 3MF downloads above contain only the custom body. The cap and ring are in this kit; they are identical for every client.</span>
+      </div>
       <div class="grp">
         <h3>For mockups</h3>
         <button class="btn ghost" id="dlPng">Save preview image (PNG)<small>Transparent background · for catalogues and client approval</small></button>
@@ -638,7 +644,7 @@ const $ = id => document.getElementById(id);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const S = {
-  product:'mug', divider:0, layers:[], bhSocket:'e27', bhHole:40.5, bhCollar:4, bhPlate:3, bhCord:8, prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:0, prWidth:64, prH:52, prLed:38, prLight:24, prWall:1.2, slSize:360, slRays:0, slRing:84, slLed:38, slLight:28, slSmooth:3, slWall:1.6, slCx:-1, slCy:-1, slWallMode:false, cobrand:false, sep:'×', cbOrder:'ours', cbBalance:0, pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
+  product:'mug', divider:0, layers:[], bhSocket:'e27', bhHole:40.5, bhCollar:4, bhPlate:3, bhCord:8, bhExplode:false, prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:0, prWidth:64, prH:52, prLed:38, prLight:24, prWall:1.2, slSize:360, slRays:0, slRing:84, slLed:38, slLight:28, slSmooth:3, slWall:1.6, slCx:-1, slCy:-1, slWallMode:false, cobrand:false, sep:'×', cbOrder:'ours', cbBalance:0, pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
   mode:'raised', logoW:52, angle:0, ly:44, both:false,
   depth:1.6, thr:0.5, invert:false, heightSrc:'layered', reliefColor:'full', smooth:2, hiDetail:false, logoColor:'#1d2c7a', removeBg:true, stickerW:0, nColors:5, text:'', textFont:"800|'Baloo 2'", textPos:'below', textSize:27, textColor:'#12939a'
 };
@@ -781,6 +787,7 @@ function bodyGeometry(){
 
 // ---------- lamp base (bulb socket holder) ----------
 // A hollow tapered body with the logo on its side, a top plate that the socket clamps to, and a cord slot at the back.
+const ringMat = new THREE.MeshPhysicalMaterial({color: '#3a3d44', roughness: 0.45, clearcoat: 0.3});
 function bulbGeometries(){
   const H = S.H, w = S.wall, tex = texAmp() > 0, Na = tex ? Math.max(360, Math.round(S.texCols) * 14) : 360;
   const cord = S.bhCord, hw = cord / 2, yc = cord + 2 - hw, slotTop = cord + 2;
@@ -798,13 +805,63 @@ function bulbGeometries(){
   }
   const out = (y, th) => R(y) + (tex ? surfaceBump(y, th) : 0), inn = y => R(y) - w;
   const body = smoothShell(F, Na, ys, out, w, (th, r, y) => [Math.sin(th) * r, y, Math.cos(th) * r], (y) => inn(y));
-  // top plate + collar around the socket hole
-  const rh = S.bhHole / 2, rp = R(H) - w + 0.6, tp = S.bhPlate, col = S.bhCollar, rc = rh + 3, V = (x, y) => new THREE.Vector2(x, y);
-  const prof = [V(rh, H - tp), V(rp, H - tp), V(rp, H)];
-  if (col > 0) prof.push(V(rc, H), V(rc, H + col), V(rh, H + col)); else prof.push(V(rh, H));
-  prof.push(V(rh, H - tp));
-  const plate = new THREE.LatheGeometry(prof, 160); plate.computeVertexNormals();
-  return [['Lamp base', body], ['Top plate', plate]];
+  // shoulder + threaded neck (the same on every body, so every stock cap and ring fits)
+  const K = BH, yN = H + K.neckH, ro = R(H) - w + 0.6, yF = H - 1.5, y0 = yF - (ro - K.neckIn), V = (x, y) => new THREE.Vector2(x, y);
+  const neck = new THREE.LatheGeometry([V(ro, y0), V(ro, H - 0.05), V(K.neckOut, H - 0.05), V(K.neckOut, yN - 0.6), V(K.neckOut - 0.6, yN), V(K.neckIn, yN), V(K.neckIn, yF), V(ro, y0)], 160);
+  fixLathe(neck);
+  const thread = threadGeometry(K.extBase, K.extProf, K.pitch, H + K.extY, K.extTurns);
+  return [['Lamp base', body], ['Neck', neck], ['Neck thread', thread]];
+}
+// Shared sizes for the screw joint. Every body, cap and ring uses these, so they are interchangeable.
+const BH = {
+  neckIn: 22.5, neckOut: 24.6, neckH: 14, pitch: 4,
+  extBase: 24.3, extProf: [[24.3, -1.8], [25.8, -0.3], [25.8, 0.3], [24.3, 1.8]], extY: 2.2, extTurns: 1.6,       // on the neck
+  intBase: 26.8, intProf: [[26.8, -1.75], [26.2, -1.75], [25.0, -0.55], [25.0, 0.55], [26.2, 1.75], [26.8, 1.75]], intY: 4.2, intTurns: 1.5,   // inside the ring
+  flangeR: 24.6, flangeT: 2.5, bossR: 22.6, lipHole: 23.0, lipT: 2.4, ringBore: 26.5, ringOut: 28.7, ribs: 36, ringBottom: 1.0
+};
+function fixLathe(g){ if (fixWinding(g)) {} g.computeVertexNormals(); return g; }
+function threadGeometry(rBase, prof, pitch, y0, turns){
+  // a helical thread (right-hand), ends tapered into the wall so it starts and stops smoothly
+  const per = 96, N = Math.max(8, Math.round(turns * per)), n = prof.length, pos = [], idx = [], tMax = turns * Math.PI * 2, ta = Math.PI / 4;
+  for (let k = 0; k <= N; k++){
+    const th = k / N * tMax, f = Math.max(0.04, ss(Math.min(th, tMax - th) / ta)), yc = y0 + pitch * th / (Math.PI * 2);
+    prof.forEach(([r, dy]) => { const rr = rBase + (r - rBase) * f; pos.push(Math.sin(th) * rr, yc + dy * (0.55 + 0.45 * f), Math.cos(th) * rr); });
+  }
+  for (let k = 0; k < N; k++) for (let m = 0; m < n; m++){
+    const a = k * n + m, b = k * n + (m + 1) % n, c = (k + 1) * n + (m + 1) % n, d = (k + 1) * n + m; idx.push(a, b, c, a, c, d);
+  }
+  for (let m = 1; m + 1 < n; m++){ idx.push(0, m + 1, m); idx.push(N * n, N * n + m, N * n + m + 1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
+  return fixLathe(g);
+}
+function bulbStockParts(){
+  // the cap (holds the socket) and the locking ring; same for every client
+  const K = BH, H = S.H, yN = H + K.neckH, rh = S.bhHole / 2, col = S.bhCollar, V = (x, y) => new THREE.Vector2(x, y);
+  const boss = K.bossR, top = yN + K.flangeT + K.lipT + 0.8, rc = Math.min(boss, rh + 3);
+  const pts = [V(rh, yN), V(K.flangeR - 0.5, yN), V(K.flangeR, yN + 0.5), V(K.flangeR, yN + K.flangeT), V(boss, yN + K.flangeT)];
+  if (col > 0 && rc < boss - 0.01) pts.push(V(boss, top), V(rc, top), V(rc, top + col), V(rh, top + col));
+  else pts.push(V(boss, top + col), V(rh, top + col));
+  pts.push(V(rh, yN));
+  const cap = fixLathe(new THREE.LatheGeometry(pts, 160));
+  // ring: ribbed skirt over the threads + a lip that presses the cap's flange down
+  const outline = [], nO = K.ribs * 12;
+  for (let k = 0; k < nO; k++){ const a = k / nO * Math.PI * 2, rib = 0.7 * Math.pow(Math.abs(Math.cos(a * K.ribs / 2)), 3); outline.push(new THREE.Vector2(Math.sin(a) * (K.ringOut + rib), -Math.cos(a) * (K.ringOut + rib))); }
+  const shapeWith = hr => { const sh = new THREE.Shape(outline); sh.holes.push(new THREE.Path(circlePts(0, 0, hr, 160).map(p => new THREE.Vector2(p[0], -p[1])).reverse())); return sh; };
+  const yLip = yN + K.flangeT, yB = H + K.ringBottom;
+  const skirt = extrudeAt(shapeWith(K.ringBore), yB, yLip - yB);
+  const lip = extrudeAt(shapeWith(K.lipHole), yLip - 0.4, K.lipT + 0.4);
+  const ithread = threadGeometry(K.intBase, K.intProf, K.pitch, H + K.intY, K.intTurns);
+  return {cap: [['Top cap', cap]], ring: [['Ring skirt', skirt], ['Ring lip', lip], ['Ring thread', ithread]], yN, yLip, yB, top: top + col};
+}
+const stockGrp = new THREE.Group(); stockGrp.name = 'Stock parts'; pivot.add(stockGrp);
+const capGrp = new THREE.Group(), ringGrp = new THREE.Group(); capGrp.name = 'Top cap'; ringGrp.name = 'Locking ring'; stockGrp.add(capGrp, ringGrp);
+function clearStock(){ [capGrp, ringGrp].forEach(g => g.children.slice().forEach(o => { o.geometry.dispose(); g.remove(o); })); }
+function buildStock(){
+  clearStock(); if (S.product !== 'bulb') return;
+  const P = bulbStockParts();
+  P.cap.forEach(([n, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = n; capGrp.add(m); });
+  P.ring.forEach(([n, g]) => { const m = new THREE.Mesh(g, ringMat); m.name = n; ringGrp.add(m); });
+  capGrp.position.y = S.bhExplode ? 22 : 0; ringGrp.position.y = S.bhExplode ? 48 : 0;
 }
 // ---------- duo organiser (tall cup + tray, flat front) ----------
 function ribP(frac){ const d = Math.abs((frac - Math.floor(frac)) - 0.5); return ss((0.25 - d) / 0.035 + 0.5); }
@@ -2042,6 +2099,7 @@ function build(){
   else { const body = new THREE.Mesh(bodyGeometry(), bodyMat); body.name = 'Mug body'; mug.add(body); }
   if (S.handle && S.product === 'mug'){ const h = new THREE.Mesh(handleGeometry(), bodyMat); h.name = 'Handle'; mug.add(h); }
   if (S.product === 'pen' && S.divider) dividerGeometry().forEach((g, i) => { const d = new THREE.Mesh(g, bodyMat); d.name = 'Divider ' + (i + 1); mug.add(d); });
+  buildStock();
   layerL = null; if (logoBase) logoProc = logoBase;
   const activeLayers = S.layers.filter(t => t.text.trim());
   if (logoBase && activeLayers.length && S.product !== 'shadow' && S.product !== 'proj'){ composeLayers(activeLayers); }
@@ -2293,7 +2351,7 @@ function setProduct0(prod){
   $('prodDuo').setAttribute('aria-pressed', String(prod === 'duo'));
   $('handleRow').hidden = prod !== 'mug';
   $('penOpts').hidden = prod !== 'pen';
-  $('prodBulb').setAttribute('aria-pressed', String(prod === 'bulb')); $('bulbOpts').hidden = prod !== 'bulb';
+  $('prodBulb').setAttribute('aria-pressed', String(prod === 'bulb')); $('bulbOpts').hidden = prod !== 'bulb'; $('bulbExport').hidden = prod !== 'bulb';
   $('duoOpts').hidden = prod !== 'duo';
   $('prodCaddy').setAttribute('aria-pressed', String(prod === 'caddy'));
   $('caddyOpts').hidden = prod !== 'caddy';
@@ -2320,7 +2378,7 @@ function setProduct0(prod){
   $('both').closest('label').hidden = flatP;
   $('mt').closest('.field').hidden = flatP;
   $('md').closest('.field').querySelector('label').textContent = (prod === 'caddy' || prod === 'phone' || prod === 'card' || prod === 'block' || prod === 'monitor') ? 'Width' : prod === 'tubes' ? 'Tube diameter' : prod === 'hex' ? 'Cell width' : prod === 'hexcup' ? 'Across flats' : prod === 'steps' ? 'Bay width' : 'Diameter';
-  $('md').min = prod === 'hex' ? 20 : prod === 'tubes' ? 25 : prod === 'card' ? 130 : (prod === 'block' || prod === 'monitor') ? 80 : prod === 'steps' ? 28 : prod === 'phone' ? 50 : prod === 'hexcup' ? 50 : prod === 'bulb' ? 50 : 60; $('md').max = prod === 'bulb' ? 130 : prod === 'hex' ? 45 : prod === 'tubes' ? 70 : (prod === 'card' || prod === 'block' || prod === 'monitor') ? 220 : prod === 'steps' ? 70 : (prod === 'caddy' ? 160 : prod === 'phone' ? 160 : 110);
+  $('md').min = prod === 'hex' ? 20 : prod === 'tubes' ? 25 : prod === 'card' ? 130 : (prod === 'block' || prod === 'monitor') ? 80 : prod === 'steps' ? 28 : prod === 'phone' ? 50 : prod === 'hexcup' ? 50 : prod === 'bulb' ? 60 : 60; $('md').max = prod === 'bulb' ? 130 : prod === 'hex' ? 45 : prod === 'tubes' ? 70 : (prod === 'card' || prod === 'block' || prod === 'monitor') ? 220 : prod === 'steps' ? 70 : (prod === 'caddy' ? 160 : prod === 'phone' ? 160 : 110);
   $('mh').max = prod === 'phone' ? 160 : 130; $('mw').max = prod === 'phone' ? 8 : 8;
   const first = PRESETS[prod][0];
   renderPresets(first[0]);
@@ -2341,6 +2399,7 @@ $('prodBulb').addEventListener('click', () => { if (S.product !== 'bulb') setPro
 const BULB_HOLES = {e27: 40.5, e14: 29, m10: 10.5}, BULB_COLLAR = {e27: 4, e14: 3, m10: 0};
 function setSocket(v){ S.bhSocket = v; $('bhSocket').value = v; [['bhHole', BULB_HOLES[v]], ['bhCollar', BULB_COLLAR[v]]].forEach(([id, val]) => { $(id).value = val; $(id).dispatchEvent(new Event('input')); }); }
 $('bhSocket').addEventListener('change', e => setSocket(e.target.value));
+$('bhExplode').addEventListener('change', e => { S.bhExplode = e.target.checked; buildStock(); });
 $('prodProj').addEventListener('click', () => { if (S.product !== 'proj'){ setProduct('proj'); setTimeout(resetView, 50); } });
 $('prShape').addEventListener('change', e => { S.prShape = e.target.value; rebuild(); });
 $('prMode').addEventListener('change', e => { S.prMode = e.target.value; rebuild(); });
@@ -2417,7 +2476,7 @@ bindRange('duoLen', 'duoLen', v => v + ' mm');
 $('slant').addEventListener('input', e => { S.slant = parseFloat(e.target.value) / 100; $('slantOut').textContent = S.slant ? e.target.value + '%' : 'Flat'; rebuild(); });
 $('slantOut').textContent = 'Flat';
 bindRange('prDist', 'prDist', v => Math.round(v / 10) + ' cm'); bindRange('prSize', 'prSize', v => Math.round(v / 10) + ' cm'); bindRange('prLift', 'prLift', v => (v >= 0 ? '+' : '') + Math.round(v / 10) + ' cm');
-bindRange('prWidth', 'prWidth', v => v + ' mm'); bindRange('bhHole', 'bhHole', v => v + ' mm'); bindRange('bhCollar', 'bhCollar', v => v ? v + ' mm' : 'None'); bindRange('bhPlate', 'bhPlate', v => v + ' mm'); bindRange('bhCord', 'bhCord', v => v + ' mm'); bindRange('prBars', 'prBars', v => v ? v + '' : 'None'); bindRange('prH', 'prH', v => v + ' mm'); bindRange('prLed', 'prLed', v => v + ' mm'); bindRange('prLight', 'prLight', v => v + ' mm'); bindRange('prWall', 'prWall', v => v.toFixed(1) + ' mm');
+bindRange('prWidth', 'prWidth', v => v + ' mm'); bindRange('bhHole', 'bhHole', v => v + ' mm'); bindRange('bhCollar', 'bhCollar', v => v ? v + ' mm' : 'None');  bindRange('bhCord', 'bhCord', v => v + ' mm'); bindRange('prBars', 'prBars', v => v ? v + '' : 'None'); bindRange('prH', 'prH', v => v + ' mm'); bindRange('prLed', 'prLed', v => v + ' mm'); bindRange('prLight', 'prLight', v => v + ' mm'); bindRange('prWall', 'prWall', v => v.toFixed(1) + ' mm');
 bindRange('slSize', 'slSize', v => Math.round(v / 10) + ' cm'); bindRange('slRays', 'slRays', v => v ? v + '' : 'None'); bindRange('slLed', 'slLed', v => v + ' mm');
 bindRange('slLight', 'slLight', v => v + ' mm'); bindRange('slSmooth', 'slSmooth', v => v ? v + '' : 'Off'); bindRange('slWall', 'slWall', v => v.toFixed(1) + ' mm'); bindRange('slRing', 'slRing', v => v + ' mm');
 bindRange('pbHole', 'pbHole', v => v + ' mm'); bindRange('pbDepth', 'pbDepth', v => v + ' mm'); bindRange('mnDepth', 'mnDepth', v => v + ' mm'); bindRange('mnNeck', 'mnNeck', v => v + ' mm');
@@ -2827,7 +2886,7 @@ function applyPreview(){
   const info = $('pvinfo');
   const solids = mug.children.filter(o => !o.userData.decal);
   const noLogoGeo = S.mode !== 'raised' && logoProc;
-  mug.visible = previewMode === 'studio';
+  mug.visible = previewMode === 'studio'; stockGrp.visible = previewMode === 'studio';
   if (prWallMesh){ prWallMesh.visible = prGlow.visible = previewMode === 'studio' && S.product === 'proj' && !!prData; }
   if (slPlane){ slPlane.visible = slGlow.visible = previewMode === 'studio' && S.product === 'shadow' && !!slData; }
   shadow.visible = true;
@@ -2947,6 +3006,37 @@ $('dlStl').addEventListener('click', async () => {
   busy(false);
 });
 
+// ---------- lamp base parts kit ----------
+function placed(geos, flip, lift){
+  // copy geometries, optionally upside down, and sit them on the bed (y = 0)
+  const out = geos.map(g => { const c = g.clone(); if (flip) c.rotateX(Math.PI); return c; });
+  let lo = Infinity; out.forEach(c => { c.computeBoundingBox(); lo = Math.min(lo, c.boundingBox.min.y); });
+  out.forEach(c => c.translate(0, -lo + (lift || 0), 0)); return out;
+}
+$('dlBulbKit').addEventListener('click', async () => {
+  busy(true); status('Building the parts kit…'); await new Promise(r => setTimeout(r, 30));
+  try {
+    const P = bulbStockParts(), files = {}, base = slug();
+    const body = mug.children.filter(o => !o.userData.decal).map(o => o.geometry);
+    const cap = placed(P.cap.map(x => x[1]), false), ring = placed(P.ring.map(x => x[1]), true);
+    const hole = S.bhHole.toString().replace('.', '_');
+    files[base + '-lamp-body-CUSTOM.stl'] = stlBinary(body, 'lamp body (custom)');
+    files['lamp-top-cap-STOCK-hole' + hole + 'mm.stl'] = stlBinary(cap, 'lamp top cap (stock)');
+    files['lamp-locking-ring-STOCK.stl'] = stlBinary(ring, 'lamp locking ring (stock)');
+    const txt = ['LAMP BASE · PARTS KIT', '',
+      '1. ' + base + '-lamp-body-CUSTOM.stl  -> print for this client. Upright, as it comes (open bottom on the bed). No supports needed.',
+      '2. lamp-top-cap-STOCK-hole' + hole + 'mm.stl  -> stock part. Flange flat on the bed. Same for every body.',
+      '3. lamp-locking-ring-STOCK.stl  -> stock part. Already upside down (lip on the bed). Same for every body.', '',
+      'Joint: right-hand thread, ' + BH.pitch + ' mm pitch, neck ' + (BH.neckOut * 2) + ' mm, about 1.5 turns. Print the thread parts with 0.2 mm layers or finer.',
+      'Assembly: wire the socket into the cap (socket ring screws down on top), run the cord out through the slot at the back of the body,',
+      'sit the cap on the neck, then screw the ring down over it until snug. The cap does not turn, so the cord does not twist.', '',
+      'Safety: use a certified socket and cord with inline switch, LED bulbs only, PETG or ASA. Have mains wiring checked by someone qualified.'];
+    files['READ-ME-assembly.txt'] = new TextEncoder().encode(txt.join('\r\n'));
+    [...cap, ...ring].forEach(g => g.dispose());
+    await deliver(base + '-lamp-base-kit.zip', fflate.zipSync(files, {level: 6}), 'application/zip');
+  } catch (e) { status('Parts kit failed: ' + (e && e.message ? e.message : e)); }
+  busy(false);
+});
 // ---------- start ----------
 function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
 animate();
