@@ -436,7 +436,9 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
           <div class="field"><label for="prBars">Extra bars</label><output id="prBarsOut"></output><input type="range" id="prBars" min="0" max="48" step="1" value="0"></div>
         </div>
         <div class="row2">
-          <div class="field"><label for="prWidth">Lamp width</label><output id="prWidthOut"></output><input type="range" id="prWidth" min="30" max="120" step="1" value="64"></div>
+          <div class="field" hidden><label for="prWidth">Lamp width</label><output id="prWidthOut"></output><input type="range" id="prWidth" min="30" max="120" step="1" value="84"></div>
+          <div><label for="prBase" class="lbl">Fits light base</label>
+            <select class="text" id="prBase"><option value="std">Standard base · 84 mm ring · 38 mm tea light</option><option value="small">Small base · 50 mm ring · 38 mm tea light</option><option value="mini">Mini base · 34 mm ring · 21 mm LED</option></select></div>
           <div class="field"><label for="prH">Lamp height</label><output id="prHOut"></output><input type="range" id="prH" min="30" max="90" step="1" value="52"></div>
         </div>
         <div class="row2">
@@ -444,8 +446,9 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
           <div class="field"><label for="prLight">Light height</label><output id="prLightOut"></output><input type="range" id="prLight" min="8" max="40" step="0.5" value="24"></div>
         </div>
         <div class="row2">
-          <div class="field"><label for="prWall">Wall</label><output id="prWallOut"></output><input type="range" id="prWall" min="0.8" max="2.4" step="0.1" value="1.2"></div>
+          <div class="field"><label for="prWall">Wall</label><output id="prWallOut"></output><input type="range" id="prWall" min="0.8" max="2.2" step="0.1" value="1.2"></div>
         </div>
+        <span class="note"><b>Swap, don't reprint.</b> Print one <b>light base</b> (Export → Light base) and keep it. For each client print only this logo part and drop it onto the base: shadow rings and projector shells for the same base size all fit, so you can switch designs in seconds. The light height must match your tea light, so keep using the same model of LED.</span>
         <span class="note">The lamp goes over an LED tea light. Light shines out through the cut-outs and draws your picture on the wall in front. Floating parts (like the middle of an O) are joined with thin bars automatically. A wider lamp gives a sharper picture. Coloured and dark parts of the picture count as the picture; white counts as background. Print in a dark colour for a crisp projection.</span>
       </div>
       <div class="sub" id="shadowOpts" hidden>
@@ -463,10 +466,13 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
           <div class="field"><label for="slLight">Light height</label><output id="slLightOut"></output><input type="range" id="slLight" min="10" max="45" step="0.5" value="28"></div>
         </div>
         <div class="row2">
-          <div class="field"><label for="slRing">Lamp width</label><output id="slRingOut"></output><input type="range" id="slRing" min="30" max="140" step="1" value="84"></div>
+          <div class="field" hidden><label for="slRing">Lamp width</label><output id="slRingOut"></output><input type="range" id="slRing" min="30" max="140" step="1" value="84"></div>
+          <div><label for="slBase" class="lbl">Fits light base</label>
+            <select class="text" id="slBase"><option value="std">Standard base · 84 mm ring · 38 mm tea light</option><option value="small">Small base · 50 mm ring · 38 mm tea light</option><option value="mini">Mini base · 34 mm ring · 21 mm LED</option></select></div>
           <div class="field" hidden><label for="slSmooth">Smooth outline</label><output id="slSmoothOut"></output><input type="range" id="slSmooth" min="0" max="12" step="1" value="3"></div>
-          <div class="field"><label for="slWall">Wall</label><output id="slWallOut"></output><input type="range" id="slWall" min="1.2" max="3" step="0.1" value="1.6"></div>
+          <div class="field"><label for="slWall">Wall</label><output id="slWallOut"></output><input type="range" id="slWall" min="1.2" max="2.2" step="0.1" value="1.6"></div>
         </div>
+        <span class="note"><b>Swap, don't reprint.</b> Print one <b>light base</b> (Export → Light base) and keep it. For each client print only this logo part and drop it onto the base: shadow rings and projector shells for the same base size all fit, so you can switch designs in seconds. The light height must match your tea light, so keep using the same model of LED.</span>
         <span class="note">The lamp is a ring with windows that sits around an LED tea light. The solid parts cast your logo as a shadow on the table; light through the windows draws the gaps between letters and shapes. Thin bars hold any floating parts. Light height is how high the glowing tip of the LED is above the table, so measure yours. A wider lamp gives a sharper picture. Use a dark room, print in a dark colour, with 0.08–0.12 mm layers.</span>
       </div>
       <div class="sub" id="blockOpts" hidden>
@@ -617,6 +623,11 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
         <button class="btn ghost" id="dlStlSet">Download STL colour set (.zip)<small>One STL per filament colour · load all together, pick a filament for each part · works in Cura too</small></button>
         <button class="btn ghost" id="dlStl">Download STL · single colour<small>One solid mesh in mm · any slicer</small></button>
       </div>
+      <div class="grp" id="baseExport" hidden>
+        <h3>Light base (print once)</h3>
+        <button class="btn primary" id="dlLightBase">Download light base STL<small>Holds the tea light · every shadow ring and projector shell of this size drops onto it</small></button>
+        <span class="note">The STL downloads above contain only this client's logo part. Print the base once per size and reuse it.</span>
+      </div>
       <div class="grp" id="bulbExport" hidden>
         <h3>Lamp base parts</h3>
         <button class="btn primary" id="dlBulbKit">Download parts kit (.zip)<small>Body (custom, with logo) + top cap + locking ring · each laid flat, ready to print</small></button>
@@ -644,7 +655,7 @@ const $ = id => document.getElementById(id);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const S = {
-  product:'mug', divider:0, layers:[], bhSocket:'e27', bhHole:40.5, bhCollar:4, bhPlate:3, bhCord:8, bhExplode:false, prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:0, prWidth:64, prH:52, prLed:38, prLight:24, prWall:1.2, slSize:360, slRays:0, slRing:84, slLed:38, slLight:28, slSmooth:3, slWall:1.6, slCx:-1, slCy:-1, slWallMode:false, cobrand:false, sep:'×', cbOrder:'ours', cbBalance:0, pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
+  product:'mug', divider:0, layers:[], bhSocket:'e27', bhHole:40.5, bhCollar:4, bhPlate:3, bhCord:8, bhExplode:false, lampBase:'std', prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:0, prWidth:84, prH:52, prLed:38, prLight:24, prWall:1.2, slSize:360, slRays:0, slRing:84, slLed:38, slLight:28, slSmooth:3, slWall:1.6, slCx:-1, slCy:-1, slWallMode:false, cobrand:false, sep:'×', cbOrder:'ours', cbBalance:0, pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
   mode:'raised', logoW:52, angle:0, ly:44, both:false,
   depth:1.6, thr:0.5, invert:false, heightSrc:'layered', reliefColor:'full', smooth:2, hiDetail:false, logoColor:'#1d2c7a', removeBg:true, stickerW:0, nColors:5, text:'', textFont:"800|'Baloo 2'", textPos:'below', textSize:27, textColor:'#12939a'
 };
@@ -834,6 +845,20 @@ function threadGeometry(rBase, prof, pitch, y0, turns){
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
   return fixLathe(g);
 }
+// ---------- light base (stock, shared by shadow rings and projector shells) ----------
+const LB = {h: 3};
+const LAMP_BASES = {std: {ring: 84, led: 38, light: 28}, small: {ring: 50, led: 38, light: 28}, mini: {ring: 34, led: 21, light: 14}};
+function lightBaseGeometry(){
+  // disc with a pocket for the tea light and a low locating ring that the logo part drops over
+  const ro = LAMP_BASES[S.lampBase].ring / 2, led = S.product === 'proj' ? S.prLed : S.slLed, rp = led / 2 + 0.4, hb = LB.h;
+  const lo = ro - 2.6, li = Math.max(rp + 1.2, ro - 4.2), rb = ro + 3, V = (x, y) => new THREE.Vector2(x, y);
+  const pts = [V(0, 1.2), V(rp, 1.2), V(rp, hb), V(li, hb), V(li, hb + 1.5), V(lo - 0.4, hb + 1.5), V(lo, hb + 1.1), V(lo, hb), V(rb - 0.8, hb), V(rb, hb - 0.8), V(rb, 0.6), V(rb - 0.6, 0), V(0, 0), V(0, 1.2)];
+  return fixLathe(new THREE.LatheGeometry(pts, 192));
+}
+function setLampBase(v){
+  S.lampBase = v; $('slBase').value = v; $('prBase').value = v; const B = LAMP_BASES[v];
+  [['slRing', B.ring], ['prWidth', B.ring]].forEach(([id, val]) => { $(id).value = val; $(id).dispatchEvent(new Event('input')); });
+}
 function bulbStockParts(){
   // the cap (holds the socket) and the locking ring; same for every client
   const K = BH, H = S.H, yN = H + K.neckH, rh = S.bhHole / 2, col = S.bhCollar, V = (x, y) => new THREE.Vector2(x, y);
@@ -854,10 +879,13 @@ function bulbStockParts(){
   return {cap: [['Top cap', cap]], ring: [['Ring skirt', skirt], ['Ring lip', lip], ['Ring thread', ithread]], yN, yLip, yB, top: top + col};
 }
 const stockGrp = new THREE.Group(); stockGrp.name = 'Stock parts'; pivot.add(stockGrp);
-const capGrp = new THREE.Group(), ringGrp = new THREE.Group(); capGrp.name = 'Top cap'; ringGrp.name = 'Locking ring'; stockGrp.add(capGrp, ringGrp);
-function clearStock(){ [capGrp, ringGrp].forEach(g => g.children.slice().forEach(o => { o.geometry.dispose(); g.remove(o); })); }
+const capGrp = new THREE.Group(), ringGrp = new THREE.Group(), baseGrp = new THREE.Group(); capGrp.name = 'Top cap'; ringGrp.name = 'Locking ring'; baseGrp.name = 'Light base'; stockGrp.add(capGrp, ringGrp, baseGrp);
+function clearStock(){ [capGrp, ringGrp, baseGrp].forEach(g => g.children.slice().forEach(o => { o.geometry.dispose(); g.remove(o); })); }
 function buildStock(){
-  clearStock(); if (S.product !== 'bulb') return;
+  clearStock();
+  mug.position.y = (S.product === 'shadow' || S.product === 'proj') ? LB.h : 0;
+  if (S.product === 'shadow' || S.product === 'proj'){ const m = new THREE.Mesh(lightBaseGeometry(), ringMat); m.name = 'Light base'; baseGrp.add(m); return; }
+  if (S.product !== 'bulb') return;
   const P = bulbStockParts();
   P.cap.forEach(([n, g]) => { const m = new THREE.Mesh(g, bodyMat); m.name = n; capGrp.add(m); });
   P.ring.forEach(([n, g]) => { const m = new THREE.Mesh(g, ringMat); m.name = n; ringGrp.add(m); });
@@ -954,7 +982,7 @@ function frontInfo(){
   if (S.product === 'phone'){ const P = phoneProfile(); return {x0: -S.D/2, x1: S.D/2, zf: P.zF, lo: 3, hi: S.phLip - 3, rc: 3}; }
   const W = S.D, f = cadFootH(); return {x0: -W/2, x1: W/2, zf: S.cadDepth/2, lo: f + 3, hi: f + S.H * S.cadFront/100 - 3, rc: 6};
 }
-const PRODUCT_WORDS = {mug:'mug', pen:'pen-holder', duo:'duo-organiser', caddy:'desk-caddy', hex:'honeycomb-stand', phone:'phone-stand', hexcup:'hexagon-cup', steps:'step-organiser', tubes:'tube-cluster', card:'card-pen-holder', block:'pen-block', monitor:'monitor-holder', shadow:'shadow-lamp', proj:'projector-lamp', bulb:'lamp-base'};
+const PRODUCT_WORDS = {mug:'mug', pen:'pen-holder', duo:'duo-organiser', caddy:'desk-caddy', hex:'honeycomb-stand', phone:'phone-stand', hexcup:'hexagon-cup', steps:'step-organiser', tubes:'tube-cluster', card:'card-pen-holder', block:'pen-block', monitor:'monitor-holder', shadow:'shadow-ring', proj:'projector-shell', bulb:'lamp-base'};
 const productWord = () => PRODUCT_WORDS[S.product] || 'mug';
 // ---------- smooth cut-out shells (shadow + projector lamps) ----------
 // A lamp wall is described by a value at every grid node (around x up): 1 = solid, 0 = open, in between near
@@ -1089,7 +1117,7 @@ function gridFix(sol, Na, Nh, bw, minCells){
 function slCompute(){
   const M = slMask(); if (!M) return null;
   if (S.slCx < 0){ S.slCx = M.cx; S.slCy = M.cy; }
-  const e = S.slLight + 1.2, ro = Math.max(S.slRing / 2, S.slLed / 2 + 1 + S.slWall), ri = ro - S.slWall, rm = (ro + ri) / 2, hMin = 1.8, hMax = e - 1.2;
+  const e = S.slLight + 1.2, ro = Math.max(S.slRing / 2, S.slLed / 2 + 1 + S.slWall), ri = ro - S.slWall, rm = (ro + ri) / 2, hMin = LB.h + 1.8, hMax = e - 1.2;
   const scale = S.slSize / Math.max(M.w, M.h), cx = S.slCx * M.w, cy = S.slCy * M.h;
   const SM = softMask(M, 1), cover = (R, a) => bilinMask(SM, cx + Math.cos(a) * R / scale, cy + Math.sin(a) * R / scale);
   // farthest logo pixel from the lamp sets the top of the wall
@@ -1098,7 +1126,7 @@ function slCompute(){
   const yAt = R => e * (1 - rm / R), Rat = y => rm * e / (e - y);
   const yTop = Math.min(hMax, yAt(Math.max(Rfar, Rat(hMin) + 1)));
   // node heights: even steps on the table, never closer than 0.05 mm on the lamp
-  const ys = [0, hMin], dR = Math.max(0.8, S.slSize / 260);
+  const ys = [LB.h, hMin], dR = Math.max(0.8, S.slSize / 260);
   for (let R = Rat(hMin) + dR; ; R += dR){ const y = yAt(R); if (y >= yTop){ if (yTop - ys[ys.length - 1] > 0.03) ys.push(yTop); else ys[ys.length - 1] = yTop; break; } if (y - ys[ys.length - 1] >= 0.05) ys.push(y); }
   const NN = ys.length, Na = Math.max(360, Math.round(2 * Math.PI * ro / 0.3)), F = new Float32Array(Na * NN);
   for (let i = 0; i < Na; i++){
@@ -1115,9 +1143,9 @@ function slCompute(){
 }
 function shadowGeometries(){
   const D = slCompute(); if (!D) return [];
-  const g = smoothShell(D.F, D.Na, D.ys, () => D.ro, S.slWall, (th, r, y) => [Math.cos(th) * r, y, Math.sin(th) * r]);
-  const fl = 1.2, floor = new THREE.CylinderGeometry(D.ri + 0.3, D.ri + 0.3, fl, 128); floor.translate(0, fl/2, 0);
-  return [['Shadow lamp', g], ['Floor', floor]];
+  // the ring is modelled standing on the light base; its own bottom is y = 0
+  const g = smoothShell(D.F, D.Na, D.ys, () => D.ro, S.slWall, (th, r, y) => [Math.cos(th) * r, y - LB.h, Math.sin(th) * r]);
+  return [['Shadow ring', g]];
 }
 function slLitAt(wx, wz){
   // trace the ray from the LED to this table point through the wall
@@ -1185,7 +1213,7 @@ function prShapeAt(wx, wy, Pc){
 }
 function prCompute(){
   const Pc = prPicture(); if (!Pc) return null;
-  const pf = prProfile(), e = S.prLight + 1, cell = 0.35, Na = Math.max(120, Math.round(2 * Math.PI * pf.rb / cell)), Nh = Math.max(30, Math.round(pf.H / cell));
+  const pf = prProfile(), e = S.prLight + 1.2 - LB.h, cell = 0.35, Na = Math.max(120, Math.round(2 * Math.PI * pf.rb / cell)), Nh = Math.max(30, Math.round(pf.H / cell));
   const NN = Nh + 1, ys = Array.from({length: NN}, (_, j) => j / Nh * pf.H), F = new Float32Array(Na * NN), light = S.prMode === 'light', M0 = slMask();
   const M = softMask(M0, cell * S.prDist / pf.rb * (M0.w / Pc.W) * 0.5);   // blur about half a grid step as seen on the wall
   for (let i = 0; i < Na; i++){
@@ -1245,8 +1273,8 @@ function updateProjectorPreview(){
   g.putImageData(img, 0, 0);
   if (prWallMesh.material.map) prWallMesh.material.map.dispose();
   prWallMesh.material.map = new THREE.CanvasTexture(c); prWallMesh.material.map.encoding = THREE.sRGBEncoding; prWallMesh.material.needsUpdate = true;
-  prWallMesh.scale.set(wW, wH, 1); prWallMesh.position.set(0, cy, S.prDist); prWallMesh.rotation.y = Math.PI;
-  prGlow.position.set(0, D.e, 0);
+  prWallMesh.scale.set(wW, wH, 1); prWallMesh.position.set(0, cy + LB.h, S.prDist); prWallMesh.rotation.y = Math.PI;
+  prGlow.position.set(0, D.e + LB.h, 0);
 }
 // ---------- pen block ----------
 function blockHoles(){
@@ -2204,15 +2232,15 @@ const PRESETS = {
     ['bhMini', 'Mini', 'E14 · small', {mh:85, md:62, mt:-20, mw:2.5, mb:3, handle:false, divider:0, slant:0, texture:'smooth', color:'#2f4cb3', bhSocket:'e14', ly:40}]
   ],
   proj: [
-    ['prCone', 'Projector cone', 'picture glows', {mh:80, md:80, mw:1.2, mb:2, handle:false, color:'#2f4cb3', prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:0, prWidth:64, prH:52, prLed:38, prLight:24, prWall:1.2, texture:'smooth'}],
-    ['prDome', 'Projector dome', 'rounded', {mh:80, md:80, mw:1.2, mb:2, handle:false, color:'#e2672b', prShape:'dome', prMode:'light', prDist:350, prSize:420, prLift:140, prBars:0, prWidth:70, prH:50, prLed:38, prLight:24, prWall:1.2, texture:'smooth'}],
-    ['prShadow', 'Shadow picture', 'dark picture, lit wall', {mh:80, md:80, mw:1.2, mb:2, handle:false, color:'#2b2d33', prShape:'cyl', prMode:'shadow', prDist:300, prSize:320, prLift:110, prBars:0, prWidth:60, prH:50, prLed:38, prLight:24, prWall:1.2, texture:'smooth'}]
+    ['prCone', 'Projector cone', 'picture glows', {mh:80, md:80, mw:1.2, mb:2, handle:false, color:'#2f4cb3', prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:0, lampBase:'std', prH:52, prLed:38, prLight:24, prWall:1.2, texture:'smooth'}],
+    ['prDome', 'Projector dome', 'rounded', {mh:80, md:80, mw:1.2, mb:2, handle:false, color:'#e2672b', prShape:'dome', prMode:'light', prDist:350, prSize:420, prLift:140, prBars:0, lampBase:'std', prH:50, prLed:38, prLight:24, prWall:1.2, texture:'smooth'}],
+    ['prShadow', 'Shadow picture', 'dark picture, lit wall', {mh:80, md:80, mw:1.2, mb:2, handle:false, color:'#2b2d33', prShape:'cyl', prMode:'shadow', prDist:300, prSize:320, prLift:110, prBars:0, lampBase:'std', prH:50, prLed:38, prLight:24, prWall:1.2, texture:'smooth'}]
   ],
   shadow: [
-    ['slTable', 'Shadow lamp', 'logo on the table', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#2f4cb3', slSize:360, slRays:0, slRing:84, slLed:38, slLight:28, slSmooth:3, texture:'smooth'}],
-    ['slBig', 'Big shadow', 'room-size', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#d8463b', slSize:600, slRays:0, slRing:120, slLed:38, slLight:30, slSmooth:4, texture:'smooth'}],
-    ['slSmall', 'Small lamp', '5 cm · quick print', {mh:80, md:80, mw:1.4, mb:2, handle:false, color:'#2b2d33', slSize:250, slRays:0, slRing:50, slLed:38, slLight:28, slSmooth:3, slWall:1.4, texture:'smooth'}],
-    ['slMini', 'Mini LED', '3.5 cm · 21 mm LED', {mh:80, md:80, mw:1.4, mb:2, handle:false, color:'#2b6b3f', slSize:180, slRays:0, slRing:34, slLed:21, slLight:14, slSmooth:3, slWall:1.2, texture:'smooth'}]
+    ['slTable', 'Shadow lamp', 'logo on the table', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#2f4cb3', slSize:360, slRays:0, lampBase:'std', slLed:38, slLight:28, slSmooth:3, texture:'smooth'}],
+    ['slBig', 'Big shadow', 'room-size', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#d8463b', slSize:600, slRays:0, lampBase:'std', slLed:38, slLight:28, slSmooth:4, texture:'smooth'}],
+    ['slSmall', 'Small lamp', '5 cm · quick print', {mh:80, md:80, mw:1.4, mb:2, handle:false, color:'#2b2d33', slSize:250, slRays:0, lampBase:'small', slLed:38, slLight:28, slSmooth:3, slWall:1.4, texture:'smooth'}],
+    ['slMini', 'Mini LED', '3.5 cm · 21 mm LED', {mh:80, md:80, mw:1.4, mb:2, handle:false, color:'#2b6b3f', slSize:180, slRays:0, lampBase:'mini', slLed:21, slLight:14, slSmooth:3, slWall:1.2, texture:'smooth'}]
   ],
   block: [
     ['pbClassic', 'Pen block', 'staggered holes', {mh:60, md:120, mw:3, mb:4, handle:false, color:'#2b2d33', pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, logoW:100, ly:50, texture:'smooth'}],
@@ -2304,6 +2332,7 @@ function applyPreset(key, p){
   if (p.twist !== undefined){ S.twist = p.twist; $('twist').value = p.twist; $('twist').dispatchEvent(new Event('input')); }
   S.slant = p.slant || 0; $('slant').value = Math.round(S.slant * 100); $('slantOut').textContent = S.slant ? Math.round(S.slant * 100) + '%' : 'Flat';
   if (p.bhSocket) setSocket(p.bhSocket);
+  if (p.lampBase) setLampBase(p.lampBase);
   if (p.prShape){ S.prShape = p.prShape; $('prShape').value = p.prShape; }
   if (p.prMode){ S.prMode = p.prMode; $('prMode').value = p.prMode; }
   if (p.pbRows){ S.pbRows = p.pbRows; $('pbRows').value = String(p.pbRows); }
@@ -2351,7 +2380,7 @@ function setProduct0(prod){
   $('prodDuo').setAttribute('aria-pressed', String(prod === 'duo'));
   $('handleRow').hidden = prod !== 'mug';
   $('penOpts').hidden = prod !== 'pen';
-  $('prodBulb').setAttribute('aria-pressed', String(prod === 'bulb')); $('bulbOpts').hidden = prod !== 'bulb'; $('bulbExport').hidden = prod !== 'bulb';
+  $('prodBulb').setAttribute('aria-pressed', String(prod === 'bulb')); $('bulbOpts').hidden = prod !== 'bulb'; $('bulbExport').hidden = prod !== 'bulb'; $('baseExport').hidden = !(prod === 'shadow' || prod === 'proj');
   $('duoOpts').hidden = prod !== 'duo';
   $('prodCaddy').setAttribute('aria-pressed', String(prod === 'caddy'));
   $('caddyOpts').hidden = prod !== 'caddy';
@@ -2399,6 +2428,8 @@ $('prodBulb').addEventListener('click', () => { if (S.product !== 'bulb') setPro
 const BULB_HOLES = {e27: 40.5, e14: 29, m10: 10.5}, BULB_COLLAR = {e27: 4, e14: 3, m10: 0};
 function setSocket(v){ S.bhSocket = v; $('bhSocket').value = v; [['bhHole', BULB_HOLES[v]], ['bhCollar', BULB_COLLAR[v]]].forEach(([id, val]) => { $(id).value = val; $(id).dispatchEvent(new Event('input')); }); }
 $('bhSocket').addEventListener('change', e => setSocket(e.target.value));
+$('slBase').addEventListener('change', e => setLampBase(e.target.value));
+$('prBase').addEventListener('change', e => setLampBase(e.target.value));
 $('bhExplode').addEventListener('change', e => { S.bhExplode = e.target.checked; buildStock(); });
 $('prodProj').addEventListener('click', () => { if (S.product !== 'proj'){ setProduct('proj'); setTimeout(resetView, 50); } });
 $('prShape').addEventListener('change', e => { S.prShape = e.target.value; rebuild(); });
@@ -3013,6 +3044,12 @@ function placed(geos, flip, lift){
   let lo = Infinity; out.forEach(c => { c.computeBoundingBox(); lo = Math.min(lo, c.boundingBox.min.y); });
   out.forEach(c => c.translate(0, -lo + (lift || 0), 0)); return out;
 }
+$('dlLightBase').addEventListener('click', async () => {
+  busy(true); status('Building the light base…');
+  try { const g = lightBaseGeometry(); await deliver('light-base-STOCK-' + S.lampBase + '-' + LAMP_BASES[S.lampBase].ring + 'mm.stl', stlBinary([g], 'light base (stock)'), 'model/stl'); g.dispose(); }
+  catch (e) { status('Base export failed: ' + (e && e.message ? e.message : e)); }
+  busy(false);
+});
 $('dlBulbKit').addEventListener('click', async () => {
   busy(true); status('Building the parts kit…'); await new Promise(r => setTimeout(r, 30));
   try {
