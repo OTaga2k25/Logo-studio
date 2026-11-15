@@ -462,8 +462,15 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
           <div class="field"><label for="slRays">Light rays</label><output id="slRaysOut"></output><input type="range" id="slRays" min="0" max="48" step="2" value="0"></div>
         </div>
         <div class="row2">
+          <div><label for="slMount" class="lbl">Light source</label>
+            <select class="text" id="slMount"><option value="base">Tea light on a light base</option><option value="dome">Bulb or LED in a dome top</option></select></div>
+          <div id="slLampWrap" hidden><label for="slLamp" class="lbl">Dome top fitting</label>
+            <select class="text" id="slLamp"><option value="e14">E14 socket (29 mm hole)</option><option value="e27">E27 socket (40.5 mm hole)</option><option value="led">Small LED module on a stem</option></select></div>
+        </div>
+        <div class="field" id="slDropWrap" hidden><label for="slDrop">Bulb drop · socket plate to the glowing centre</label><output id="slDropOut"></output><input type="range" id="slDrop" min="15" max="140" step="1" value="55"></div>
+        <div class="row2">
           <div class="field"><label for="slLed">LED tea light Ø</label><output id="slLedOut"></output><input type="range" id="slLed" min="15" max="45" step="0.5" value="38"></div>
-          <div class="field"><label for="slLight">Light height</label><output id="slLightOut"></output><input type="range" id="slLight" min="10" max="45" step="0.5" value="28"></div>
+          <div class="field"><label for="slLight">Light height</label><output id="slLightOut"></output><input type="range" id="slLight" min="10" max="90" step="0.5" value="28"></div>
         </div>
         <div class="row2">
           <div class="field" hidden><label for="slRing">Lamp width</label><output id="slRingOut"></output><input type="range" id="slRing" min="30" max="140" step="1" value="84"></div>
@@ -625,6 +632,7 @@ details.adv>.adv-body{display:flex;flex-direction:column;gap:14px;padding:2px 14
       </div>
       <div class="grp" id="baseExport" hidden>
         <h3>Light base (print once)</h3>
+        <button class="btn primary" id="dlDomeTop" hidden>Download dome top STL<small>Holds the socket or LED · fits every shadow ring of this size · printed upside down</small></button>
         <button class="btn primary" id="dlLightBase">Download light base STL<small>Holds the tea light · every shadow ring and projector shell of this size drops onto it</small></button>
         <span class="note">The STL downloads above contain only this client's logo part. Print the base once per size and reuse it.</span>
       </div>
@@ -655,7 +663,7 @@ const $ = id => document.getElementById(id);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const S = {
-  product:'mug', divider:0, layers:[], bhSocket:'e27', bhHole:40.5, bhCollar:4, bhPlate:3, bhCord:8, bhExplode:false, lampBase:'std', prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:0, prWidth:84, prH:52, prLed:38, prLight:24, prWall:1.2, slSize:360, slRays:0, slRing:84, slLed:38, slLight:28, slSmooth:3, slWall:1.6, slCx:-1, slCy:-1, slWallMode:false, cobrand:false, sep:'×', cbOrder:'ours', cbBalance:0, pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
+  product:'mug', divider:0, layers:[], bhSocket:'e27', bhHole:40.5, bhCollar:4, bhPlate:3, bhCord:8, bhExplode:false, lampBase:'std', slMount:'base', slLamp:'e14', slDrop:55, prShape:'cone', prMode:'light', prDist:300, prSize:360, prLift:120, prBars:0, prWidth:84, prH:52, prLed:38, prLight:24, prWall:1.2, slSize:360, slRays:0, slRing:84, slLed:38, slLight:28, slSmooth:3, slWall:1.6, slCx:-1, slCy:-1, slWallMode:false, cobrand:false, sep:'×', cbOrder:'ours', cbBalance:0, pbRows:2, pbHole:13, pbDepth:52, pbStagger:true, mnDepth:38, mnNeck:24, tbLayout:'row3', tbBase:28, tbStep:18, cpCup:66, cpFront:36, cpSlot:22, twist:0.35, slant:0, hcSides:6, hcBand:false, stBays:3, stDir:'right', stDepth:70, stLow:50, phAngle:65, phSlot:14, phLip:30, hexLayout:'flower', hexBase:30, hexStep:16, cadDepth:100, cadFront:48, cadSlot:34, cadSplit:true, cadFoot:true, duoLen:135, duoH2:60, dropWhite:false, texture:'smooth', texDepth:1.4, texCols:20, texRow:11, cuff:false, cuffH:18, cuffOut:2, H:100, D:84, taper:0, wall:6, base:6, handle:false, color:'#7c7f84',
   mode:'raised', logoW:52, angle:0, ly:44, both:false,
   depth:1.6, thr:0.5, invert:false, heightSrc:'layered', reliefColor:'full', smooth:2, hiDetail:false, logoColor:'#1d2c7a', removeBg:true, stickerW:0, nColors:5, text:'', textFont:"800|'Baloo 2'", textPos:'below', textSize:27, textColor:'#12939a'
 };
@@ -855,6 +863,32 @@ function lightBaseGeometry(){
   const pts = [V(0, 1.2), V(rp, 1.2), V(rp, hb), V(li, hb), V(li, hb + 1.5), V(lo - 0.4, hb + 1.5), V(lo, hb + 1.1), V(lo, hb), V(rb - 0.8, hb), V(rb, hb - 0.8), V(rb, 0.6), V(rb - 0.6, 0), V(0, 0), V(0, 1.2)];
   return fixLathe(new THREE.LatheGeometry(pts, 192));
 }
+// dome top (stock): sits on the ring like a lid and holds the socket / LED above the light
+const DOME = {wd: 2, sk: 4, cl: 0.3, tp: 3};
+const DOME_LAMPS = {e14: {hole: 29, drop: 55}, e27: {hole: 40.5, drop: 85}, led: {hole: 13, drop: 30}};
+function domeInfo(ro){
+  const led = S.slLamp === 'led', rh = led ? 6.5 : DOME_LAMPS[S.slLamp].hole / 2, rRo = ro + DOME.cl + DOME.wd, rflat = led ? rh + 8 : rh + 6;
+  return {led, rh, rRo, rflat, DH: Math.max(18, rRo - rflat + 2)};
+}
+function domeGeometry(){
+  const D = slData; if (!D || !D.dome) return null;
+  const T = D.DT, ro = D.ro, ri = D.ri, tp = DOME.tp, V = (x, y) => new THREE.Vector2(x, y), rRi = ro + DOME.cl;
+  const pts = [V(rRi, -DOME.sk), V(T.rRo, -DOME.sk), V(T.rRo, 0), V(T.rflat, T.DH)];
+  if (T.led){
+    const Ls = Math.max(4, S.slDrop - tp - 1), yb = T.DH - tp - Ls;
+    pts.push(V(T.rh - 2.5, T.DH), V(T.rh - 2.5, yb + 1.5), V(T.rh, yb + 1.5), V(T.rh, yb), V(T.rh + 2, yb), V(T.rh + 2, T.DH - tp));   // stem: LED sits in the cup at the bottom, wire up through the top
+  } else pts.push(V(T.rh, T.DH), V(T.rh, T.DH - tp));
+  pts.push(V(T.rflat - 1, T.DH - tp), V(ri - 0.5, 0), V(rRi, 0), V(rRi, -DOME.sk));
+  return fixLathe(new THREE.LatheGeometry(pts, 192));
+}
+function setMount(v){
+  S.slMount = v; $('slMount').value = v; const d = v === 'dome';
+  $('slLampWrap').hidden = !d; $('slDropWrap').hidden = !d;
+  $('slLed').closest('.field').hidden = d; $('slBase').closest('div').hidden = d;
+  $('dlLightBase').hidden = d && S.product === 'shadow'; $('dlDomeTop').hidden = !(d && S.product === 'shadow');
+  $('slLight').closest('.field').querySelector('label').textContent = d ? 'Light height · glow above the table' : 'Light height';
+}
+function setDomeLamp(v){ S.slLamp = v; $('slLamp').value = v; $('slDrop').value = DOME_LAMPS[v].drop; $('slDrop').dispatchEvent(new Event('input')); }
 function setLampBase(v){
   S.lampBase = v; $('slBase').value = v; $('prBase').value = v; const B = LAMP_BASES[v];
   [['slRing', B.ring], ['prWidth', B.ring]].forEach(([id, val]) => { $(id).value = val; $(id).dispatchEvent(new Event('input')); });
@@ -884,6 +918,10 @@ function clearStock(){ [capGrp, ringGrp, baseGrp].forEach(g => g.children.slice(
 function buildStock(){
   clearStock();
   mug.position.y = (S.product === 'shadow' || S.product === 'proj') ? LB.h : 0;
+  baseGrp.position.y = 0;
+  if (S.product === 'shadow' && S.slMount === 'dome'){
+    mug.position.y = 0; const g = domeGeometry(); if (g){ const m = new THREE.Mesh(g, ringMat); m.name = 'Dome top'; baseGrp.add(m); baseGrp.position.y = slData.Hr; } return;
+  }
   if (S.product === 'shadow' || S.product === 'proj'){ const m = new THREE.Mesh(lightBaseGeometry(), ringMat); m.name = 'Light base'; baseGrp.add(m); return; }
   if (S.product !== 'bulb') return;
   const P = bulbStockParts();
@@ -1117,7 +1155,8 @@ function gridFix(sol, Na, Nh, bw, minCells){
 function slCompute(){
   const M = slMask(); if (!M) return null;
   if (S.slCx < 0){ S.slCx = M.cx; S.slCy = M.cy; }
-  const e = S.slLight + 1.2, ro = Math.max(S.slRing / 2, S.slLed / 2 + 1 + S.slWall), ri = ro - S.slWall, rm = (ro + ri) / 2, hMin = LB.h + 1.8, hMax = e - 1.2;
+  const dome = S.slMount === 'dome', y0 = dome ? 0 : LB.h;
+  const e = dome ? S.slLight : S.slLight + 1.2, ro = Math.max(S.slRing / 2, (dome ? 0 : S.slLed / 2 + 1) + S.slWall), ri = ro - S.slWall, rm = (ro + ri) / 2, hMin = y0 + 1.8, hMax = e - 1.2;
   const scale = S.slSize / Math.max(M.w, M.h), cx = S.slCx * M.w, cy = S.slCy * M.h;
   const SM = softMask(M, 1), cover = (R, a) => bilinMask(SM, cx + Math.cos(a) * R / scale, cy + Math.sin(a) * R / scale);
   // farthest logo pixel from the lamp sets the top of the wall
@@ -1126,31 +1165,44 @@ function slCompute(){
   const yAt = R => e * (1 - rm / R), Rat = y => rm * e / (e - y);
   const yTop = Math.min(hMax, yAt(Math.max(Rfar, Rat(hMin) + 1)));
   // node heights: even steps on the table, never closer than 0.05 mm on the lamp
-  const ys = [LB.h, hMin], dR = Math.max(0.8, S.slSize / 260);
+  const ys = [y0, hMin], dR = Math.max(0.8, S.slSize / 260);
   for (let R = Rat(hMin) + dR; ; R += dR){ const y = yAt(R); if (y >= yTop){ if (yTop - ys[ys.length - 1] > 0.03) ys.push(yTop); else ys[ys.length - 1] = yTop; break; } if (y - ys[ys.length - 1] >= 0.05) ys.push(y); }
+  const jTop = ys.length - 1;                         // last row that maps onto the table picture
+  // dome top: the ring carries on up past the light (walls above the light cast nothing on the table)
+  const DT = dome ? domeInfo(ro) : null, Hr = dome ? Math.max(e + 1, e + S.slDrop - DT.DH) : 0;
+  if (dome){ if (e - 0.25 > yTop + 0.05) ys.push(e - 0.25); ys.push(e + 0.25); if (Hr > e + 0.3) ys.push(Hr); }
   const NN = ys.length, Na = Math.max(360, Math.round(2 * Math.PI * ro / 0.3)), F = new Float32Array(Na * NN);
   for (let i = 0; i < Na; i++){
     const a = i / Na * Math.PI * 2;
-    for (let j = 0; j < NN; j++) F[i * NN + j] = j <= 1 ? 1 : cover(Rat(ys[j]), a);
+    for (let j = 0; j < NN; j++) F[i * NN + j] = j <= 1 ? 1 : j <= jTop ? cover(Rat(ys[j]), a) : ys[j] >= e ? 1 : 0;
+  }
+  if (dome){
+    // posts hold the top band up; put them where the logo wall below is already solid so their shadow starts outside the logo
+    const cw = 2 * Math.PI * ro / Na, hw = Math.max(2, Math.ceil(0.9 / cw)), jt = Math.max(2, jTop - 1);
+    for (let k = 0; k < 4; k++){
+      const it = Math.round((k / 4 + 1 / 8) * Na) % Na; let best = it;
+      for (let d = 0; d < Na / 12; d++){ const c1 = (it + d) % Na, c2 = (it - d + Na) % Na; if (F[c1 * NN + jt] >= 0.5){ best = c1; break; } if (F[c2 * NN + jt] >= 0.5){ best = c2; break; } }
+      for (let dd = -hw; dd <= hw; dd++){ const i = ((best + dd) % Na + Na) % Na; for (let j = jt; j < NN; j++) F[i * NN + j] = 1; }
+    }
   }
   if (S.slRays > 0){                                   // optional slits: rays of light through the shadow
     const cw = 2 * Math.PI * ro / Na, w = 0.45;
-    for (let i = 0; i < Na; i++){ const a = i / Na * S.slRays, d = Math.abs(a - Math.floor(a) - 0.5) * Na / S.slRays * cw; if (d < w * 1.5){ const k = Math.max(0, Math.min(1, (d - w) / (w) + 0.5)); for (let j = 2; j < NN; j++) F[i * NN + j] = Math.min(F[i * NN + j], k); } }
+    for (let i = 0; i < Na; i++){ const a = i / Na * S.slRays, d = Math.abs(a - Math.floor(a) - 0.5) * Na / S.slRays * cw; if (d < w * 1.5){ const k = Math.max(0, Math.min(1, (d - w) / (w) + 0.5)); for (let j = 2; j <= jTop; j++) F[i * NN + j] = Math.min(F[i * NN + j], k); } }
   }
   const bars = fieldFix(F, Na, NN, Math.max(3, Math.round(1.0 / (2 * Math.PI * ro / Na))), 10);
-  slData = {Na, NN, ys, F, e, ro, ri, rm, hMin, yTop, Rfar, Rat, bars};
+  slData = {Na, NN, ys, F, e, ro, ri, rm, hMin, yTop, Rfar, Rat, bars, dome, y0, Hr, DT};
   return slData;
 }
 function shadowGeometries(){
   const D = slCompute(); if (!D) return [];
   // the ring is modelled standing on the light base; its own bottom is y = 0
-  const g = smoothShell(D.F, D.Na, D.ys, () => D.ro, S.slWall, (th, r, y) => [Math.cos(th) * r, y - LB.h, Math.sin(th) * r]);
+  const g = smoothShell(D.F, D.Na, D.ys, () => D.ro, S.slWall, (th, r, y) => [Math.cos(th) * r, y - D.y0, Math.sin(th) * r]);
   return [['Shadow ring', g]];
 }
 function slLitAt(wx, wz){
   // trace the ray from the LED to this table point through the wall
   const D = slData, r = Math.hypot(wx, wz); if (r <= D.ro) return false;
-  const y = D.e * (1 - D.rm / r); if (y >= D.yTop) return true; if (y < D.hMin) return false;
+  const y = D.e * (1 - D.rm / r); if (y >= D.yTop && !D.dome) return true; if (y < D.hMin) return false;
   let a = Math.atan2(wz, wx); if (a < 0) a += Math.PI * 2;
   return fieldAt(D, a / (Math.PI * 2) * D.Na, y) < 0.5;
 }
@@ -2179,7 +2231,7 @@ function updateReadout(){
     `<span class="tag"><i>H</i><b>${sz.y.toFixed(0)}</b></span>` +
     `<span class="tag"><i>W</i><b>${sz.x.toFixed(0)}</b></span>` +
     `<span class="tag"><i>D</i><b>${sz.z.toFixed(0)} mm</b></span>` +
-    (S.product === 'bulb' ? `<span class="tag"><i>Socket hole</i><b>Ø ${S.bhHole} mm</b></span>` : S.product === 'proj' ? `<span class="tag"><i>Projects</i><b>${Math.round(S.prSize / 10)} cm at ${Math.round(S.prDist / 10)} cm</b></span>` : S.product === 'shadow' ? `<span class="tag"><i>Shadow</i><b>≈ ${slData ? Math.round(slData.Rfar * 2 / 10) : '–'} cm</b></span>` : S.product === 'block' ? `<span class="tag"><i>Holes</i><b>${blockHoles().length}</b></span>` : S.product === 'monitor' ? `<span class="tag"><i>Holds</i><b>pens in the screen</b></span>` : S.product === 'tubes' ? `<span class="tag"><i>Tubes</i><b>${tubeCells().length}</b></span>` : S.product === 'card' ? `<span class="tag"><i>Holds</i><b>cards + pens</b></span>` : S.product === 'hexcup' ? `<span class="tag"><i>Fits</i><b>≈ ${Math.max(4, Math.floor(Math.pow((S.D - 2*S.wall)/2, 2) * 0.42 / 21))} pens</b></span>` : S.product === 'steps' ? `<span class="tag"><i>Bays</i><b>${S.stBays}</b></span>` : S.product === 'phone' ? `<span class="tag"><i>Fits</i><b>phones up to ${S.phSlot} mm</b></span>` : S.product === 'hex' ? `<span class="tag"><i>Fits</i><b>≈ ${hexCells().length * Math.max(2, Math.floor(Math.pow((S.D - 2*S.wall) / 9.5, 2) * 0.8))} pens</b></span>` : S.product === 'caddy' ? `<span class="tag"><i>Holds</i><b>phone + pens</b></span>` : S.product === 'duo' ? `<span class="tag"><i>Holds</i><b>cup + tray</b></span>` : S.product === 'pen'
+    (S.product === 'bulb' ? `<span class="tag"><i>Socket hole</i><b>Ø ${S.bhHole} mm</b></span>` : S.product === 'proj' ? `<span class="tag"><i>Projects</i><b>${Math.round(S.prSize / 10)} cm at ${Math.round(S.prDist / 10)} cm</b></span>` : S.product === 'shadow' ? `<span class="tag"><i>Shadow</i><b>≈ ${slData ? Math.round(slData.Rfar * 2 / 10) : '–'} cm</b></span>` + (slData && slData.dome ? `<span class="tag"><i>Ring</i><b>${Math.round(slData.Hr)} mm tall</b></span>` : '') : S.product === 'block' ? `<span class="tag"><i>Holes</i><b>${blockHoles().length}</b></span>` : S.product === 'monitor' ? `<span class="tag"><i>Holds</i><b>pens in the screen</b></span>` : S.product === 'tubes' ? `<span class="tag"><i>Tubes</i><b>${tubeCells().length}</b></span>` : S.product === 'card' ? `<span class="tag"><i>Holds</i><b>cards + pens</b></span>` : S.product === 'hexcup' ? `<span class="tag"><i>Fits</i><b>≈ ${Math.max(4, Math.floor(Math.pow((S.D - 2*S.wall)/2, 2) * 0.42 / 21))} pens</b></span>` : S.product === 'steps' ? `<span class="tag"><i>Bays</i><b>${S.stBays}</b></span>` : S.product === 'phone' ? `<span class="tag"><i>Fits</i><b>phones up to ${S.phSlot} mm</b></span>` : S.product === 'hex' ? `<span class="tag"><i>Fits</i><b>≈ ${hexCells().length * Math.max(2, Math.floor(Math.pow((S.D - 2*S.wall) / 9.5, 2) * 0.8))} pens</b></span>` : S.product === 'caddy' ? `<span class="tag"><i>Holds</i><b>phone + pens</b></span>` : S.product === 'duo' ? `<span class="tag"><i>Holds</i><b>cup + tray</b></span>` : S.product === 'pen'
       ? `<span class="tag"><i>Fits</i><b>≈ ${penCount()} pens</b></span>`
       : `<span class="tag"><i>Holds</i><b>≈ ${Math.round(capacityMl() / 5) * 5} ml</b></span>`);
 }
@@ -2239,6 +2291,8 @@ const PRESETS = {
   shadow: [
     ['slTable', 'Shadow lamp', 'logo on the table', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#2f4cb3', slSize:360, slRays:0, lampBase:'std', slLed:38, slLight:28, slSmooth:3, texture:'smooth'}],
     ['slBig', 'Big shadow', 'room-size', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#d8463b', slSize:600, slRays:0, lampBase:'std', slLed:38, slLight:28, slSmooth:4, texture:'smooth'}],
+    ['slDomeE14', 'Dome · E14 bulb', 'bulb hangs from the top', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#2f4cb3', slSize:420, slRays:0, lampBase:'std', slMount:'dome', slLamp:'e14', slLight:40, slSmooth:3, slWall:1.6, texture:'smooth'}],
+    ['slDomeLed', 'Dome · LED', 'small LED on a stem', {mh:80, md:80, mw:1.6, mb:2, handle:false, color:'#2b2d33', slSize:360, slRays:0, lampBase:'std', slMount:'dome', slLamp:'led', slLight:30, slSmooth:3, slWall:1.6, texture:'smooth'}],
     ['slSmall', 'Small lamp', '5 cm · quick print', {mh:80, md:80, mw:1.4, mb:2, handle:false, color:'#2b2d33', slSize:250, slRays:0, lampBase:'small', slLed:38, slLight:28, slSmooth:3, slWall:1.4, texture:'smooth'}],
     ['slMini', 'Mini LED', '3.5 cm · 21 mm LED', {mh:80, md:80, mw:1.4, mb:2, handle:false, color:'#2b6b3f', slSize:180, slRays:0, lampBase:'mini', slLed:21, slLight:14, slSmooth:3, slWall:1.2, texture:'smooth'}]
   ],
@@ -2316,7 +2370,7 @@ function applyPreset(key, p){
   $('handle').checked = p.handle; S.handle = p.handle;
   if (p.divider !== undefined){ S.divider = p.divider; $('divider').value = String(p.divider); }
   setTexture(p.texture || (S.product === 'duo' ? 'ribbed' : 'smooth'), true);
-  [['prDist','prDist'],['prSize','prSize'],['prLift','prLift'],['prBars','prBars'],['prWidth','prWidth'],['prH','prH'],['prLed','prLed'],['prLight','prLight'],['prWall','prWall'],['slSize','slSize'],['slRing','slRing'],['slRays','slRays'],['slLed','slLed'],['slLight','slLight'],['slSmooth','slSmooth'],['slWall','slWall'],['pbHole','pbHole'],['pbDepth','pbDepth'],['mnDepth','mnDepth'],['mnNeck','mnNeck'],['tbBase','tbBase'],['tbStep','tbStep'],['cpCup','cpCup'],['cpFront','cpFront'],['cpSlot','cpSlot'],['stDepth','stDepth'],['stLow','stLow'],['phAngle','phAngle'],['phSlot','phSlot'],['phLip','phLip'],['hexBase','hexBase'],['hexStep','hexStep'],['cadDepth','cadDepth'],['cadFront','cadFront'],['cadSlot','cadSlot'],['duoLen','duoLen'],['duoH2','duoH2'],['texCols','texCols'],['texDepth','texDepth'],['lw','logoW'],['ly','ly']].forEach(([id, k]) => { if (p[k] !== undefined){ $(id).value = p[k]; $(id).dispatchEvent(new Event('input')); } });
+  [['prDist','prDist'],['prSize','prSize'],['prLift','prLift'],['prBars','prBars'],['prWidth','prWidth'],['prH','prH'],['prLed','prLed'],['prLight','prLight'],['prWall','prWall'],['slSize','slSize'],['slDrop','slDrop'],['slRing','slRing'],['slRays','slRays'],['slLed','slLed'],['slLight','slLight'],['slSmooth','slSmooth'],['slWall','slWall'],['pbHole','pbHole'],['pbDepth','pbDepth'],['mnDepth','mnDepth'],['mnNeck','mnNeck'],['tbBase','tbBase'],['tbStep','tbStep'],['cpCup','cpCup'],['cpFront','cpFront'],['cpSlot','cpSlot'],['stDepth','stDepth'],['stLow','stLow'],['phAngle','phAngle'],['phSlot','phSlot'],['phLip','phLip'],['hexBase','hexBase'],['hexStep','hexStep'],['cadDepth','cadDepth'],['cadFront','cadFront'],['cadSlot','cadSlot'],['duoLen','duoLen'],['duoH2','duoH2'],['texCols','texCols'],['texDepth','texDepth'],['lw','logoW'],['ly','ly']].forEach(([id, k]) => { if (p[k] !== undefined){ $(id).value = p[k]; $(id).dispatchEvent(new Event('input')); } });
   if (p.depth){ $('depth').value = p.depth; $('depth').dispatchEvent(new Event('input')); }
   if (p.text !== undefined){ S.text = p.text; $('logoText').value = p.text; }
   if (p.textColor){ S.textColor = p.textColor; $('textColor').value = p.textColor; }
@@ -2333,6 +2387,7 @@ function applyPreset(key, p){
   S.slant = p.slant || 0; $('slant').value = Math.round(S.slant * 100); $('slantOut').textContent = S.slant ? Math.round(S.slant * 100) + '%' : 'Flat';
   if (p.bhSocket) setSocket(p.bhSocket);
   if (p.lampBase) setLampBase(p.lampBase);
+  if (S.product === 'shadow'){ setMount(p.slMount || 'base'); if (p.slLamp) setDomeLamp(p.slLamp); if (p.slDrop) { $('slDrop').value = p.slDrop; $('slDrop').dispatchEvent(new Event('input')); } }
   if (p.prShape){ S.prShape = p.prShape; $('prShape').value = p.prShape; }
   if (p.prMode){ S.prMode = p.prMode; $('prMode').value = p.prMode; }
   if (p.pbRows){ S.pbRows = p.pbRows; $('pbRows').value = String(p.pbRows); }
@@ -2380,7 +2435,7 @@ function setProduct0(prod){
   $('prodDuo').setAttribute('aria-pressed', String(prod === 'duo'));
   $('handleRow').hidden = prod !== 'mug';
   $('penOpts').hidden = prod !== 'pen';
-  $('prodBulb').setAttribute('aria-pressed', String(prod === 'bulb')); $('bulbOpts').hidden = prod !== 'bulb'; $('bulbExport').hidden = prod !== 'bulb'; $('baseExport').hidden = !(prod === 'shadow' || prod === 'proj');
+  $('prodBulb').setAttribute('aria-pressed', String(prod === 'bulb')); $('bulbOpts').hidden = prod !== 'bulb'; $('bulbExport').hidden = prod !== 'bulb'; $('baseExport').hidden = !(prod === 'shadow' || prod === 'proj'); if (prod !== 'shadow'){ $('dlDomeTop').hidden = true; $('dlLightBase').hidden = false; }
   $('duoOpts').hidden = prod !== 'duo';
   $('prodCaddy').setAttribute('aria-pressed', String(prod === 'caddy'));
   $('caddyOpts').hidden = prod !== 'caddy';
@@ -2429,6 +2484,8 @@ const BULB_HOLES = {e27: 40.5, e14: 29, m10: 10.5}, BULB_COLLAR = {e27: 4, e14: 
 function setSocket(v){ S.bhSocket = v; $('bhSocket').value = v; [['bhHole', BULB_HOLES[v]], ['bhCollar', BULB_COLLAR[v]]].forEach(([id, val]) => { $(id).value = val; $(id).dispatchEvent(new Event('input')); }); }
 $('bhSocket').addEventListener('change', e => setSocket(e.target.value));
 $('slBase').addEventListener('change', e => setLampBase(e.target.value));
+$('slMount').addEventListener('change', e => { setMount(e.target.value); rebuild(); });
+$('slLamp').addEventListener('change', e => { setDomeLamp(e.target.value); });
 $('prBase').addEventListener('change', e => setLampBase(e.target.value));
 $('bhExplode').addEventListener('change', e => { S.bhExplode = e.target.checked; buildStock(); });
 $('prodProj').addEventListener('click', () => { if (S.product !== 'proj'){ setProduct('proj'); setTimeout(resetView, 50); } });
@@ -2509,7 +2566,7 @@ $('slantOut').textContent = 'Flat';
 bindRange('prDist', 'prDist', v => Math.round(v / 10) + ' cm'); bindRange('prSize', 'prSize', v => Math.round(v / 10) + ' cm'); bindRange('prLift', 'prLift', v => (v >= 0 ? '+' : '') + Math.round(v / 10) + ' cm');
 bindRange('prWidth', 'prWidth', v => v + ' mm'); bindRange('bhHole', 'bhHole', v => v + ' mm'); bindRange('bhCollar', 'bhCollar', v => v ? v + ' mm' : 'None');  bindRange('bhCord', 'bhCord', v => v + ' mm'); bindRange('prBars', 'prBars', v => v ? v + '' : 'None'); bindRange('prH', 'prH', v => v + ' mm'); bindRange('prLed', 'prLed', v => v + ' mm'); bindRange('prLight', 'prLight', v => v + ' mm'); bindRange('prWall', 'prWall', v => v.toFixed(1) + ' mm');
 bindRange('slSize', 'slSize', v => Math.round(v / 10) + ' cm'); bindRange('slRays', 'slRays', v => v ? v + '' : 'None'); bindRange('slLed', 'slLed', v => v + ' mm');
-bindRange('slLight', 'slLight', v => v + ' mm'); bindRange('slSmooth', 'slSmooth', v => v ? v + '' : 'Off'); bindRange('slWall', 'slWall', v => v.toFixed(1) + ' mm'); bindRange('slRing', 'slRing', v => v + ' mm');
+bindRange('slLight', 'slLight', v => v + ' mm'); bindRange('slSmooth', 'slSmooth', v => v ? v + '' : 'Off'); bindRange('slWall', 'slWall', v => v.toFixed(1) + ' mm'); bindRange('slRing', 'slRing', v => v + ' mm'); bindRange('slDrop', 'slDrop', v => v + ' mm');
 bindRange('pbHole', 'pbHole', v => v + ' mm'); bindRange('pbDepth', 'pbDepth', v => v + ' mm'); bindRange('mnDepth', 'mnDepth', v => v + ' mm'); bindRange('mnNeck', 'mnNeck', v => v + ' mm');
 bindRange('tbBase', 'tbBase', v => v + ' mm'); bindRange('tbStep', 'tbStep', v => v ? v + ' mm' : 'All the same');
 bindRange('cpCup', 'cpCup', v => v + ' mm'); bindRange('cpFront', 'cpFront', v => v + ' mm'); bindRange('cpSlot', 'cpSlot', v => v + ' mm');
@@ -3044,6 +3101,13 @@ function placed(geos, flip, lift){
   let lo = Infinity; out.forEach(c => { c.computeBoundingBox(); lo = Math.min(lo, c.boundingBox.min.y); });
   out.forEach(c => c.translate(0, -lo + (lift || 0), 0)); return out;
 }
+$('dlDomeTop').addEventListener('click', async () => {
+  busy(true); status('Building the dome top…');
+  try { const g = domeGeometry(); const [f] = placed([g], true); const k = S.slLamp === 'led' ? 'led-stem' + S.slDrop : S.slLamp;
+    await deliver('dome-top-STOCK-' + k + '-' + LAMP_BASES[S.lampBase].ring + 'mm.stl', stlBinary([f], 'dome top (stock)'), 'model/stl'); g.dispose(); f.dispose(); }
+  catch (e) { status('Dome export failed: ' + (e && e.message ? e.message : e)); }
+  busy(false);
+});
 $('dlLightBase').addEventListener('click', async () => {
   busy(true); status('Building the light base…');
   try { const g = lightBaseGeometry(); await deliver('light-base-STOCK-' + S.lampBase + '-' + LAMP_BASES[S.lampBase].ring + 'mm.stl', stlBinary([g], 'light base (stock)'), 'model/stl'); g.dispose(); }
